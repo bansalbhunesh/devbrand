@@ -73,11 +73,19 @@ export function runLayer6(
 ): NarrativeDraft {
   const verifiedCitations = verifyCitations(draft, enrichedPR, staticMetrics, impactProfile);
   const consistencyScore = computeSelfConsistency({ ...draft, citations: verifiedCitations });
+  const metricVerified = verifiedCitations.filter(c => c.evidenceType === 'metric' && c.verified).length;
+
+  const structuralVerified = verifiedCitations.filter(c => c.evidenceType === 'structural' && c.verified).length;
+  
+  // Density reward: variety is better than just many of one type
+  const varietyBonus = (metricVerified > 0 && structuralVerified > 0) ? 0.2 : 0;
+  const evidenceDensityScore = Math.min(1, (verifiedCitations.filter(v => v.verified).length / 5) + varietyBonus);
 
   return {
     ...draft,
     citations: verifiedCitations,
     selfConsistencyScore: consistencyScore,
-    evidenceDensityScore: verifiedCitations.length / 5, // Normalized to 5 citations
+    evidenceDensityScore,
   };
+
 }

@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { createFileRoute } from "@tanstack/react-router";
+
 import { useQuery } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
 import { db } from "@/server/db";
@@ -40,18 +40,39 @@ const getTeamImpact = createServerFn({ method: "GET" })
       : 0;
 
     const coreInfraCount = recentImpacts.filter(o => o.category === "Architecture" || o.impactScore > 80).length;
+    
+    // Compute real invisible work percentage across the team
+    const invisibleWorkCount = recentImpacts.filter(o => o.metadata?.invisibleWorkReport?.isSignificant).length;
+    const invisibleWorkPercent = recentImpacts.length > 0 
+      ? Math.round((invisibleWorkCount / recentImpacts.length) * 100)
+      : 0;
+
+    // 5. Map members with their individual stats
+    const membersWithStats = members.map(m => {
+      const userImpacts = recentImpacts.filter(o => o.userId === m.userId);
+      const memberAvgImpact = userImpacts.length > 0
+        ? Math.round(userImpacts.reduce((sum, o) => sum + o.impactScore, 0) / userImpacts.length)
+        : 0;
+      
+      return {
+        ...m.user,
+        avgImpact: memberAvgImpact,
+        prCount: userImpacts.length,
+      };
+    });
 
     return { 
       team, 
-      members: members.map(m => m.user), 
+      members: membersWithStats, 
       recentImpacts,
       metrics: {
         avgImpact: Math.round(avgImpact),
         coreInfraCount,
-        invisibleWorkPercent: 42, // placeholder for now
+        invisibleWorkPercent,
       }
     };
   });
+
 
 
 export const Route = createFileRoute("/team/$id")({
@@ -102,19 +123,27 @@ function TeamDashboard() {
               {teamData?.members.map((m) => (
                 <tr key={m.id} className="border-b border-border hover:bg-surface/20 transition cursor-pointer">
                   <td className="px-6 py-4 flex items-center gap-3">
-                    <img src={m.avatarUrl ?? ""} className="h-8 w-8 rounded-lg border border-border" alt="" />
+                    {m.avatarUrl ? (
+                      <img src={m.avatarUrl} className="h-8 w-8 rounded-lg border border-border" alt="" />
+                    ) : (
+                      <div className="h-8 w-8 rounded-lg bg-blue/10 border border-blue/20 grid place-items-center text-[10px] font-bold text-blue">
+                        {m.name?.slice(0, 1).toUpperCase()}
+                      </div>
+                    )}
                     <span className="text-sm font-medium">{m.name}</span>
                   </td>
+
                   <td className="px-6 py-4 text-xs font-mono text-muted-foreground">{m.seniority} engineer</td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
                       <div className="h-1.5 w-24 rounded-full bg-border overflow-hidden">
-                        <div className="h-full bg-blue rounded-full" style={{ width: '70%' }} />
+                        <div className="h-full bg-blue rounded-full" style={{ width: `${m.avgImpact}%` }} />
                       </div>
-                      <span className="text-xs font-bold">--</span>
+                      <span className="text-xs font-bold">{m.avgImpact || "--"}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-xs text-muted-foreground">Last week</td>
+                  <td className="px-6 py-4 text-xs text-muted-foreground">{m.prCount > 0 ? `${m.prCount} PRs` : "No activity"}</td>
+
                 </tr>
               ))}
             </tbody>

@@ -4,6 +4,7 @@ import { hydrateRoot } from "react-dom/client";
 
 const router = createRouter();
 
+
 const client = createStartClient({
   router,
 });

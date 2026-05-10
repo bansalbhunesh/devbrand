@@ -3,7 +3,8 @@ import { z } from "zod";
 import Stripe from "stripe";
 import { db } from "./db";
 import { users, subscriptions, userEvents } from "./schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
+
 
 let stripe: Stripe | null = null;
 
@@ -87,9 +88,13 @@ export const handleStripeWebhook = createServerFn({ method: "POST" })
 
     // Idempotency check: check if we already processed this event
     const existing = await db.query.userEvents.findFirst({
-      where: sql`${userEvents.payload}->>'stripeEventId' = ${event.id}`
+      where: sql`COALESCE(${userEvents.payload}->>'stripeEventId', '') = ${event.id}`
     });
-    if (existing) return { received: true, duplicate: true };
+    if (existing) {
+      console.log(`[Stripe Webhook] Duplicate event ignored: ${event.id}`);
+      return { received: true, duplicate: true };
+    }
+
 
     switch (event.type) {
       case "checkout.session.completed": {

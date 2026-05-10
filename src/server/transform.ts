@@ -14,10 +14,12 @@ function generateSlug(prUrl: string, userId: string): string {
 }
 
 export const transformPR = createServerFn({ method: "POST" })
-  .validator(z.object({ prUrl: z.string().url(), userId: z.string().uuid() }))
-  .handler(async ({ data: { prUrl, userId } }) => {
-    const user = await db.query.users.findFirst({ where: eq(users.id, userId) });
-    if (!user) throw new Error("USER_NOT_FOUND");
+  .validator(z.object({ prUrl: z.string().url() }))
+  .handler(async ({ data: { prUrl } }) => {
+    const user = await getSession();
+    if (!user) throw new Error("UNAUTHORIZED");
+    const userId = user.id;
+
 
     const isFreeLimitReached = user.plan === "free" && user.generationsThisMonth >= 3;
     if (isFreeLimitReached) throw new Error("LIMIT_REACHED");
@@ -26,8 +28,9 @@ export const transformPR = createServerFn({ method: "POST" })
     const context: UserContext = {
       seniority: user.seniority as any,
       tone: user.tone as any,
-      targetAudience: "recruiter", // Default
+      targetAudience: (user as any).targetAudience || "recruiter", 
     };
+
 
     const output = await runEngine(prUrl, userId, context);
 
@@ -82,8 +85,11 @@ export const transformPR = createServerFn({ method: "POST" })
 
 
 export const getUserOutputs = createServerFn({ method: "GET" })
-  .validator(z.string().uuid())
-  .handler(async ({ data: userId }) => {
+  .handler(async () => {
+    const user = await getSession();
+    if (!user) throw new Error("UNAUTHORIZED");
+    const userId = user.id;
+
     return db.query.outputs.findMany({
       where: eq(outputs.userId, userId),
       orderBy: (o, { desc }) => [desc(o.createdAt)],
@@ -92,8 +98,12 @@ export const getUserOutputs = createServerFn({ method: "GET" })
   });
 
 export const toggleOutputVisibility = createServerFn({ method: "POST" })
-  .validator(z.object({ outputId: z.string().uuid(), userId: z.string().uuid(), isPublic: z.boolean() }))
-  .handler(async ({ data: { outputId, userId, isPublic } }) => {
+  .validator(z.object({ outputId: z.string().uuid(), isPublic: z.boolean() }))
+  .handler(async ({ data: { outputId, isPublic } }) => {
+    const user = await getSession();
+    if (!user) throw new Error("UNAUTHORIZED");
+    const userId = user.id;
+
     await db
       .update(outputs)
       .set({ isPublic })

@@ -81,8 +81,10 @@ export function classifyChangeType(diff: FileDiff): ChangeType {
 
 export function analyzeStaticMetrics(enrichedPR: EnrichedPR): StaticMetrics {
   const fileMetrics: FileMetrics[] = enrichedPR.diffs.map((diff) => {
-    const complexity = calculateCyclomaticComplexity(diff.patch);
-    const halstead = calculateHalsteadMetrics(diff.patch);
+    const codeToAnalyze = diff.fullContent || diff.patch;
+    const complexity = calculateCyclomaticComplexity(codeToAnalyze);
+    const halstead = calculateHalsteadMetrics(codeToAnalyze);
+
     return {
       filename: diff.filename,
       churnScore: calculateChurnScore(diff.additions, diff.deletions),

@@ -19,6 +19,8 @@ export const users = pgTable("users", {
   email: text("email"),
   seniority: text("seniority").notNull().default("mid"), // junior | mid | senior | staff
   tone: text("tone").notNull().default("direct"),         // direct | storytelling | technical
+  targetAudience: text("target_audience").notNull().default("recruiter"), // recruiter | manager | peer | founder
+
   stripeCustomerId: text("stripe_customer_id"),
   plan: text("plan").notNull().default("free"),            // free | pro
   planExpiresAt: timestamp("plan_expires_at", { withTimezone: true }),

@@ -2,8 +2,13 @@ import { createRootRoute } from "@tanstack/react-router";
 import { Outlet, ScrollRestoration } from "@tanstack/react-router";
 import { Meta, Scripts } from "@tanstack/react-start";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import * as React from "react";
 import "@/styles.css";
+import * as React from "react";
+
+
+
+
+
 
 const queryClient = new QueryClient();
 
@@ -15,19 +20,75 @@ export const Route = createRootRoute({
       { title: "DevBrand — Make invisible engineering work visible" },
       { name: "description", content: "GitHub → LinkedIn posts + resume bullets. No hype. No emoji." },
       { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "DevBrand" },
       { property: "og:title", content: "DevBrand — Evidence-Backed Engineering Reputation" },
       { property: "og:description", content: "Turn your PRs into verifiable career leverage. Evidence citations included." },
       { property: "og:image", content: "https://devbrand.ai/og-main.png" },
+      { property: "og:url", content: "https://devbrand.ai" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:site", content: "@devbrand_ai" },
       { name: "twitter:image", content: "https://devbrand.ai/og-main.png" },
+
     ],
     links: [
       { rel: "canonical", href: "https://devbrand.ai" },
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" }
     ]
   }),
+  errorComponent: (props) => {
+    return (
+      <RootDocument>
+        <div className="min-h-screen bg-background grid place-items-center p-6 text-center">
+          <div className="max-w-md">
+            <div className="h-16 w-16 bg-red-500/10 rounded-2xl grid place-items-center mx-auto mb-8">
+              <span className="text-2xl">💀</span>
+            </div>
+            <h1 className="text-3xl font-bold tracking-tight mb-4">Internal System Collapse.</h1>
+            <p className="text-muted-foreground mb-8 leading-relaxed">
+              Our AI either found a bug it couldn't roast, or the server decided to retire early. 
+              Either way, it's not looking good for your PR.
+            </p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="px-6 py-3 rounded-xl bg-foreground text-background font-bold hover:opacity-90 transition"
+            >
+              Try to recover
+            </button>
+            <pre className="mt-12 p-4 rounded-lg bg-muted text-[10px] font-mono text-left overflow-auto border border-border opacity-50">
+              {props.error?.message}
+            </pre>
+          </div>
+        </div>
+      </RootDocument>
+    );
+  },
+  notFoundComponent: () => {
+    return (
+      <RootDocument>
+        <div className="min-h-screen bg-background grid place-items-center p-6 text-center">
+          <div className="max-w-md">
+            <div className="h-16 w-16 bg-blue-500/10 rounded-2xl grid place-items-center mx-auto mb-8">
+              <span className="text-2xl">🔍</span>
+            </div>
+            <h1 className="text-3xl font-bold tracking-tight mb-4">Impact Not Found.</h1>
+            <p className="text-muted-foreground mb-8 leading-relaxed">
+              We looked through the git logs and found nothing here. Just like that refactoring
+              ticket you said you finished last week.
+            </p>
+            <a 
+              href="/"
+              className="px-6 py-3 rounded-xl bg-blue-500 text-white font-bold hover:opacity-90 transition inline-block"
+            >
+              Back to Registry
+            </a>
+          </div>
+        </div>
+      </RootDocument>
+    );
+  },
   component: RootComponent,
 });
+
 
 const STRUCTURED_DATA = {
   "@context": "https://schema.org",

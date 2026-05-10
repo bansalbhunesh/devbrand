@@ -185,20 +185,40 @@ export function computeGraphMetrics(graph: DependencyGraph): GraphMetrics {
 }
 
 
-export function analyzeDependencyGraph(enrichedPR: EnrichedPR): GraphMetrics {
-  // In a real scenario, we'd build the graph and compare pre/post.
-  // For this engine, we'll return metrics based on the current state.
-  return {
-    nodeMetrics: [],
-    globalMetrics: {
-      avgPathLength: 0,
-      diameter: 0,
-      density: 0,
-      modularity: 0,
-      avgClusteringCoefficient: 0,
-      connectedComponents: 0,
-      cycleCount: 0,
-    },
-    structuralChanges: [],
-  };
+export async function analyzeDependencyGraph(enrichedPR: EnrichedPR): Promise<GraphMetrics> {
+  const { owner, repo } = enrichedPR.metadata;
+  
+  try {
+    // 1. Build the full dependency graph for the repository
+    const graph = await buildImportGraph(owner, repo);
+    
+    // 2. Compute PageRank, HITS, and coupling metrics
+    const metrics = computeGraphMetrics(graph);
+    
+    // 3. Filter metrics to only include files relevant to this PR
+    const prFiles = new Set(enrichedPR.diffs.map(d => d.filename));
+    const prNodeMetrics = metrics.nodeMetrics.filter(m => prFiles.has(m.filename));
+    
+    return {
+      ...metrics,
+      nodeMetrics: prNodeMetrics,
+    };
+  } catch (error) {
+    console.error("[Layer 2] Graph analysis failed:", error);
+    // Fallback to empty metrics if graph construction fails
+    return {
+      nodeMetrics: [],
+      globalMetrics: {
+        avgPathLength: 0,
+        diameter: 0,
+        density: 0,
+        modularity: 0,
+        avgClusteringCoefficient: 0,
+        connectedComponents: 0,
+        cycleCount: 0,
+      },
+      structuralChanges: [],
+    };
+  }
 }
+

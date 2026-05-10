@@ -20,10 +20,11 @@ function WrappedPage() {
   });
 
   const { data: stats, isLoading } = useQuery({
-    queryKey: ["wrapped", session?.user?.id],
-    queryFn: () => getWrappedStats({ data: session?.user?.id! }),
-    enabled: !!session?.user?.id,
+    queryKey: ["wrapped", session?.id],
+    queryFn: () => getWrappedStats({ data: session?.id! }),
+    enabled: !!session?.id,
   });
+
 
   if (isLoading) {
     return (

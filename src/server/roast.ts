@@ -131,6 +131,12 @@ export const generateRoast = createServerFn({ method: "POST" })
     const cleaned = rawContent.replace(/^```json\n?/, "").replace(/\n?```$/, "");
     const output = RoastOutputSchema.parse(JSON.parse(cleaned));
 
+    const [inserted] = await db.insert(roasts).values({
+      userId: userId || null,
+      githubUsername: username,
+      roastData: output,
+    }).returning();
+
     if (userId) {
       await Promise.all([
         db
@@ -140,22 +146,11 @@ export const generateRoast = createServerFn({ method: "POST" })
         db.insert(userEvents).values({
           userId,
           eventType: "roast",
-          payload: { username, criticality: output.criticality },
-        }),
-        db.insert(roasts).values({
-          userId,
-          githubUsername: username,
-          roastData: output,
+          payload: { username, criticality: output.criticality, roastId: inserted.id },
         }),
       ]);
-    } else {
-      // Still persist anonymous roasts for viral sharing!
-      await db.insert(roasts).values({
-        githubUsername: username,
-        roastData: output,
-      });
     }
 
-
-    return output;
+    return { ...output, id: inserted.id };
   });
+

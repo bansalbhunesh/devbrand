@@ -2,9 +2,26 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  Github, Sparkles, ClipboardCopy, Check, Loader2,
-  GitPullRequest, Lock, Zap, ArrowUpRight, Settings,
-  ExternalLink, BarChart3, Eye, EyeOff, LogOut, Star, TrendingUp,
+  LayoutDashboard,
+  Sparkles,
+  GitPullRequest,
+  History,
+  Settings,
+  Zap,
+  TrendingUp,
+  ExternalLink,
+  ClipboardCopy,
+  Check,
+  Eye,
+  EyeOff,
+  LogOut,
+  Loader2,
+  ArrowUpRight,
+  ShieldCheck,
+  Flame,
+  Users,
+  Plus,
+  Lock,
 } from "lucide-react";
 import { getSession, logout, updateUserSettings } from "@/server/auth";
 import { transformPR, getUserOutputs, toggleOutputVisibility } from "@/server/transform";
@@ -130,11 +147,18 @@ function Dashboard() {
               </span>
             </div>
 
-            <img
-              src={user?.avatarUrl ?? ""}
-              className="h-7 w-7 rounded-full border border-border"
-              alt={user?.name ?? ""}
-            />
+            {user?.avatarUrl ? (
+              <img
+                src={user.avatarUrl}
+                className="h-7 w-7 rounded-full border border-border"
+                alt={user.name ?? ""}
+              />
+            ) : (
+              <div className="h-7 w-7 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-blue-500/30 grid place-items-center text-[10px] font-bold text-blue-500">
+                {user?.name?.slice(0, 1).toUpperCase() || "U"}
+              </div>
+            )}
+
             <button
               onClick={handleLogout}
               className="text-xs text-muted-foreground hover:text-foreground transition flex items-center gap-1.5"
@@ -146,19 +170,20 @@ function Dashboard() {
       </header>
 
       <div className="mx-auto max-w-6xl px-6 py-10">
-        <div className="flex items-center gap-1 border-b border-border mb-8">
-          {(["generate", "history", "settings"] as Tab[]).map((t) => (
+        <div className="flex items-center gap-1 border-b border-border mb-8 overflow-x-auto no-scrollbar">
+          {(["generate", "history", "teams", "settings"] as Tab[]).map((t) => (
+
             <button
               key={t}
               onClick={() => setTab(t)}
               className={cn(
-                "px-4 py-2.5 text-sm font-medium capitalize transition border-b-2 -mb-px",
+                "px-4 py-2.5 text-sm font-medium capitalize transition border-b-2 -mb-px whitespace-nowrap",
                 tab === t
                   ? "border-foreground text-foreground"
                   : "border-transparent text-muted-foreground hover:text-foreground"
               )}
             >
-              {t === "generate" ? "Generate" : t === "history" ? "History" : "Settings"}
+              {t}
             </button>
           ))}
         </div>
@@ -373,21 +398,65 @@ function Dashboard() {
                 <Loader2 className="h-4 w-4 animate-spin" /> Loading...
               </div>
             ) : outputs && outputs.length > 0 ? (
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {outputs.map((o) => (
                   <HistoryCard key={o.id} output={o} userId={user.id} onQueryInvalidate={() => qc.invalidateQueries({ queryKey: ["outputs", user.id] })} />
                 ))}
               </div>
             ) : (
-              <div className="py-20 text-center border-2 border-dashed border-border rounded-3xl">
-                <p className="text-muted-foreground">No generations yet.</p>
-                <button onClick={() => setTab("generate")} className="mt-4 text-sm text-blue-500 hover:underline">
-                  Generate your first impact story →
+              <div className="py-32 text-center border-2 border-dashed border-border rounded-3xl bg-muted/10">
+                <div className="h-12 w-12 rounded-2xl bg-muted grid place-items-center mx-auto mb-4">
+                  <ClipboardCopy className="h-6 w-6 text-muted-foreground/40" />
+                </div>
+                <h3 className="text-base font-semibold">No impact stories yet</h3>
+                <p className="text-sm text-muted-foreground mt-1 max-w-[240px] mx-auto">
+                  Paste a PR URL to generate your first verifiable impact report.
+                </p>
+                <button onClick={() => setTab("generate")} className="mt-6 px-4 py-2 rounded-lg bg-foreground text-background text-sm font-medium hover:opacity-90 transition">
+                  Get started
                 </button>
               </div>
             )}
           </div>
         )}
+
+        {tab === "teams" && (
+          <div className="space-y-8">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-semibold tracking-tight">Engineering Teams</h2>
+                <p className="text-sm text-muted-foreground">Manage your team analytics and collaborative impact scoring.</p>
+              </div>
+              <button className="px-4 py-2 rounded-lg bg-foreground text-background text-sm font-medium hover:opacity-90 transition flex items-center gap-2">
+                <Plus className="h-4 w-4" /> Create team
+              </button>
+            </div>
+
+            <div className="py-32 text-center border-2 border-dashed border-border rounded-3xl bg-muted/10">
+               <div className="h-12 w-12 rounded-2xl bg-muted grid place-items-center mx-auto mb-4">
+                <Users className="h-6 w-6 text-muted-foreground/40" />
+              </div>
+              <h3 className="text-base font-semibold">No teams found</h3>
+              <p className="text-sm text-muted-foreground mt-1 max-w-[280px] mx-auto">
+                Join a team to compare impact velocity and collaborate on architectural decisions.
+              </p>
+              {user.plan === "free" && (
+                <div className="mt-8 p-4 rounded-xl border border-blue-500/20 bg-blue-500/5 max-w-sm mx-auto">
+                   <p className="text-xs text-blue-500 font-bold mb-2 uppercase tracking-widest flex items-center justify-center gap-1.5">
+                    <Zap className="h-3 w-3" /> Team Pro Required
+                   </p>
+                   <p className="text-[11px] text-muted-foreground leading-relaxed">
+                    Unlock team-wide analytics, shared reputation history, and private Slack impact signals.
+                   </p>
+                   <button onClick={handleUpgrade} className="mt-4 text-xs font-bold text-blue-500 hover:underline">
+                    Upgrade account →
+                   </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
 
         {tab === "settings" && (
           <div className="max-w-lg space-y-10">

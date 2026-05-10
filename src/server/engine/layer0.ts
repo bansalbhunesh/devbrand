@@ -55,17 +55,37 @@ export async function fetchPRDiff(prUrl: string): Promise<{
     owner, repo, pull_number: prNumber, per_page: 300
   });
 
-  const diffs: FileDiff[] = files.map((file) => ({
-    filename: file.filename,
-    status: file.status as FileDiff['status'],
-    additions: file.additions,
-    deletions: file.deletions,
-    patch: file.patch || "",
-    previousFilename: file.previous_filename || undefined,
-  }));
+  const BINARY_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.gif', '.pdf', '.exe', '.bin', '.zip', '.tar', '.gz'];
+
+  const diffs: FileDiff[] = files
+    .filter(file => {
+      const isBinary = BINARY_EXTENSIONS.some(ext => file.filename.toLowerCase().endsWith(ext));
+      const hasPatch = !!file.patch;
+      return !isBinary && hasPatch;
+    })
+    .map((file) => ({
+      filename: file.filename,
+      status: file.status as FileDiff['status'],
+      additions: file.additions,
+      deletions: file.deletions,
+      patch: file.patch || "",
+      previousFilename: file.previous_filename || undefined,
+    }));
+
+  if (diffs.length === 0 && files.length > 0) {
+    // If we filtered out everything (e.g. only images), provide a minimal stub to avoid crashing
+    diffs.push({
+      filename: files[0].filename,
+      status: files[0].status as FileDiff['status'],
+      additions: files[0].additions,
+      deletions: files[0].deletions,
+      patch: "// [BINARY OR NON-TEXTUAL CHANGE]",
+    });
+  }
 
   return { metadata, diffs };
 }
+
 
 export function extractSymbols(code: string, filename: string): ASTSymbol[] {
   const symbols: ASTSymbol[] = [];
@@ -298,18 +318,73 @@ export async function ingestAndPreprocessPR(prUrl: string): Promise<EnrichedPR> 
     computeCodeOwnership(metadata, filePaths),
   ]);
 
-  const astDiffs: ASTDiff[] = diffs.map((diff) => ({
-    filename: diff.filename,
-    beforeSymbols: [],
-    afterSymbols: [],
-    addedSymbols: [],
-    removedSymbols: [],
-    changedSymbols: [],
-    addedImports: [],
-    removedImports: [],
-    semanticChange: diff.status === 'added' ? 'additive' :
-                    diff.status === 'deleted' ? 'breaking' : 'none',
+  // Identify top 10 files by churn for semantic analysis to save API quota
+  const topChurnFiles = [...diffs]
+    .sort((a, b) => (b.additions + b.deletions) - (a.additions + a.deletions))
+    .slice(0, 10)
+    .map(d => d.filename);
+
+  const astDiffs: ASTDiff[] = await Promise.all(diffs.map(async (diff) => {
+    try {
+      // Fetch "before" and "after" content for semantic analysis
+      // Note: We only do this for supported file types AND top churn files to save tokens/API calls
+      const isSupported = /\.(ts|tsx|js|jsx)$/.test(diff.filename);
+      const isTopChurn = topChurnFiles.includes(diff.filename);
+      
+      if (!isSupported || !isTopChurn) {
+
+        return {
+          filename: diff.filename,
+          beforeSymbols: [],
+          afterSymbols: [],
+          addedSymbols: [],
+          removedSymbols: [],
+          changedSymbols: [],
+          addedImports: [],
+          removedImports: [],
+          semanticChange: diff.status === 'added' ? 'additive' :
+                          diff.status === 'deleted' ? 'breaking' : 'none',
+        };
+      }
+
+      const [{ data: beforeData }, { data: afterData }] = await Promise.all([
+        octokit.rest.repos.getContent({
+          owner: metadata.owner,
+          repo: metadata.repo,
+          path: diff.previousFilename || diff.filename,
+          ref: metadata.baseSha,
+        }).catch(() => ({ data: { content: "" } })),
+        octokit.rest.repos.getContent({
+          owner: metadata.owner,
+          repo: metadata.repo,
+          path: diff.filename,
+          ref: metadata.headSha,
+        }).catch(() => ({ data: { content: "" } })),
+      ]);
+
+      const beforeCode = "content" in beforeData ? Buffer.from(beforeData.content, "base64").toString("utf-8") : "";
+      const afterCode = "content" in afterData ? Buffer.from(afterData.content, "base64").toString("utf-8") : "";
+
+      // Attach full content to the diff for later static analysis (Layer 1)
+      diff.fullContent = afterCode;
+
+      return generateASTDiff(diff.filename, beforeCode, afterCode);
+
+    } catch (err) {
+      return {
+        filename: diff.filename,
+        beforeSymbols: [],
+        afterSymbols: [],
+        addedSymbols: [],
+        removedSymbols: [],
+        changedSymbols: [],
+        addedImports: [],
+        removedImports: [],
+        semanticChange: 'none',
+      };
+    }
   }));
+
 
   return {
     metadata,

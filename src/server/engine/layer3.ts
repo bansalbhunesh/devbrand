@@ -33,8 +33,7 @@ export function computeImpactProfile(
   });
 
   const avgContribution = perFileContributions.reduce((s, c) => s + c.archScoreContribution, 0) / (perFileContributions.length || 1);
-  const archScore = Math.min(100, avgContribution * 1.5); // Boost for visibility
-
+  
   const dimensions: ImpactDimensions = {
     architecturalDisruption: (graphMetrics.structuralChanges?.length || 0) * 10,
     riskAndHotspot: staticMetrics.overallMetrics.maxChurnScore / 10,
@@ -44,6 +43,22 @@ export function computeImpactProfile(
     testSurfaceArea: enrichedPR.diffs.filter(d => d.filename.includes("test")).length * 5,
     complexityLoad: staticMetrics.overallMetrics.avgComplexity,
   };
+
+  // Weighted average for a more accurate ArchScore
+  const weights: Record<keyof ImpactDimensions, number> = {
+    architecturalDisruption: 0.25,
+    riskAndHotspot: 0.15,
+    crossCuttingIndex: 0.15,
+    knowledgeDispersion: 0.1,
+    couplingModification: 0.2,
+    testSurfaceArea: 0.05,
+    complexityLoad: 0.1,
+  };
+
+  const archScore = Math.min(100, Object.entries(dimensions).reduce((acc, [key, val]) => {
+    return acc + (Math.min(100, val) * (weights[key as keyof ImpactDimensions] || 0));
+  }, 0));
+
 
   const breakdown: ScoreBreakdown[] = Object.entries(dimensions).map(([dim, val]) => ({
     dimension: dim,

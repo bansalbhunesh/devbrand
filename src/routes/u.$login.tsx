@@ -50,7 +50,14 @@ function UserProfile() {
       <header className="border-b border-border bg-background/50 backdrop-blur-xl sticky top-0 z-50">
         <div className="mx-auto max-w-5xl px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <img src={user.avatarUrl ?? ""} className="h-10 w-10 rounded-xl border border-border shadow-sm" alt={user.name ?? ""} />
+            {user.avatarUrl ? (
+              <img src={user.avatarUrl} className="h-10 w-10 rounded-xl border border-border shadow-sm" alt={user.name ?? ""} />
+            ) : (
+              <div className="h-10 w-10 rounded-xl bg-blue-500/10 border border-blue-500/20 grid place-items-center text-xs font-bold text-blue-500">
+                {user.name?.slice(0, 1).toUpperCase()}
+              </div>
+            )}
+
             <div>
               <h1 className="text-sm font-bold tracking-tight">{user.name}</h1>
               <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">@{user.githubLogin} · {user.seniority} Engineer</p>

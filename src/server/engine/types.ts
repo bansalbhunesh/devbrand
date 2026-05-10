@@ -25,7 +25,9 @@ export interface FileDiff {
   deletions: number;
   patch: string;
   previousFilename?: string;
+  fullContent?: string; // New field for after-state content
 }
+
 
 export interface ASTSymbol {
   name: string;

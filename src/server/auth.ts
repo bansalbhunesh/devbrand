@@ -187,13 +187,16 @@ export const handleGithubCallback = createServerFn({ method: "POST" })
 export const updateUserSettings = createServerFn({ method: "POST" })
   .validator(
     z.object({
-      userId: z.string().uuid(),
       seniority: z.enum(["junior", "mid", "senior", "staff"]).optional(),
       tone: z.enum(["direct", "storytelling", "technical"]).optional(),
     })
   )
   .handler(async ({ data }) => {
-    const { userId, ...updates } = data;
+    const user = await getSession();
+    if (!user) throw new Error("UNAUTHORIZED");
+    const userId = user.id;
+    const updates = data;
+
     const filtered = Object.fromEntries(
       Object.entries(updates).filter(([, v]) => v !== undefined)
     );
@@ -202,8 +205,9 @@ export const updateUserSettings = createServerFn({ method: "POST" })
     return { success: true };
   });
 export const getUserPlan = createServerFn({ method: "GET" })
-  .validator(z.string().uuid())
-  .handler(async ({ data: userId }) => {
-    const user = await db.query.users.findFirst({ where: eq(users.id, userId) });
-    return user?.plan ?? "free";
+  .handler(async () => {
+    const user = await getSession();
+    if (!user) return "free";
+    return user.plan;
   });
+
