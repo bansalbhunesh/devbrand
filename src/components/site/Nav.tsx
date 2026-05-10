@@ -1,13 +1,16 @@
 "use client";
 
 import { Link } from "@tanstack/react-router";
-import { Github, Menu } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { Github, Menu, LayoutDashboard } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { getSession } from "@/server/auth";
 
 export function Nav() {
   const [scrolled, setScrolled] = useState(false);
+  const { data: session } = useQuery({ queryKey: ["session"], queryFn: () => getSession() });
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -26,8 +29,8 @@ export function Nav() {
     >
       <div className="mx-auto max-w-7xl px-6 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2.5 group">
-          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue to-purple grid place-items-center ring-soft group-hover:scale-105 transition">
-            <span className="text-[12px] font-bold text-background">DB</span>
+          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 grid place-items-center ring-soft group-hover:scale-105 transition">
+            <span className="text-[12px] font-bold text-white">DB</span>
           </div>
           <span className="font-semibold tracking-tight text-lg">DevBrand</span>
         </Link>
@@ -40,18 +43,29 @@ export function Nav() {
         </div>
 
         <div className="flex items-center gap-3">
-          <Link 
-            to="/" 
-            className="hidden sm:inline-flex items-center gap-2 text-sm font-medium text-foreground hover:opacity-80 transition"
-          >
-            Sign in
-          </Link>
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-foreground text-background text-sm font-medium ring-soft hover:opacity-90 transition"
-          >
-            <Github className="h-4 w-4" /> Start for free
-          </Link>
+          {session ? (
+            <Link 
+              to="/dashboard" 
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-foreground text-background text-sm font-medium hover:opacity-90 transition shadow-lg shadow-foreground/5"
+            >
+              <LayoutDashboard className="h-4 w-4" /> Dashboard
+            </Link>
+          ) : (
+            <>
+              <Link 
+                to="/dashboard" 
+                className="hidden sm:inline-flex items-center gap-2 text-sm font-medium text-foreground hover:opacity-80 transition"
+              >
+                Sign in
+              </Link>
+              <Link
+                to="/dashboard"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-foreground text-background text-sm font-medium hover:opacity-90 transition"
+              >
+                <Github className="h-4 w-4" /> Start for free
+              </Link>
+            </>
+          )}
 
           <Sheet>
             <SheetTrigger asChild>
@@ -61,12 +75,16 @@ export function Nav() {
             </SheetTrigger>
             <SheetContent side="right" className="bg-background/95 backdrop-blur-xl border-border">
               <div className="flex flex-col gap-6 mt-12">
-                <Link to="/" className="text-lg font-medium hover:text-blue transition">Intelligence</Link>
-                <Link to="/" className="text-lg font-medium hover:text-blue transition">Roast</Link>
-                <Link to="/" className="text-lg font-medium hover:text-blue transition">Wrapped</Link>
-                <Link to="/" className="text-lg font-medium hover:text-blue transition">Pricing</Link>
+                <Link to="/" className="text-lg font-medium hover:text-blue-500 transition">Intelligence</Link>
+                <Link to="/" className="text-lg font-medium hover:text-blue-500 transition">Roast</Link>
+                <Link to="/" className="text-lg font-medium hover:text-blue-500 transition">Wrapped</Link>
+                <Link to="/" className="text-lg font-medium hover:text-blue-500 transition">Pricing</Link>
                 <hr className="border-border/50" />
-                <Link to="/" className="text-lg font-medium">Sign in</Link>
+                {session ? (
+                  <Link to="/dashboard" className="text-lg font-medium flex items-center gap-2 text-blue-500"><LayoutDashboard className="h-5 w-5" /> Dashboard</Link>
+                ) : (
+                  <Link to="/dashboard" className="text-lg font-medium">Sign in</Link>
+                )}
               </div>
             </SheetContent>
           </Sheet>

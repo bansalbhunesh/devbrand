@@ -1,48 +1,78 @@
 "use client";
 
-import { Github } from "lucide-react";
+import { Github, Twitter, Linkedin } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 
 export function Footer() {
   return (
-    <footer className="relative border-t border-border">
-      <div className="mx-auto max-w-7xl px-6 py-14 grid md:grid-cols-[1.2fr_1fr_1fr_1fr] gap-10">
-        <div>
-          <div className="flex items-center gap-2">
-            <div className="h-7 w-7 rounded-md bg-gradient-to-br from-blue to-purple grid place-items-center ring-soft">
-              <span className="text-[11px] font-bold text-background">DB</span>
+    <footer className="relative border-t border-border bg-background pt-20">
+      <div className="mx-auto max-w-7xl px-6 pb-20">
+        <div className="grid md:grid-cols-[1.5fr_1fr_1fr_1fr] gap-16">
+          <div>
+            <div className="flex items-center gap-2.5 mb-6">
+              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 grid place-items-center shadow-lg shadow-blue-500/20">
+                <span className="text-[12px] font-bold text-white">DB</span>
+              </div>
+              <span className="font-bold text-lg tracking-tight">DevBrand</span>
             </div>
-            <span className="font-semibold">DevBrand</span>
+            <p className="text-sm text-muted-foreground leading-relaxed max-w-xs mb-8">
+              The reputation layer for modern software engineers. We turn complex technical artifacts into 
+              verifiable career leverage.
+            </p>
+            <div className="flex items-center gap-5 text-muted-foreground">
+              <a href="https://github.com/devbrand" className="hover:text-foreground transition-colors"><Github className="h-4 w-4" /></a>
+              <a href="https://twitter.com/devbrand" className="hover:text-foreground transition-colors"><Twitter className="h-4 w-4" /></a>
+              <a href="https://linkedin.com/company/devbrand" className="hover:text-foreground transition-colors"><Linkedin className="h-4 w-4" /></a>
+            </div>
           </div>
-          <p className="mt-4 text-sm text-muted-foreground max-w-xs">
-            The operating system for developer reputation. Make your invisible work visible.
-          </p>
-          <div className="mt-5 flex items-center gap-3 text-muted-foreground">
-            <a href="#" className="hover:text-foreground transition"><Github className="h-4 w-4" /></a>
-          </div>
-        </div>
 
-        <FooterCol title="Product" links={["Demo", "Wrapped", "Pricing", "Roast"]} />
-        <FooterCol title="Resources" links={["Docs", "Changelog", "Privacy", "Terms"]} />
-        <FooterCol title="Company" links={["About", "Contact", "Brand", "Status"]} />
+          <FooterCol title="Product" links={[
+            { label: "Intelligence", to: "/#intelligence" },
+            { label: "GitHub Roast", to: "/#roast" },
+            { label: "Pricing", to: "/#pricing" },
+            { label: "Wrapped 2025", to: "/dashboard" }
+          ]} />
+          
+          <FooterCol title="Developers" links={[
+            { label: "Documentation", to: "/" },
+            { label: "API Reference", to: "/" },
+            { label: "System Status", to: "/" },
+            { label: "Open Source", to: "/" }
+          ]} />
+          
+          <FooterCol title="Legal" links={[
+            { label: "Privacy Policy", to: "/" },
+            { label: "Terms of Service", to: "/" },
+            { label: "Cookie Policy", to: "/" },
+            { label: "Security", to: "/" }
+          ]} />
+        </div>
       </div>
 
       <div className="border-t border-border">
-        <div className="mx-auto max-w-7xl px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted-foreground">
-          <div>© {new Date().getFullYear()} DevBrand. All rights reserved.</div>
-          <div className="font-mono">v0.1 · built for engineers</div>
+        <div className="mx-auto max-w-7xl px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">
+          <div>© {new Date().getFullYear()} DevBrand Intelligence Corp.</div>
+          <div className="flex items-center gap-6">
+            <span className="flex items-center gap-1.5"><span className="h-1 w-1 rounded-full bg-green-500" /> All systems operational</span>
+            <span className="font-mono lowercase tracking-normal opacity-50">v1.0.4-stable</span>
+          </div>
         </div>
       </div>
     </footer>
   );
 }
 
-function FooterCol({ title, links }: { title: string; links: string[] }) {
+function FooterCol({ title, links }: { title: string; links: { label: string; to: string }[] }) {
   return (
     <div>
-      <div className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">{title}</div>
-      <ul className="mt-4 space-y-2.5 text-sm">
-        {links.map((l) => (
-          <li key={l}><a href="#" className="text-foreground/80 hover:text-foreground transition">{l}</a></li>
+      <div className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground mb-8">{title}</div>
+      <ul className="space-y-4">
+        {links.map((l, i) => (
+          <li key={i}>
+            <Link to={l.to as any} className="text-sm font-medium text-foreground/60 hover:text-blue-500 transition-colors">
+              {l.label}
+            </Link>
+          </li>
         ))}
       </ul>
     </div>

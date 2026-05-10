@@ -1,40 +1,90 @@
 "use client";
 
-import { Activity, GitBranch, Layers, LineChart, Network, Wrench } from "lucide-react";
-import { SectionLabel, SectionTitle } from "./DemoTransform";
+import { Sparkles, Cpu, Shield, Zap, GitBranch, Terminal } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-const cards = [
-  { icon: Activity, title: "Contribution rhythm", body: "When you ship, how steadily, and where your focus actually lives across repos." },
-  { icon: Layers, title: "Architecture footprint", body: "What surfaces you touch most: APIs, infra, data, UI — mapped from real diffs." },
-  { icon: Network, title: "Collaboration graph", body: "Who you review with, who reviews you, and where you're a quiet force multiplier." },
-  { icon: Wrench, title: "Debug & maintenance", body: "Reliability work, refactors, and migrations — the load-bearing work nobody sees." },
-  { icon: GitBranch, title: "Strongest repositories", body: "Where your impact compounds, ranked by signal — not just commit count." },
-  { icon: LineChart, title: "Recruiter-friendly summary", body: "A clear, evidence-backed paragraph anyone outside engineering can read." },
+const capabilities = [
+  {
+    icon: <Cpu className="h-5 w-5 text-purple-500" />,
+    title: "Stack Detection",
+    desc: "Automatically identifies 40+ languages and frameworks including distributed system patterns.",
+  },
+  {
+    icon: <Shield className="h-5 w-5 text-blue-500" />,
+    title: "Evidence Citations",
+    desc: "Every AI-generated claim is backed by a verifiable file path, line number, and commit SHA.",
+  },
+  {
+    icon: <GitBranch className="h-5 w-5 text-green-500" />,
+    title: "Contextual Awareness",
+    desc: "Understands repository structure to distinguish between minor tweaks and core logic shifts.",
+  },
 ];
 
 export function Intelligence() {
   return (
-    <section id="intelligence" className="relative py-28 border-t border-border">
+    <section id="intelligence" className="py-32 border-t border-border bg-muted/10 relative">
       <div className="mx-auto max-w-7xl px-6">
-        <SectionLabel>GitHub intelligence</SectionLabel>
-        <SectionTitle>Your engineering footprint, finally legible.</SectionTitle>
-        <p className="mt-5 max-w-2xl text-muted-foreground">
-          Not a vanity dashboard. A clear read of how you work, what you ship, and the systems you actually move.
-        </p>
+        <div className="text-center mb-20">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-[10px] font-bold text-purple-500 uppercase tracking-widest mb-6">
+            Neural Engine
+          </div>
+          <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-8">Intelligence without the hype.</h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto text-lg leading-relaxed">
+            We don't use AI to write code. We use it to explain the value of the code you already wrote. 
+            DevBrand's engine is calibrated for engineering precision, not marketing fluff.
+          </p>
+        </div>
 
-        <div className="mt-14 grid sm:grid-cols-2 lg:grid-cols-3 gap-px rounded-2xl overflow-hidden border border-border bg-border">
-          {cards.map(({ icon: Icon, title, body }) => (
-            <div key={title} className="bg-surface/70 p-7 hover:bg-surface transition group">
-              <div className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-lg grid place-items-center bg-background border border-border ring-soft">
-                  <Icon className="h-4 w-4 text-blue" />
-                </div>
-                <h3 className="font-medium tracking-tight">{title}</h3>
+        <div className="grid md:grid-cols-3 gap-8">
+          {capabilities.map((cap, i) => (
+            <div key={i} className="group p-8 rounded-3xl border border-border bg-background hover:border-purple-500/30 transition-all hover:shadow-2xl hover:shadow-purple-500/5">
+              <div className="mb-6 p-3 rounded-2xl bg-muted border border-border w-fit group-hover:bg-purple-500/5 group-hover:border-purple-500/20 transition-colors">
+                {cap.icon}
               </div>
-              <p className="mt-4 text-sm text-muted-foreground leading-6">{body}</p>
-              <div className="mt-6 h-px divider-soft opacity-0 group-hover:opacity-100 transition" />
+              <h3 className="text-lg font-bold mb-3">{cap.title}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">{cap.desc}</p>
             </div>
           ))}
+        </div>
+
+        <div className="mt-20 rounded-3xl border border-border bg-background overflow-hidden shadow-2xl">
+          <div className="grid md:grid-cols-[1fr_1.5fr]">
+            <div className="p-10 bg-purple-500/5 border-r border-border">
+              <div className="text-[10px] font-bold uppercase tracking-widest text-purple-500 mb-6">Prompt Architecture</div>
+              <p className="text-sm text-muted-foreground leading-relaxed mb-8">
+                Our system prompts are strictly tuned to avoid hype cycles. We enforce a "no-emoji, no-enthusiasm" 
+                policy, focusing purely on architectural impact and quantifiable outcomes.
+              </p>
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 text-xs font-mono text-foreground/70">
+                  <Terminal className="h-3.5 w-3.5 text-purple-500" /> Grounded in diffs
+                </div>
+                <div className="flex items-center gap-3 text-xs font-mono text-foreground/70">
+                  <Terminal className="h-3.5 w-3.5 text-purple-500" /> Evidence-first logic
+                </div>
+                <div className="flex items-center gap-3 text-xs font-mono text-foreground/70">
+                  <Terminal className="h-3.5 w-3.5 text-purple-500" /> Zero hallucination
+                </div>
+              </div>
+            </div>
+            <div className="p-2 md:p-8 bg-muted/20">
+              <div className="rounded-2xl border border-border bg-background p-6 font-mono text-[11px] leading-7 shadow-inner">
+                <div className="text-purple-500/50 mb-4 tracking-widest uppercase">System Prompt V1.2</div>
+                <div className="space-y-2 text-muted-foreground">
+                  <p><span className="text-purple-500">SET</span> analyst_mode = PRECISE</p>
+                  <p><span className="text-purple-500">ENFORCE</span> citation_model = TRUE</p>
+                  <p><span className="text-purple-500">FORBID</span> buzzwords = ["game-changer", "revolutionary", "excited"]</p>
+                  <p><span className="text-purple-500">PRIORITIZE</span> structural_impact_over_features = TRUE</p>
+                  <div className="h-px bg-border my-6" />
+                  <p className="text-foreground/60 italic">
+                    "Identify the core problem solved. If a refactor reduces complexity but adds zero features, 
+                    weight it 2x higher than a feature-layer update."
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>

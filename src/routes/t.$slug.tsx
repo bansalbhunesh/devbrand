@@ -1,20 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { createServerFn } from "@tanstack/react-start";
-import { db } from "@/server/db";
-import { outputs } from "@/server/schema";
-import { eq } from "drizzle-orm";
+import { getOutputBySlug } from "@/server/outputs";
 import { GitCommit, Sparkles, ArrowRight, Link2, Check } from "lucide-react";
 import { useState } from "react";
-
-const getOutputBySlug = createServerFn({ method: "GET" })
-  .validator((slug: string) => slug)
-  .handler(async ({ data: slug }) => {
-    // For now we assume slug is the first part of the UUID
-    // In production we would have a dedicated slug column
-    const all = await db.query.outputs.findMany();
-    const match = all.find(o => o.id.startsWith(slug));
-    return match ?? null;
-  });
 
 export const Route = createFileRoute("/t/$slug")({
   component: OutputPage,
@@ -42,77 +29,91 @@ function OutputPage() {
   const output = Route.useLoaderData();
   const [copied, setCopied] = useState(false);
 
-  if (!output) return <div className="min-h-screen grid place-items-center bg-background text-destructive">Impact not found.</div>;
+  if (!output) return <div className="min-h-screen grid place-items-center bg-background text-destructive font-mono">Impact not found.</div>;
 
   return (
-    <div className="min-h-screen bg-background py-20 px-6">
+    <div className="min-h-screen bg-background py-20 px-6 text-foreground">
       <div className="mx-auto max-w-3xl">
         <div className="flex items-center gap-3 mb-12">
-          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue to-purple grid place-items-center ring-soft">
-            <span className="text-[14px] font-bold text-background">DB</span>
+          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 grid place-items-center">
+            <span className="text-[14px] font-bold text-white">DB</span>
           </div>
           <div>
             <h1 className="text-xl font-bold tracking-tight">DevBrand Transform</h1>
-            <p className="text-xs text-muted-foreground uppercase tracking-widest">Evidence-Backed Engineering Impact</p>
+            <p className="text-xs text-muted-foreground uppercase tracking-widest font-medium">Evidence-Backed Engineering Impact</p>
           </div>
         </div>
 
-        <div className="rounded-2xl border border-border bg-surface/50 overflow-hidden">
+        <div className="rounded-2xl border border-border bg-muted/20 overflow-hidden backdrop-blur-sm">
           <div className="p-8 border-b border-border bg-background/40">
             <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">
               <span>Original Change</span>
-              <span className="font-mono normal-case tracking-normal text-[12px]">{output.prTitle}</span>
+              <span className="font-mono normal-case tracking-normal text-[12px] opacity-60">{output.prTitle}</span>
             </div>
-            <p className="font-mono text-lg text-foreground/90">Fixed the core issue and optimized performance.</p>
+            <p className="font-mono text-lg text-foreground/90 leading-relaxed italic">
+              "{output.prCommitMessage || 'Refactored code and improved system performance.'}"
+            </p>
             <div className="mt-6 flex items-center gap-2 text-xs font-mono text-muted-foreground">
-              <GitCommit className="h-4 w-4" /> {output.id.slice(0, 7)}
+              <GitCommit className="h-4 w-4" /> {output.slug}
             </div>
           </div>
 
           <div className="p-8 relative">
-            <div className="flex items-center justify-between mb-6">
-              <div className="text-[11px] uppercase tracking-[0.25em] text-blue font-bold">The Impact Story</div>
-              <div className="flex items-center gap-3">
-                <span className="text-[11px] font-mono font-bold text-muted-foreground border border-border rounded-md px-2 py-1">{output.category}</span>
-                <span className="text-[11px] font-mono font-bold text-blue border border-blue/30 bg-blue/10 rounded-md px-2 py-1">{output.complexityLevel}</span>
+            <div className="flex items-center justify-between mb-8">
+              <div className="text-[11px] uppercase tracking-[0.25em] text-blue-500 font-bold">The Impact Story</div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-mono font-bold text-muted-foreground border border-border rounded-md px-2 py-0.5">{output.category}</span>
+                <span className="text-[10px] font-mono font-bold text-blue-500 border border-blue-500/30 bg-blue-500/10 rounded-md px-2 py-0.5">{output.complexityLevel}</span>
               </div>
             </div>
 
-            <p className="text-xl leading-relaxed text-pretty font-medium mb-10">
+            <p className="text-xl leading-relaxed text-pretty font-medium mb-10 text-foreground/90">
               {output.linkedinPost1}
             </p>
 
-            <div className="rounded-xl border border-border bg-background/40 p-5">
-              <div className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground mb-4">Verifiable Evidence</div>
-              <ol className="space-y-3 text-xs font-mono text-muted-foreground">
-                <li className="flex items-center gap-3">
-                  <span className="text-blue font-bold">[1]</span>
-                  <span className="text-foreground/80">Impact Score: {output.impactScore}/100</span>
+            <div className="rounded-xl border border-border bg-background/40 p-5 space-y-4">
+              <div className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground font-medium">Verifiable Evidence</div>
+              <ol className="space-y-4 text-xs font-mono">
+                <li className="flex items-start gap-3">
+                  <span className="text-blue-500 font-bold mt-0.5">[1]</span>
+                  <div>
+                    <p className="text-foreground font-semibold">Impact Score: {output.impactScore}/100</p>
+                    <p className="text-muted-foreground text-[10px] mt-0.5">Weighted by architectural depth and fan-in complexity.</p>
+                  </div>
                 </li>
-                {output.prSignals?.map((signal, i) => (
-                  <li key={i} className="flex items-center gap-3">
-                    <span className="text-blue font-bold">[{i + 2}]</span>
-                    <span className="text-foreground/80">{signal} verified via diff analysis</span>
+                {output.citations && (output.citations as any[]).map((cit, i) => (
+                  <li key={i} className="flex items-start gap-3">
+                    <span className="text-blue-500 font-bold mt-0.5">[{i + 2}]</span>
+                    <div>
+                      <p className="text-foreground">{cit.claim}</p>
+                      <p className="text-muted-foreground text-[10px] mt-0.5 font-mono">{cit.ref} · {cit.sha.slice(0, 7)}</p>
+                    </div>
                   </li>
                 ))}
               </ol>
             </div>
 
             <div className="mt-12 pt-8 border-t border-border flex flex-wrap gap-4 items-center justify-between">
-              <div className="flex gap-4">
-                <button
-                  onClick={() => { navigator.clipboard?.writeText(window.location.href); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-foreground text-background text-sm font-bold hover:opacity-90 transition shadow-lg shadow-foreground/10"
-                >
-                  {copied ? <Check className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
-                  {copied ? "Copied Link" : "Copy Share Link"}
-                </button>
-              </div>
-              <div className="text-xs font-mono text-muted-foreground">
-                Generated by DevBrand Intelligence v1.0
+              <button
+                onClick={() => { navigator.clipboard?.writeText(window.location.href); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-foreground text-background text-sm font-bold hover:opacity-90 transition shadow-lg shadow-foreground/5"
+              >
+                {copied ? <Check className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
+                {copied ? "Copied Link" : "Share Impact"}
+              </button>
+              
+              <div className="flex flex-col items-end gap-1">
+                <div className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">Powered by</div>
+                <div className="font-bold text-sm tracking-tighter">DevBrand <span className="text-blue-500">AI</span></div>
               </div>
             </div>
           </div>
+        </div>
+        
+        <div className="mt-12 text-center">
+          <p className="text-xs text-muted-foreground">
+            Want to transform your own PRs? <a href="/" className="text-blue-500 hover:underline font-medium">Join the waitlist →</a>
+          </p>
         </div>
       </div>
     </div>
