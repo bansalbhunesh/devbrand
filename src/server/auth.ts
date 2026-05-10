@@ -158,6 +158,7 @@ export const handleGithubCallback = createServerFn({ method: "POST" })
         name: ghUser.name ?? ghUser.login,
         avatarUrl: ghUser.avatar_url,
         email: ghUser.email,
+        referralCode: `${ghUser.login}-${Math.random().toString(36).substring(2, 8)}`,
       })
       .onConflictDoUpdate({
         target: users.githubId,

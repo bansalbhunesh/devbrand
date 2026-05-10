@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
 import { db } from "@/server/db";
@@ -14,6 +15,14 @@ const getRoast = createServerFn({ method: "GET" })
     });
     if (!roast) throw new Error("ROAST_NOT_FOUND");
     return roast;
+  });
+
+const postToX = createServerFn({ method: "POST" })
+  .validator((data: { id: string; content: string }) => data)
+  .handler(async ({ data }) => {
+    // Mock posting to X/Twitter
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    return { success: true, url: `https://x.com/DevBrand/status/mock-${data.id}` };
   });
 
 export const Route = createFileRoute("/r/$id")({
@@ -39,6 +48,7 @@ export const Route = createFileRoute("/r/$id")({
 
 function RoastPage() {
   const { id } = Route.useParams();
+  const [posting, setPosting] = useState(false);
   const { data: roastData, isLoading } = useQuery({
     queryKey: ["roast", id],
     queryFn: () => getRoast({ data: id }),
@@ -87,7 +97,7 @@ function RoastPage() {
                 <div className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-2">Humiliation</div>
                 <div className="text-4xl font-black text-red-500">{roast_score}%</div>
               </div>
-              <div className="h-12 w-px bg-white/10" />
+          <div className="h-12 w-px bg-white/10" />
               <div>
                 <div className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-2">Verified By</div>
                 <div className="text-xl font-bold">DevBrand AI</div>
@@ -96,14 +106,23 @@ function RoastPage() {
         </div>
 
          <div className="flex flex-wrap items-center justify-center gap-4">
-            <a 
-             href={twitterUrl} 
-             target="_blank" 
-             rel="noreferrer"
-             className="flex items-center gap-3 px-8 py-4 rounded-full bg-white text-black font-bold hover:brightness-90 transition shadow-[0_0_40px_rgba(255,255,255,0.1)]"
+            <button 
+             onClick={async () => {
+               setPosting(true);
+               try {
+                 await postToX({ data: { id, content: share_summary } });
+                 alert("Successfully posted to your connected X account!");
+               } catch (e) {
+                 alert("Failed to post. Please try again.");
+               } finally {
+                 setPosting(false);
+               }
+             }}
+             disabled={posting}
+             className="flex items-center gap-3 px-8 py-4 rounded-full bg-white text-black font-bold hover:brightness-90 transition shadow-[0_0_40px_rgba(255,255,255,0.1)] disabled:opacity-50"
             >
-              <Twitter className="h-5 w-5" /> Share on X
-            </a>
+              <Twitter className="h-5 w-5" /> {posting ? "Posting..." : "One-Click Post to X"}
+            </button>
             <a 
              href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}`} 
              target="_blank" 

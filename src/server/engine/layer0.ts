@@ -1,4 +1,9 @@
 import { Octokit } from "octokit";
+import { parse } from "@babel/parser";
+import _traverse from "@babel/traverse";
+
+// @babel/traverse handles default exports differently depending on the environment
+const traverse = typeof _traverse === 'function' ? _traverse : (_traverse as any).default;
 import type {
   PRMetadata,
   FileDiff,
@@ -89,37 +94,92 @@ export async function fetchPRDiff(prUrl: string): Promise<{
 
 export function extractSymbols(code: string, filename: string): ASTSymbol[] {
   const symbols: ASTSymbol[] = [];
-  const patterns = [
-    /export\s+(?:async\s+)?function\s+(\w+)/g,
-    /export\s+(?:async\s+)?(?:const|let|var)\s+(\w+)/g,
-    /export\s+class\s+(\w+)/g,
-    /export\s+interface\s+(\w+)/g,
-    /export\s+type\s+(\w+)/g,
-    /export\s+default/g,
-  ];
+  if (!code || !code.trim()) return symbols;
 
-  const kindMap: Record<string, ASTSymbol['kind']> = {
-    function: "function",
-    const: "const",
-    class: "class",
-    interface: "interface",
-    type: "type",
-  };
+  try {
+    const ast = parse(code, {
+      sourceType: "module",
+      plugins: ["typescript", "jsx", "decorators-legacy"],
+      errorRecovery: true,
+    });
 
-  for (const pattern of patterns) {
-    pattern.lastIndex = 0;
-    let match;
-    while ((match = pattern.exec(code)) !== null) {
-      const name = match[1] || "default";
-      const startLine = code.substring(0, match.index).split("\n").length;
-      symbols.push({
-        name,
-        kind: kindMap[pattern.source.match(/function|const|class|interface|type/)?.[0] || "variable"] || "variable",
-        startLine,
-        endLine: startLine + 10, 
-        isExported: true,
-      });
-    }
+    traverse(ast, {
+      ExportNamedDeclaration(path: any) {
+        if (path.node.declaration) {
+          const dec = path.node.declaration;
+          if (dec.type === "FunctionDeclaration" && dec.id) {
+            symbols.push({
+              name: dec.id.name,
+              kind: "function",
+              startLine: dec.loc?.start.line || 1,
+              endLine: dec.loc?.end.line || 1,
+              isExported: true,
+            });
+          } else if (dec.type === "ClassDeclaration" && dec.id) {
+            symbols.push({
+              name: dec.id.name,
+              kind: "class",
+              startLine: dec.loc?.start.line || 1,
+              endLine: dec.loc?.end.line || 1,
+              isExported: true,
+            });
+          } else if (dec.type === "VariableDeclaration") {
+            const kind = dec.kind === "const" ? "const" : "variable";
+            for (const d of dec.declarations) {
+              if (d.id.type === "Identifier") {
+                symbols.push({
+                  name: d.id.name,
+                  kind,
+                  startLine: d.loc?.start.line || 1,
+                  endLine: d.loc?.end.line || 1,
+                  isExported: true,
+                });
+              }
+            }
+          } else if (dec.type === "TSTypeAliasDeclaration" && dec.id) {
+            symbols.push({
+              name: dec.id.name,
+              kind: "type",
+              startLine: dec.loc?.start.line || 1,
+              endLine: dec.loc?.end.line || 1,
+              isExported: true,
+            });
+          } else if (dec.type === "TSInterfaceDeclaration" && dec.id) {
+            symbols.push({
+              name: dec.id.name,
+              kind: "interface",
+              startLine: dec.loc?.start.line || 1,
+              endLine: dec.loc?.end.line || 1,
+              isExported: true,
+            });
+          }
+        }
+      },
+      ExportDefaultDeclaration(path: any) {
+        let name = "default";
+        let kind: ASTSymbol['kind'] = "function";
+        
+        if (path.node.declaration.type === "FunctionDeclaration" && path.node.declaration.id) {
+            name = path.node.declaration.id.name;
+        } else if (path.node.declaration.type === "ClassDeclaration" && path.node.declaration.id) {
+            name = path.node.declaration.id.name;
+            kind = "class";
+        } else if (path.node.declaration.type === "Identifier") {
+            name = path.node.declaration.name;
+            kind = "variable";
+        }
+
+        symbols.push({
+          name,
+          kind,
+          startLine: path.node.loc?.start.line || 1,
+          endLine: path.node.loc?.end.line || 1,
+          isExported: true,
+        });
+      }
+    });
+  } catch (error) {
+    console.warn(`[Layer 0] Failed to parse AST for ${filename}`);
   }
 
   return symbols;

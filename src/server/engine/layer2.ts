@@ -189,6 +189,122 @@ export function computeGraphMetrics(graph: DependencyGraph): GraphMetrics {
     hub = hub.map(v => v / hubNorm);
   }
 
+  // 3. Compute True Betweenness Centrality (Brandes' Algorithm)
+  const cb = new Array(n).fill(0);
+  const adj: number[][] = Array.from({ length: n }, () => []);
+  for (const edge of edges) {
+    const s = nodes.findIndex(node => node.id === edge.source);
+    const t = nodes.findIndex(node => node.id === edge.target);
+    if (s !== -1 && t !== -1) adj[s].push(t);
+  }
+
+  for (let s = 0; s < n; s++) {
+    const S: number[] = [];
+    const P: number[][] = Array.from({ length: n }, () => []);
+    const sigma = new Array(n).fill(0);
+    sigma[s] = 1;
+    const d = new Array(n).fill(-1);
+    d[s] = 0;
+    const Q: number[] = [s];
+
+    while (Q.length > 0) {
+      const v = Q.shift()!;
+      S.push(v);
+      for (const w of adj[v]) {
+        if (d[w] < 0) {
+          Q.push(w);
+          d[w] = d[v] + 1;
+        }
+        if (d[w] === d[v] + 1) {
+          sigma[w] += sigma[v];
+          P[w].push(v);
+        }
+      }
+    }
+
+    const delta = new Array(n).fill(0);
+    while (S.length > 0) {
+      const w = S.pop()!;
+      for (const v of P[w]) {
+        delta[v] += (sigma[v] / sigma[w]) * (1 + delta[w]);
+      }
+      if (w !== s) cb[w] += delta[w];
+    }
+  }
+  const maxCb = Math.max(...cb, 1);
+  const normalizedCb = cb.map(v => (v / maxCb) * 100);
+
+  // 4. Compute Clustering Coefficient
+  const cc = new Array(n).fill(0);
+  const undirAdj: Set<number>[] = Array.from({ length: n }, () => new Set());
+  for (const edge of edges) {
+    const s = nodes.findIndex(node => node.id === edge.source);
+    const t = nodes.findIndex(node => node.id === edge.target);
+    if (s !== -1 && t !== -1 && s !== t) {
+      undirAdj[s].add(t);
+      undirAdj[t].add(s);
+    }
+  }
+
+  for (let i = 0; i < n; i++) {
+    const neighbors = Array.from(undirAdj[i]);
+    const k = neighbors.length;
+    if (k < 2) continue;
+    let links = 0;
+    for (let u = 0; u < k; u++) {
+      for (let v = u + 1; v < k; v++) {
+        if (undirAdj[neighbors[u]].has(neighbors[v])) links++;
+      }
+    }
+    cc[i] = (2.0 * links) / (k * (k - 1));
+  }
+
+  // 5. Community Detection (Label Propagation Algorithm)
+  const communities = new Array(n).fill(0).map((_, i) => i);
+  let changed = true;
+  let iters = 0;
+  while (changed && iters < 10) {
+    changed = false;
+    const order = new Array(n).fill(0).map((_, i) => i).sort(() => Math.random() - 0.5);
+    for (const i of order) {
+      const neighborLabels = new Map<number, number>();
+      for (const t of undirAdj[i]) {
+        const label = communities[t];
+        neighborLabels.set(label, (neighborLabels.get(label) || 0) + 1);
+      }
+      if (neighborLabels.size === 0) continue;
+      let maxCount = 0;
+      let bestLabel = communities[i];
+      for (const [label, count] of neighborLabels.entries()) {
+        if (count > maxCount) {
+          maxCount = count;
+          bestLabel = label;
+        }
+      }
+      if (communities[i] !== bestLabel) {
+        communities[i] = bestLabel;
+        changed = true;
+      }
+    }
+    iters++;
+  }
+
+  let m = 0;
+  for (const list of undirAdj) m += list.size;
+  m = m / 2;
+  let q = 0;
+  if (m > 0) {
+    for (let i = 0; i < n; i++) {
+      for (let j = 0; j < n; j++) {
+        if (communities[i] === communities[j]) {
+          const a = undirAdj[i].has(j) ? 1 : 0;
+          q += (a - (undirAdj[i].size * undirAdj[j].size) / (2 * m));
+        }
+      }
+    }
+    q = q / (2 * m);
+  }
+
   const nodeMetrics: NodeGraphMetrics[] = nodes.map((node, i) => {
     const inDegree = edges.filter((e) => e.target === node.id).length;
     const outDegree = edges.filter((e) => e.source === node.id).length;
@@ -196,18 +312,19 @@ export function computeGraphMetrics(graph: DependencyGraph): GraphMetrics {
     // PageRank normalized (0-1 range usually, but we want a readable score component)
     const prScore = Math.min(100, pr[i] * n * 20); 
     const hubAuthScore = (hub[i] + auth[i]) * 50;
+    // We keep Force Multiplier logic for ArchScore integration but now expose true betweenness
     const forceMultiplier = Math.min(100, (prScore * 0.6) + (hubAuthScore * 0.4));
 
     return {
       filename: node.id,
       pageRank: pr[i],
-      betweennessCentrality: forceMultiplier, // Using this for Force Multiplier
+      betweennessCentrality: normalizedCb[i], 
       inDegree,
       outDegree,
       hubScore: hub[i],
       authorityScore: auth[i],
-      clusteringCoefficient: 0,
-      communityId: 0,
+      clusteringCoefficient: cc[i],
+      communityId: communities[i],
       efferentCoupling: outDegree,
       afferentCoupling: inDegree,
       instability: outDegree / (inDegree + outDegree || 1),
@@ -216,13 +333,12 @@ export function computeGraphMetrics(graph: DependencyGraph): GraphMetrics {
     };
   });
 
-
   const globalMetrics: GlobalGraphMetrics = {
     avgPathLength: 0,
     diameter: 0,
     density: edges.length / (n * (n - 1) || 1),
-    modularity: 0,
-    avgClusteringCoefficient: 0,
+    modularity: q,
+    avgClusteringCoefficient: cc.reduce((a, b) => a + b, 0) / n,
     connectedComponents: 1,
     cycleCount: 0,
   };

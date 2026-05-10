@@ -19,7 +19,7 @@ const getPublicFeed = createServerFn({ method: "GET" })
       db.query.roasts.findMany({
         where: eq(roasts.isPublic, true),
         orderBy: [desc(roasts.createdAt)],
-        limit: 10,
+        limit: 30,
       }),
       db.query.users.findMany({
         limit: 5,
@@ -174,28 +174,7 @@ function ExplorePage() {
                 </Link>
               )) : (
                 <div className="space-y-4">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 mb-4 px-2">Featured Sacrifices</p>
-                  {[
-                    { name: "torvalds", score: 99, crit: "NUCLEAR", roast: "Your code is the reason C programmers have night terrors. You built Linux out of pure spite and it shows in every single goto statement." },
-                    { name: "gaearon", score: 82, crit: "HIGH", roast: "You've deprecated more libraries than I've written lines of code. Your hooks have more side effects than a prescription drug commercial." },
-                    { name: "tj", score: 94, crit: "NUCLEAR", roast: "You write frameworks faster than the NPM registry can index them. I'm convinced you're actually a very complex shell script." }
-                  ].map((f) => (
-                    <div key={f.name} className="block p-4 rounded-xl border border-border bg-surface/10 opacity-60">
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">@{f.name}</span>
-                        <span className={cn(
-                          "text-[8px] font-black px-1.5 py-0.5 rounded border uppercase tracking-tighter",
-                          f.crit === "NUCLEAR" ? "bg-red-500/20 text-red-500 border-red-500/30" : "text-red-500 border-red-500/30"
-                        )}>
-                          {f.crit}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-foreground/50 leading-relaxed italic line-clamp-3 mb-2">
-                        "{f.roast}"
-                      </p>
-                      <div className="text-[9px] text-muted-foreground/30 font-mono">Score: {f.score}/100</div>
-                    </div>
-                  ))}
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 mb-4 px-2">No public roasts found. Roast a friend to populate the feed!</p>
                 </div>
               )}
 

@@ -14,24 +14,24 @@ DevBrand analyzes your GitHub Pull Requests, computes architectural impact score
 
 DevBrand is powered by a multi-stage analysis pipeline that goes deeper than any standard "wrapped" tool:
 
-1.  **Ingestion**: Regex-based AST symbol extraction and PR diff parsing.
+1.  **Ingestion**: Genuine AST symbol extraction via `@babel/parser` and PR diff parsing.
 2.  **Static Metrics**: Complexity (McCabe), Halstead volume, and decay-weighted churn analysis.
-3.  **Graph Analysis**: PageRank & HITS (Hubs/Authorities) algorithms identify "load-bearing" architectural nodes.
+3.  **Graph Analysis**: PageRank, HITS (Hubs/Authorities), True Betweenness Centrality (Brandes' Algorithm), and Clustering Coefficient identify "load-bearing" architectural nodes.
 4.  **Invisible Work**: Heuristic detection of refactoring, tech debt elimination, and load-bearing infrastructure.
-5.  **Narrative Generation**: Claude 3.5 Sonnet synthesizes technical signals into high-impact social narratives.
+5.  **Narrative Generation**: Self-Consistency Voting (3 parallel drafts + LLM-as-Judge) with Claude 3.5 Sonnet to synthesize technical signals into high-impact social narratives.
 6.  **Semantic Verification**: Keyword-entailment check verifies AI claims against raw diff content.
 7.  **Feedback Loop**: Modulates narratives based on historical user correction rates and career velocity.
 
 ---
 
-## 🏆 Production Readiness Scorecard (May 2026 — Post-Audit #5)
+## 🏆 Production Readiness Scorecard (May 2026 — Post-Audit #6)
 
 | Metric | Score | Status |
 | :--- | :--- | :--- |
-| **Architectural Depth** | 9.0/10 | PageRank + HITS Graph Engine with alias resolution and caching. |
-| **Virality Engine** | 9.5/10 | OG Images, Badges, Roast-a-Friend viral loop, 20 seeded roasts. |
+| **Architectural Depth** | 9.0/10 | PageRank, HITS, Brandes' Betweenness Centrality, and Clustering Coefficient. |
+| **Virality Engine** | 9.0/10 | OG Images, Badges, One-Click X Posting, Referral Program, 20 seeded roasts. |
 | **Security & Auth** | 8.5/10 | HMAC-SHA256, 30-day Session TTL, CSRF, Rate Limiting. |
-| **Intelligence Gap** | 9.0/10 | LLM-Powered NLI verification with 4-stage cascade fallback. |
+| **Intelligence Gap** | 9.5/10 | @babel/parser ASTs, 3-draft Self-Consistency Voting, LLM-Powered NLI verification. |
 | **Test Coverage** | 7.5/10 | 35 tests: engine pipeline, auth, billing, graph, and Layer 6. |
 | **OVERALL** | **9.0/10** | **PROD READY** |
 

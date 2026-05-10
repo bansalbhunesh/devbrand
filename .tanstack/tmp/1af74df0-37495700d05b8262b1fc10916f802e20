@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as WrappedRouteImport } from './routes/wrapped'
 import { Route as RoastFriendRouteImport } from './routes/roast-friend'
 import { Route as RoastRouteImport } from './routes/roast'
+import { Route as ReferralsRouteImport } from './routes/referrals'
 import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
@@ -35,6 +36,11 @@ const RoastFriendRoute = RoastFriendRouteImport.update({
 const RoastRoute = RoastRouteImport.update({
   id: '/roast',
   path: '/roast',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReferralsRoute = ReferralsRouteImport.update({
+  id: '/referrals',
+  path: '/referrals',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ExploreRoute = ExploreRouteImport.update({
@@ -87,6 +93,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
   '/explore': typeof ExploreRoute
+  '/referrals': typeof ReferralsRoute
   '/roast': typeof RoastRoute
   '/roast-friend': typeof RoastFriendRoute
   '/wrapped': typeof WrappedRoute
@@ -101,6 +108,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
   '/explore': typeof ExploreRoute
+  '/referrals': typeof ReferralsRoute
   '/roast': typeof RoastRoute
   '/roast-friend': typeof RoastFriendRoute
   '/wrapped': typeof WrappedRoute
@@ -116,6 +124,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
   '/explore': typeof ExploreRoute
+  '/referrals': typeof ReferralsRoute
   '/roast': typeof RoastRoute
   '/roast-friend': typeof RoastFriendRoute
   '/wrapped': typeof WrappedRoute
@@ -132,6 +141,7 @@ export interface FileRouteTypes {
     | '/'
     | '/dashboard'
     | '/explore'
+    | '/referrals'
     | '/roast'
     | '/roast-friend'
     | '/wrapped'
@@ -146,6 +156,7 @@ export interface FileRouteTypes {
     | '/'
     | '/dashboard'
     | '/explore'
+    | '/referrals'
     | '/roast'
     | '/roast-friend'
     | '/wrapped'
@@ -160,6 +171,7 @@ export interface FileRouteTypes {
     | '/'
     | '/dashboard'
     | '/explore'
+    | '/referrals'
     | '/roast'
     | '/roast-friend'
     | '/wrapped'
@@ -175,6 +187,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DashboardRoute: typeof DashboardRoute
   ExploreRoute: typeof ExploreRoute
+  ReferralsRoute: typeof ReferralsRoute
   RoastRoute: typeof RoastRoute
   RoastFriendRoute: typeof RoastFriendRoute
   WrappedRoute: typeof WrappedRoute
@@ -207,6 +220,13 @@ declare module '@tanstack/react-router' {
       path: '/roast'
       fullPath: '/roast'
       preLoaderRoute: typeof RoastRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/referrals': {
+      id: '/referrals'
+      path: '/referrals'
+      fullPath: '/referrals'
+      preLoaderRoute: typeof ReferralsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/explore': {
@@ -279,6 +299,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DashboardRoute: DashboardRoute,
   ExploreRoute: ExploreRoute,
+  ReferralsRoute: ReferralsRoute,
   RoastRoute: RoastRoute,
   RoastFriendRoute: RoastFriendRoute,
   WrappedRoute: WrappedRoute,

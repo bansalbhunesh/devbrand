@@ -29,6 +29,10 @@ export const users = pgTable("users", {
   monthResetAt: timestamp("month_reset_at", { withTimezone: true })
     .notNull()
     .default(sql`date_trunc('month', now()) + interval '1 month'`),
+
+  referralCode: text("referral_code").unique(),
+  referredBy: uuid("referred_by").references((): any => users.id),
+
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });

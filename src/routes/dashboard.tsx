@@ -1,4 +1,4 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute, redirect, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -40,7 +40,7 @@ export const Route = createFileRoute("/dashboard")({
   component: Dashboard,
 });
 
-type Tab = "generate" | "history" | "settings";
+type Tab = "generate" | "history" | "teams" | "settings";
 
 function Dashboard() {
   const { user } = Route.useLoaderData() as { user: NonNullable<Awaited<ReturnType<typeof getSession>>> };
@@ -146,6 +146,13 @@ function Dashboard() {
                   : "unlimited"}
               </span>
             </div>
+
+            <Link 
+              to="/referrals" 
+              className="text-xs text-muted-foreground hover:text-foreground transition flex items-center gap-1.5 font-medium"
+            >
+              <Users className="h-3.5 w-3.5" /> Referrals
+            </Link>
 
             {user?.avatarUrl ? (
               <img
