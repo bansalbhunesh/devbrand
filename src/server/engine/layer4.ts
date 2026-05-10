@@ -11,45 +11,55 @@ export function analyzeInvisibleWork(
 ): InvisibleWorkReport {
   const categories: InvisibleWorkCategory[] = [];
 
-  const refactorFiles = enrichedPR.diffs.filter((d, i) => {
-    const isRefactorKeyword = d.patch.toLowerCase().includes("refactor");
-    const isSemanticRefactor = enrichedPR.astDiffs[i]?.semanticChange === 'refactor';
-    const isBalanced = d.additions > 0 && d.deletions > 0 && Math.abs(d.additions - d.deletions) < 10;
-    return isRefactorKeyword || isSemanticRefactor || isBalanced;
+  let structuralRefactoringScore = 0;
+  const refactoredFiles: string[] = [];
+  const refactorEvidence: string[] = [];
+
+  let codeDeletionScore = 0;
+  const cleanupFiles: string[] = [];
+
+  enrichedPR.astDiffs.forEach((astDiff, index) => {
+    const diff = enrichedPR.diffs[index];
+    if (!diff) return;
+
+    // 1. Structural Refactoring (Extract Method / Move)
+    const symbolsChanged = astDiff.removedSymbols.length + astDiff.addedSymbols.length;
+    const isHighChurnLowImpact = diff.additions > 0 && diff.deletions > 0 && Math.abs(diff.additions - diff.deletions) < 15;
+    
+    if (symbolsChanged > 0 && isHighChurnLowImpact) {
+      structuralRefactoringScore += symbolsChanged * 2;
+      refactoredFiles.push(astDiff.filename);
+      refactorEvidence.push(`Detected ${astDiff.removedSymbols.length} removed and ${astDiff.addedSymbols.length} added symbols with balanced line churn in ${astDiff.filename}.`);
+    }
+
+    // 2. Code Cleanup / Tech Debt Elimination
+    if (diff.deletions > diff.additions * 2 && diff.deletions > 20) {
+      codeDeletionScore += Math.floor(diff.deletions / 10);
+      cleanupFiles.push(astDiff.filename);
+    }
   });
 
-  if (refactorFiles.length > 0) {
-    const hasSemanticRefactor = enrichedPR.astDiffs.some(a => a.semanticChange === 'refactor');
+  if (structuralRefactoringScore > 0) {
     categories.push({
       category: "refactoring",
-      confidence: hasSemanticRefactor ? 0.95 : 0.8,
-      effortEstimate: refactorFiles.length * 2,
-      files: refactorFiles.map(f => f.filename),
-      evidence: [
-        hasSemanticRefactor ? "AST semantic refactor detected" : "Balanced additions/deletions",
-        "Refactor keyword found in diff"
-      ],
-      description: "Structural code improvements without functional change.",
-      valueProvided: "Improved maintainability and reduced technical debt.",
+      confidence: 0.95, // High confidence because it's based on true AST symbols
+      effortEstimate: structuralRefactoringScore,
+      files: [...new Set(refactoredFiles)],
+      evidence: refactorEvidence.slice(0, 3), // Top 3 pieces of evidence
+      description: "Structural code improvements and method extractions.",
+      valueProvided: "Improved maintainability and reduced technical debt through true AST restructuring.",
     });
   }
 
-
-  const techDebtFiles = enrichedPR.diffs.filter(d => 
-    d.patch.toLowerCase().includes("todo") || 
-    d.patch.toLowerCase().includes("fixme") ||
-    d.patch.toLowerCase().includes("hack")
-  );
-
-  if (techDebtFiles.length > 0) {
+  if (codeDeletionScore > 0) {
     categories.push({
       category: "tech_debt",
-      confidence: 0.7,
-      effortEstimate: techDebtFiles.length,
-      files: techDebtFiles.map(f => f.filename),
-      evidence: ["Debt markers found in patch"],
-      description: "Addressing known shortcuts or sub-optimal patterns.",
-      valueProvided: "Reduced long-term maintenance burden.",
+      confidence: 0.90,
+      effortEstimate: codeDeletionScore,
+      files: [...new Set(cleanupFiles)],
+      evidence: ["Significant net-negative code deletion detected."],
+      description: "Eliminating dead code or streamlining logic.",
+      valueProvided: "Reduced surface area for bugs and lower maintenance burden.",
     });
   }
 
@@ -58,7 +68,7 @@ export function analyzeInvisibleWork(
   return {
     categories,
     totalInvisibleEffort: invisibleWorkScore,
-    invisibleWorkScore: Math.min(100, invisibleWorkScore * 10),
+    invisibleWorkScore: Math.min(100, invisibleWorkScore * 5),
     effortBreakdown: {
       visibleEffort: enrichedPR.diffs.length,
       invisibleEffort: invisibleWorkScore,
@@ -66,6 +76,6 @@ export function analyzeInvisibleWork(
       estimatedTotalHours: (enrichedPR.diffs.length + invisibleWorkScore) * 0.5,
     },
     overlookedIndicators: [],
-    detectionConfidence: 0.75,
+    detectionConfidence: 0.90, // Upgraded from 0.75 due to AST usage
   };
 }

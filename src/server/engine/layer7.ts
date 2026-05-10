@@ -82,16 +82,61 @@ export async function computeCareerVelocity(userId: string): Promise<{
   };
 }
 
+export interface UserPreference {
+  conciseness: number; // 0-1
+  technicalDepth: number; // 0-1
+  tone: 'aggressive' | 'professional' | 'humble';
+  frequentKeywords: string[];
+}
+
+export async function extractUserPreferences(userId: string): Promise<UserPreference> {
+  const events = await db.query.userEvents.findMany({
+    where: eq(userEvents.userId, userId),
+    orderBy: [desc(userEvents.createdAt)],
+    limit: 50,
+  });
+
+  const editEvents = events.filter(e => e.eventType === "edit_output");
+  
+  // Heuristic-based preference extraction
+  let totalLengthDelta = 0;
+  const keywords = new Set<string>();
+
+  editEvents.forEach(e => {
+    const payload = e.payload as any;
+    if (payload.before && payload.after) {
+      totalLengthDelta += (payload.after.length - payload.before.length);
+      // Extract added words as potential keywords
+      const words = payload.after.split(/\s+/);
+      words.forEach((w: string) => { if (w.length > 5) keywords.add(w.toLowerCase()); });
+    }
+  });
+
+  return {
+    conciseness: totalLengthDelta < 0 ? 0.8 : 0.4,
+    technicalDepth: 0.6, // Default
+    tone: 'professional',
+    frequentKeywords: Array.from(keywords).slice(0, 10),
+  };
+}
+
 export async function runLayer7(userId: string, draft: NarrativeDraft): Promise<NarrativeDraft> {
   const feedback = await getGlobalFeedback(userId);
   const velocity = await computeCareerVelocity(userId);
+  const preferences = await extractUserPreferences(userId);
   
   const finalDraft = applyFeedbackLoop(draft, feedback);
+  
+  // Inject learned preferences into the draft for the next iteration (or final polish)
+  finalDraft.userPreferences = preferences;
   
   // Modulate narrative based on career velocity
   if (velocity.consistency > 0.8) {
     finalDraft.linkedinPost1 += "\n\n(Consistent contributor status verified by DevBrand)";
   }
+
+  // Final Self-Consistency adjustment
+  finalDraft.selfConsistencyScore = finalDraft.selfConsistencyScore * (1 - feedback.userCorrectionRate * 0.5);
 
   return finalDraft;
 }

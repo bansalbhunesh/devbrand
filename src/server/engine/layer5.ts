@@ -18,6 +18,8 @@ CALIBRATION:
 - Focus on Evidence: Use metrics like ArchScore (${request.impactProfile.archScore}), Churn, and Dependency changes.
 - Seniority: ${request.userContext.seniority} level engineering.
 - Tone: ${request.userContext.tone}.
+- User Preferences: ${request.userPreferences ? JSON.stringify(request.userPreferences) : 'Standard professional tone'}.
+- Keywords: ${request.userPreferences?.frequentKeywords.join(', ') || 'None'}.
 
 OUTPUT:
 Return ONLY valid JSON with keys: linkedinPost1, linkedinPost2, linkedinPost3, resumeBullet, interviewHook, commitMessageSummary, citations (array of {claim, ref, sha, evidenceType, verified}).`;

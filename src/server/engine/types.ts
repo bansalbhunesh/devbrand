@@ -286,6 +286,13 @@ export interface OverlookedIndicator {
   category: InvisibleWorkCategory['category'];
 }
 
+export interface UserPreference {
+  conciseness: number;
+  technicalDepth: number;
+  tone: 'aggressive' | 'professional' | 'humble';
+  frequentKeywords: string[];
+}
+
 export interface NarrativeRequest {
   impactProfile: ImpactProfile;
   invisibleWorkReport: InvisibleWorkReport;
@@ -293,6 +300,7 @@ export interface NarrativeRequest {
   staticMetrics: StaticMetrics;
   graphImpactReport: GraphImpactReport;
   userContext: UserContext;
+  userPreferences?: UserPreference;
 }
 
 export interface UserContext {
@@ -316,6 +324,7 @@ export interface NarrativeDraft {
   hypeScore: number;
   selfConsistencyScore: number;
   evidenceDensityScore: number;
+  userPreferences?: UserPreference;
 }
 
 export interface Citation {

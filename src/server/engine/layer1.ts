@@ -17,40 +17,77 @@ export function calculateChurnScore(
   return (additions + deletions) * decayFactor;
 }
 
+import { parse } from "@babel/parser";
+import _traverse from "@babel/traverse";
+const traverse = typeof _traverse === 'function' ? _traverse : (_traverse as any).default;
+
 export function calculateCyclomaticComplexity(code: string): number {
-  const patterns = [
-    /\bif\s*\(/g,
-    /\belse\s+if/g,
-    /\bwhile\s*\(/g,
-    /\bfor\s*\(/g,
-    /\bswitch\s*\(/g,
-    /\bcase\s+/g,
-    /\bcatch\s*\(/g,
-    /\?\s*[^?]+\s*:/g,
-    /\&\&/g,
-    /\|\|/g,
-  ];
-
+  if (!code || !code.trim()) return 1;
   let complexity = 1;
-  const cleanCode = code.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, ""); 
-
-  for (const pattern of patterns) {
-    const matches = cleanCode.match(pattern);
-    if (matches) complexity += matches.length;
+  try {
+    const ast = parse(code, {
+      sourceType: "module",
+      plugins: ["typescript", "jsx", "decorators-legacy"],
+      errorRecovery: true,
+    });
+    
+    traverse(ast, {
+      IfStatement() { complexity++; },
+      WhileStatement() { complexity++; },
+      ForStatement() { complexity++; },
+      ForInStatement() { complexity++; },
+      ForOfStatement() { complexity++; },
+      CatchClause() { complexity++; },
+      ConditionalExpression() { complexity++; },
+      LogicalExpression(path: any) {
+        if (path.node.operator === "&&" || path.node.operator === "||") {
+          complexity++;
+        }
+      },
+      SwitchCase(path: any) {
+        if (path.node.test) complexity++; // exclude default
+      }
+    });
+  } catch (e) {
+    // Fallback to basic length approximation if extremely malformed
+    return 1 + Math.floor(code.split('\n').length / 50);
   }
-
   return complexity;
 }
 
 export function calculateHalsteadMetrics(code: string) {
-  const operators = ["+", "-", "*", "/", "=", "==", "!=", "&&", "||", "if", "for", "while", "return"];
-  const tokens = code.split(/\s+/).filter(Boolean);
+  if (!code || !code.trim()) return { volume: 0, difficulty: 0 };
   
-  const n1 = new Set(tokens.filter(t => operators.includes(t))).size;
-  const n2 = new Set(tokens.filter(t => !operators.includes(t))).size;
-  const N1 = tokens.filter(t => operators.includes(t)).length;
-  const N2 = tokens.filter(t => !operators.includes(t)).length;
+  const operators = new Set<string>();
+  const operands = new Set<string>();
+  let N1 = 0; // total operators
+  let N2 = 0; // total operands
 
+  try {
+    const ast = parse(code, {
+      sourceType: "module",
+      plugins: ["typescript", "jsx", "decorators-legacy"],
+      errorRecovery: true,
+    });
+
+    traverse(ast, {
+      Identifier(path: any) { operands.add(path.node.name); N2++; },
+      StringLiteral(path: any) { operands.add(path.node.value); N2++; },
+      NumericLiteral(path: any) { operands.add(path.node.value.toString()); N2++; },
+      BinaryExpression(path: any) { operators.add(path.node.operator); N1++; },
+      LogicalExpression(path: any) { operators.add(path.node.operator); N1++; },
+      UnaryExpression(path: any) { operators.add(path.node.operator); N1++; },
+      AssignmentExpression(path: any) { operators.add(path.node.operator); N1++; },
+      UpdateExpression(path: any) { operators.add(path.node.operator); N1++; },
+      CallExpression(path: any) { operators.add('()'); N1++; },
+      MemberExpression(path: any) { operators.add('.'); N1++; }
+    });
+  } catch (e) {
+    return { volume: 0, difficulty: 0 };
+  }
+
+  const n1 = operators.size;
+  const n2 = operands.size;
   const N = N1 + N2;
   const n = n1 + n2;
   const volume = N > 0 && n > 0 ? N * Math.log2(n) : 0;

@@ -30,6 +30,10 @@ export async function runEngine(prUrl: string, userId: string, context: UserCont
     // Layer 4: Invisible Work
     const invisibleWorkReport = await analyzeInvisibleWork(enrichedPR, staticMetrics);
 
+    // NEW: Extract User Preferences (Layer 7 Active Learning)
+    const { extractUserPreferences } = await import("./layer7");
+    const userPreferences = await extractUserPreferences(userId);
+
     // Layer 5: Narrative Generation
     const narrative = await generateNarrative({
       impactProfile,
@@ -38,6 +42,7 @@ export async function runEngine(prUrl: string, userId: string, context: UserCont
       staticMetrics,
       graphImpactReport,
       userContext: context,
+      userPreferences,
     });
 
     // Layer 6: Verification & Evidence Linking (Semantic Upgrade)
