@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WrappedRouteImport } from './routes/wrapped'
+import { Route as RoastFriendRouteImport } from './routes/roast-friend'
 import { Route as RoastRouteImport } from './routes/roast'
 import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as DashboardRouteImport } from './routes/dashboard'
@@ -19,10 +20,16 @@ import { Route as TeamIdRouteImport } from './routes/team.$id'
 import { Route as TSlugRouteImport } from './routes/t.$slug'
 import { Route as RIdRouteImport } from './routes/r.$id'
 import { Route as ApiBadgeLoginRouteImport } from './routes/api.badge.$login'
+import { Route as ApiOgRoastIdRouteImport } from './routes/api.og.roast.$id'
 
 const WrappedRoute = WrappedRouteImport.update({
   id: '/wrapped',
   path: '/wrapped',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RoastFriendRoute = RoastFriendRouteImport.update({
+  id: '/roast-friend',
+  path: '/roast-friend',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RoastRoute = RoastRouteImport.update({
@@ -70,30 +77,39 @@ const ApiBadgeLoginRoute = ApiBadgeLoginRouteImport.update({
   path: '/api/badge/$login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiOgRoastIdRoute = ApiOgRoastIdRouteImport.update({
+  id: '/api/og/roast/$id',
+  path: '/api/og/roast/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
   '/explore': typeof ExploreRoute
   '/roast': typeof RoastRoute
+  '/roast-friend': typeof RoastFriendRoute
   '/wrapped': typeof WrappedRoute
   '/r/$id': typeof RIdRoute
   '/t/$slug': typeof TSlugRoute
   '/team/$id': typeof TeamIdRoute
   '/u/$login': typeof ULoginRoute
   '/api/badge/$login': typeof ApiBadgeLoginRoute
+  '/api/og/roast/$id': typeof ApiOgRoastIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
   '/explore': typeof ExploreRoute
   '/roast': typeof RoastRoute
+  '/roast-friend': typeof RoastFriendRoute
   '/wrapped': typeof WrappedRoute
   '/r/$id': typeof RIdRoute
   '/t/$slug': typeof TSlugRoute
   '/team/$id': typeof TeamIdRoute
   '/u/$login': typeof ULoginRoute
   '/api/badge/$login': typeof ApiBadgeLoginRoute
+  '/api/og/roast/$id': typeof ApiOgRoastIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -101,12 +117,14 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRoute
   '/explore': typeof ExploreRoute
   '/roast': typeof RoastRoute
+  '/roast-friend': typeof RoastFriendRoute
   '/wrapped': typeof WrappedRoute
   '/r/$id': typeof RIdRoute
   '/t/$slug': typeof TSlugRoute
   '/team/$id': typeof TeamIdRoute
   '/u/$login': typeof ULoginRoute
   '/api/badge/$login': typeof ApiBadgeLoginRoute
+  '/api/og/roast/$id': typeof ApiOgRoastIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -115,36 +133,42 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/explore'
     | '/roast'
+    | '/roast-friend'
     | '/wrapped'
     | '/r/$id'
     | '/t/$slug'
     | '/team/$id'
     | '/u/$login'
     | '/api/badge/$login'
+    | '/api/og/roast/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/dashboard'
     | '/explore'
     | '/roast'
+    | '/roast-friend'
     | '/wrapped'
     | '/r/$id'
     | '/t/$slug'
     | '/team/$id'
     | '/u/$login'
     | '/api/badge/$login'
+    | '/api/og/roast/$id'
   id:
     | '__root__'
     | '/'
     | '/dashboard'
     | '/explore'
     | '/roast'
+    | '/roast-friend'
     | '/wrapped'
     | '/r/$id'
     | '/t/$slug'
     | '/team/$id'
     | '/u/$login'
     | '/api/badge/$login'
+    | '/api/og/roast/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -152,12 +176,14 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRoute
   ExploreRoute: typeof ExploreRoute
   RoastRoute: typeof RoastRoute
+  RoastFriendRoute: typeof RoastFriendRoute
   WrappedRoute: typeof WrappedRoute
   RIdRoute: typeof RIdRoute
   TSlugRoute: typeof TSlugRoute
   TeamIdRoute: typeof TeamIdRoute
   ULoginRoute: typeof ULoginRoute
   ApiBadgeLoginRoute: typeof ApiBadgeLoginRoute
+  ApiOgRoastIdRoute: typeof ApiOgRoastIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -167,6 +193,13 @@ declare module '@tanstack/react-router' {
       path: '/wrapped'
       fullPath: '/wrapped'
       preLoaderRoute: typeof WrappedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/roast-friend': {
+      id: '/roast-friend'
+      path: '/roast-friend'
+      fullPath: '/roast-friend'
+      preLoaderRoute: typeof RoastFriendRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/roast': {
@@ -232,6 +265,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiBadgeLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/og/roast/$id': {
+      id: '/api/og/roast/$id'
+      path: '/api/og/roast/$id'
+      fullPath: '/api/og/roast/$id'
+      preLoaderRoute: typeof ApiOgRoastIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -240,12 +280,14 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRoute,
   ExploreRoute: ExploreRoute,
   RoastRoute: RoastRoute,
+  RoastFriendRoute: RoastFriendRoute,
   WrappedRoute: WrappedRoute,
   RIdRoute: RIdRoute,
   TSlugRoute: TSlugRoute,
   TeamIdRoute: TeamIdRoute,
   ULoginRoute: ULoginRoute,
   ApiBadgeLoginRoute: ApiBadgeLoginRoute,
+  ApiOgRoastIdRoute: ApiOgRoastIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

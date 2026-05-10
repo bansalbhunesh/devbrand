@@ -47,7 +47,14 @@ async function verifySession(cookie: string): Promise<string | null> {
     const enc = new TextEncoder();
     const sig = Uint8Array.from(atob(sigB64), (c) => c.charCodeAt(0));
     const valid = await crypto.subtle.verify("HMAC", key, sig, enc.encode(payload));
-    return valid ? userId : null;
+    if (!valid) return null;
+
+    // TTL check: reject sessions older than 30 days
+    const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+    const issuedAt = parseInt(ts, 36);
+    if (isNaN(issuedAt) || Date.now() - issuedAt > SESSION_TTL_MS) return null;
+
+    return userId;
   } catch {
     return null;
   }

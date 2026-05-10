@@ -1,4 +1,7 @@
 import { Octokit } from "octokit";
+import { db } from "../db";
+import { repoGraphs } from "../schema";
+import { eq, and, gt } from "drizzle-orm";
 import type {
   EnrichedPR,
   DependencyGraph,
@@ -12,23 +15,64 @@ import type {
 
 const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
-export function resolvePath(current: string, target: string, nodes: string[]): string | null {
-  if (!target.startsWith(".")) return null;
+// Common alias patterns → directory mappings
+const ALIAS_MAP: Record<string, string> = {
+  "@/": "src/",
+  "~/": "src/",
+  "#/": "src/",
+};
 
-  const parts = current.split("/");
-  parts.pop();
-  
-  const targetParts = target.split("/");
-  for (const p of targetParts) {
-    if (p === "..") parts.pop();
-    else if (p !== ".") parts.push(p);
+export function resolveAlias(target: string): string | null {
+  for (const [alias, dir] of Object.entries(ALIAS_MAP)) {
+    if (target.startsWith(alias)) {
+      return target.replace(alias, dir);
+    }
+  }
+  return null;
+}
+
+export function resolvePath(current: string, target: string, nodes: string[]): string | null {
+  // 1. Try relative path resolution
+  if (target.startsWith(".")) {
+    const parts = current.split("/");
+    parts.pop();
+    
+    const targetParts = target.split("/");
+    for (const p of targetParts) {
+      if (p === "..") parts.pop();
+      else if (p !== ".") parts.push(p);
+    }
+
+    const resolved = parts.join("/");
+    const match = nodes.find(n => {
+      const stem = n.replace(/\.[^/.]+$/, "");
+      return n === resolved || stem === resolved || n === `${resolved}/index`;
+    });
+    if (match) return match;
   }
 
-  const resolved = parts.join("/");
-  return nodes.find(n => {
-    const stem = n.replace(/\.[^/.]+$/, "");
-    return n === resolved || stem === resolved || n === `${resolved}/index`;
-  }) || null;
+  // 2. Try alias resolution (@/, ~/, #/)
+  const aliasResolved = resolveAlias(target);
+  if (aliasResolved) {
+    const match = nodes.find(n => {
+      const stem = n.replace(/\.[^/.]+$/, "");
+      return n === aliasResolved || stem === aliasResolved || n === `${aliasResolved}/index`;
+    });
+    if (match) return match;
+  }
+
+  // 3. Fuzzy basename matching (last resort)
+  const basename = target.split("/").pop()?.replace(/\.[^/.]+$/, "");
+  if (basename && basename.length > 2) {
+    const candidates = nodes.filter(n => {
+      const nodeName = n.split("/").pop()?.replace(/\.[^/.]+$/, "");
+      return nodeName === basename;
+    });
+    // Only match if there's exactly one candidate (unambiguous)
+    if (candidates.length === 1) return candidates[0];
+  }
+
+  return null;
 }
 
 export async function buildImportGraph(owner: string, repo: string): Promise<DependencyGraph> {
@@ -195,8 +239,41 @@ export async function analyzeDependencyGraph(enrichedPR: EnrichedPR): Promise<Gr
   const { owner, repo } = enrichedPR.metadata;
   
   try {
-    // 1. Build the full dependency graph for the repository
-    const graph = await buildImportGraph(owner, repo);
+    // 1. Check cache: use repo_graphs if we have a fresh entry (<24h)
+    const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+    const cutoff = new Date(Date.now() - CACHE_TTL_MS);
+    let graph: DependencyGraph;
+
+    try {
+      const cached = await db.query.repoGraphs.findFirst({
+        where: and(
+          eq(repoGraphs.owner, owner),
+          eq(repoGraphs.repo, repo),
+          gt(repoGraphs.computedAt, cutoff)
+        ),
+      });
+
+      if (cached) {
+        console.log(`[Layer 2] Using cached graph for ${owner}/${repo}`);
+        graph = cached.graphData as unknown as DependencyGraph;
+      } else {
+        // Build fresh and persist
+        graph = await buildImportGraph(owner, repo);
+        await db.insert(repoGraphs).values({
+          owner,
+          repo,
+          graphData: graph as any,
+        }).onConflictDoUpdate({
+          target: [repoGraphs.owner, repoGraphs.repo],
+          set: { graphData: graph as any, computedAt: new Date() },
+        });
+        console.log(`[Layer 2] Built and cached graph for ${owner}/${repo}`);
+      }
+    } catch (cacheErr) {
+      // Cache miss or DB error — build fresh without caching
+      console.warn("[Layer 2] Cache unavailable, building graph fresh", cacheErr);
+      graph = await buildImportGraph(owner, repo);
+    }
     
     // 2. Compute PageRank, HITS, and coupling metrics
     const metrics = computeGraphMetrics(graph);
@@ -211,7 +288,6 @@ export async function analyzeDependencyGraph(enrichedPR: EnrichedPR): Promise<Gr
     };
   } catch (error) {
     console.error("[Layer 2] Graph analysis failed:", error);
-    // Fallback to empty metrics if graph construction fails
     return {
       nodeMetrics: [],
       globalMetrics: {

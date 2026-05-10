@@ -52,7 +52,7 @@ export async function verifyCitations(
     }
 
     // 3. Fallback: Metric Cross-Reference
-    if (!verified && citation.evidenceType === 'metric') {
+    if (!verified && (citation.evidenceType === 'metric')) {
       const metric = staticMetrics.fileMetrics.find(m => m.filename === citation.ref);
       if (metric) {
         if (citation.claim.toLowerCase().includes("complexity") && metric.cyclomaticComplexity > 1) {
@@ -63,7 +63,7 @@ export async function verifyCitations(
     }
 
     // 4. Fallback: Structural Check
-    if (!verified && citation.evidenceType === 'structural') {
+    if (!verified && (citation.evidenceType === 'structural')) {
       const contribution = impactProfile.perFileContributions.find(c => c.filename === citation.ref);
       if (contribution && contribution.archScoreContribution > 0) {
         verified = true;

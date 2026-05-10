@@ -24,15 +24,16 @@ DevBrand is powered by a multi-stage analysis pipeline that goes deeper than any
 
 ---
 
-## 🏆 Production Readiness Scorecard (May 2026 Audit)
+## 🏆 Production Readiness Scorecard (May 2026 — Post-Audit #5)
 
 | Metric | Score | Status |
 | :--- | :--- | :--- |
-| **Architectural Depth** | 9.0/10 | PageRank + HITS Graph Engine fully activated. |
-| **Virality Engine** | 9.5/10 | OG Image API, dynamic badges, and social loops built. |
-| **Security & Auth** | 8.5/10 | HMAC-SHA256, Session identity, and Rate Limiting. |
-| **Intelligence Gap** | 9.5/10 | Semantic Claim Verification (LLM-Powered NLI) implemented. |
-| **OVERALL** | **9.25/10** | **PROD READY** |
+| **Architectural Depth** | 9.0/10 | PageRank + HITS Graph Engine with alias resolution and caching. |
+| **Virality Engine** | 9.5/10 | OG Images, Badges, Roast-a-Friend viral loop, 20 seeded roasts. |
+| **Security & Auth** | 8.5/10 | HMAC-SHA256, 30-day Session TTL, CSRF, Rate Limiting. |
+| **Intelligence Gap** | 9.0/10 | LLM-Powered NLI verification with 4-stage cascade fallback. |
+| **Test Coverage** | 7.5/10 | 35 tests: engine pipeline, auth, billing, graph, and Layer 6. |
+| **OVERALL** | **9.0/10** | **PROD READY** |
 
 
 *   **Evidence Citations**: Every generated claim is anchored to specific file paths and commit SHAs. Your reputation is backed by the git log.

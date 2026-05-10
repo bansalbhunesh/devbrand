@@ -113,7 +113,10 @@ export const repoGraphs = pgTable("repo_graphs", {
   repo: text("repo").notNull(),
   graphData: text("graph_data", { mode: "json" }).notNull(),
   computedAt: timestamp("computed_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => [
+  uniqueIndex("repo_graphs_owner_repo_idx").on(t.owner, t.repo),
+  index("repo_graphs_computed_at_idx").on(t.computedAt),
+]);
 
 export const userEvents = pgTable(
   "user_events",
