@@ -62,6 +62,9 @@ export async function POST(req: NextRequest) {
       linkedin_post_3: r.output.linkedin_posts[2],
       resume_bullet: r.output.resume_bullet,
       interview_hook: r.output.interview_hook,
+      impact_score: r.output.impact_score,
+      category: r.output.category,
+      complexity_level: r.output.complexity_level,
     }))
 
     if (toSave.length > 0) {

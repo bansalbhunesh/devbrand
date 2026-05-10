@@ -869,7 +869,216 @@ body {
 
 @keyframes shimmer {
   0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+}
+
+/* ========== PUBLIC PROFILES ========== */
+
+.profile-layout {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.profile-layout.theme-light {
+  /* Override variables for light theme if needed, but since globals has light theme vars, it will just use them */
+}
+
+.profile-header-wrap {
+  background: var(--bg-subtle);
+  border-bottom: 1px solid var(--border-light);
+  padding: 60px 24px 40px;
+}
+
+.profile-header-inner {
+  max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  gap: 24px;
+  align-items: center;
+}
+
+.profile-avatar img {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 4px solid var(--bg);
+  box-shadow: var(--shadow-sm);
+}
+
+.profile-info h1 {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.profile-bio {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+  max-width: 500px;
+}
+
+.profile-stats {
+  display: flex;
+  gap: 20px;
+}
+
+.stat-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-value {
+  font-size: 18px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+
+.stat-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+}
+
+.profile-content {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 40px 24px;
+}
+
+.profile-tabs {
+  display: flex;
+  gap: 20px;
+  border-bottom: 1px solid var(--border-light);
+  margin-bottom: 30px;
+}
+
+.profile-tab {
+  padding-bottom: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.profile-tab.active {
+  color: var(--text);
+  border-bottom: 2px solid var(--text);
+}
+
+.portfolio-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.portfolio-item {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.portfolio-item-header {
+  padding: 20px;
+  border-bottom: 1px solid var(--border-light);
+  background: var(--bg-subtle);
+}
+
+.portfolio-item-meta {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.portfolio-score {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--success);
+  background: var(--success-bg);
+  padding: 2px 8px;
+  border-radius: var(--radius-xl);
+}
+
+.portfolio-tag {
+  font-size: 11px;
+  color: var(--text-muted);
+  background: var(--bg-muted);
+  padding: 2px 8px;
+  border-radius: var(--radius-xl);
+}
+
+.portfolio-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.portfolio-repo {
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+}
+
+.portfolio-item-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.portfolio-section h4 {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.portfolio-section p {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text);
+  white-space: pre-wrap;
+}
+
+.portfolio-item-footer {
+  padding: 16px 20px;
+  border-top: 1px solid var(--border-light);
+  background: var(--bg-subtle);
+}
+
+.btn-view-pr {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color var(--transition);
+}
+
+.btn-view-pr:hover {
+  color: var(--text);
+}
+
+.profile-footer {
+  text-align: center;
+  padding: 40px;
+  font-size: 12px;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border-light);
+}
+
+.profile-footer a {
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.skeleton-bg {
+  background: linear-gradient(90deg, var(--bg-muted) 25%, var(--bg-subtle) 50%, var(--bg-muted) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease infinite;
 }
 
 /* Responsive */

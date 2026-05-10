@@ -10,6 +10,9 @@ export interface GeneratedOutput {
   linkedin_posts: [string, string, string]
   resume_bullet: string
   interview_hook: string
+  impact_score: number
+  category: string
+  complexity_level: string
 }
 
 export interface GenerateResult {
@@ -38,8 +41,15 @@ Return valid JSON only. No markdown. No preamble. No trailing text.
 {
   "linkedin_posts": [string, string, string],
   "resume_bullet": string,
-  "interview_hook": string
+  "interview_hook": string,
+  "impact_score": number,
+  "category": string,
+  "complexity_level": string
 }
+
+impact_score: An integer from 1 to 100 evaluating the technical impact and complexity of the PR.
+category: Choose the most appropriate: "Performance", "Refactor", "Feature", "Security", "Bugfix", or "Infrastructure".
+complexity_level: Evaluate the code to determine the required skill: "Junior", "Mid", or "Senior".
 
 linkedin_posts rules:
   - Post 1: the problem you solved (140-160 words)
@@ -111,7 +121,14 @@ export async function generateForPR(
   } catch (err) {
     return {
       pr,
-      output: { linkedin_posts: ['', '', ''], resume_bullet: '', interview_hook: '' },
+      output: { 
+        linkedin_posts: ['', '', ''], 
+        resume_bullet: '', 
+        interview_hook: '',
+        impact_score: 0,
+        category: 'Unknown',
+        complexity_level: 'Unknown'
+      },
       error: err instanceof Error ? err.message : 'Unknown error',
     }
   }

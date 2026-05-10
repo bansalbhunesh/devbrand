@@ -12,6 +12,9 @@ interface Output {
   linkedin_posts: [string, string, string]
   resume_bullet: string
   interview_hook: string
+  impact_score: number
+  category: string
+  complexity_level: string
 }
 
 interface Result {
@@ -31,6 +34,10 @@ interface HistoryItem {
   resume_bullet: string
   interview_hook: string
   created_at: string
+  is_public: boolean
+  impact_score: number
+  category: string
+  complexity_level: string
 }
 
 export default function Dashboard() {
@@ -133,6 +140,21 @@ export default function Dashboard() {
     }
   }
 
+  async function togglePublic(id: string, currentPublic: boolean) {
+    try {
+      const res = await fetch('/api/visibility', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, is_public: !currentPublic })
+      })
+      if (res.ok) {
+        setHistory(prev => prev.map(item => item.id === id ? { ...item, is_public: !currentPublic } : item))
+      }
+    } catch (err) {
+      console.error('Failed to toggle visibility')
+    }
+  }
+
   function formatDate(dateStr: string) {
     return new Date(dateStr).toLocaleDateString('en-US', {
       month: 'short', day: 'numeric', year: 'numeric',
@@ -165,6 +187,11 @@ export default function Dashboard() {
           </span>
           {session?.user?.image && (
             <img src={session.user.image} alt="" className="dash-avatar" />
+          )}
+          {session?.user?.githubLogin && (
+            <a href={`/${session.user.githubLogin}`} target="_blank" rel="noopener noreferrer" className="btn-signout" style={{textDecoration: 'none'}}>
+              View Profile
+            </a>
           )}
           <button onClick={() => signOut()} className="btn-signout">
             Sign out
@@ -308,6 +335,11 @@ export default function Dashboard() {
               <div className="result-header">
                 <div>
                   <p className="result-title">{result.pr.title}</p>
+                  <div className="portfolio-item-meta" style={{marginBottom: '4px'}}>
+                    <span className="portfolio-score">+{result.output.impact_score} Impact</span>
+                    <span className="portfolio-tag">{result.output.category}</span>
+                    <span className="portfolio-tag">{result.output.complexity_level}</span>
+                  </div>
                   <p className="result-signals">{result.pr.signals?.join(' · ')}</p>
                 </div>
                 <a href={result.pr.html_url} target="_blank" rel="noopener noreferrer" className="result-link">
@@ -401,6 +433,15 @@ export default function Dashboard() {
                 <div className="result-header">
                   <div>
                     <p className="result-title">{item.pr_title}</p>
+                    <div className="portfolio-item-meta" style={{marginBottom: '4px', marginTop: '6px'}}>
+                      <span className="portfolio-score">+{item.impact_score} Impact</span>
+                      {item.category && <span className="portfolio-tag">{item.category}</span>}
+                      {item.complexity_level && <span className="portfolio-tag">{item.complexity_level}</span>}
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'var(--text-muted)', cursor: 'pointer', marginLeft: '12px' }}>
+                        <input type="checkbox" checked={item.is_public} onChange={() => togglePublic(item.id, item.is_public)} />
+                        Public on Profile
+                      </label>
+                    </div>
                     <p className="result-signals">
                       {item.repo_name} · {formatDate(item.created_at)}
                     </p>

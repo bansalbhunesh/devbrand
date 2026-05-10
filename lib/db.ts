@@ -38,7 +38,17 @@ export async function upsertUser(profile: {
       updated_at = now()
     RETURNING *
   `, [profile.github_id, profile.github_login, profile.name, profile.avatar_url, profile.email])
-  return rows[0]
+  
+  const user = rows[0]
+  
+  // Ensure profile exists
+  if (user) {
+    await pool.query(`
+      INSERT INTO profiles (user_id) VALUES ($1) ON CONFLICT DO NOTHING
+    `, [user.id])
+  }
+  
+  return user
 }
 
 export async function getUser(githubId: string): Promise<User | null> {
@@ -108,18 +118,21 @@ export async function saveOutputs(userId: string, outputs: {
   pr_title: string; pr_url: string; pr_signals: string[]; repo_name: string; stack: string[]
   linkedin_post_1: string; linkedin_post_2: string; linkedin_post_3: string
   resume_bullet: string; interview_hook: string
+  impact_score?: number; category?: string; complexity_level?: string
 }[]) {
   for (const o of outputs) {
     await pool.query(`
       INSERT INTO outputs (
         user_id, pr_title, pr_url, pr_signals, repo_name, stack,
         linkedin_post_1, linkedin_post_2, linkedin_post_3,
-        resume_bullet, interview_hook
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+        resume_bullet, interview_hook,
+        impact_score, category, complexity_level
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
     `, [
       userId, o.pr_title, o.pr_url, o.pr_signals, o.repo_name, o.stack,
       o.linkedin_post_1, o.linkedin_post_2, o.linkedin_post_3,
       o.resume_bullet, o.interview_hook,
+      o.impact_score ?? 0, o.category ?? null, o.complexity_level ?? null
     ])
   }
 }
@@ -139,4 +152,33 @@ export async function resetAllMonthlyGenerations() {
       updated_at = now()
     WHERE month_reset_at <= now()
   `)
+}
+
+export async function getPublicProfile(githubLogin: string) {
+  const { rows } = await pool.query(`
+    SELECT
+      u.id as user_id, u.name, u.github_login, u.avatar_url, u.seniority,
+      p.bio, p.theme,
+      (
+        SELECT json_agg(row_to_json(o))
+        FROM (
+          SELECT * FROM outputs
+          WHERE user_id = u.id AND is_public = true
+          ORDER BY impact_score DESC, created_at DESC
+        ) o
+      ) as public_outputs,
+      (
+        SELECT COALESCE(SUM(impact_score), 0) FROM outputs WHERE user_id = u.id AND is_public = true
+      ) as total_impact_score
+    FROM users u
+    JOIN profiles p ON u.id = p.user_id
+    WHERE u.github_login = $1 AND p.is_public = true
+  `, [githubLogin])
+  return rows[0] ?? null
+}
+
+export async function toggleOutputVisibility(outputId: string, userId: string, isPublic: boolean) {
+  await pool.query(`
+    UPDATE outputs SET is_public = $3 WHERE id = $1 AND user_id = $2
+  `, [outputId, userId, isPublic])
 }
