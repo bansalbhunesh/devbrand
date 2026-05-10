@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS users (
   email TEXT,
   seniority TEXT NOT NULL DEFAULT 'mid',
   tone TEXT NOT NULL DEFAULT 'direct',
+  target_audience TEXT NOT NULL DEFAULT 'recruiter',
   stripe_customer_id TEXT,
   plan TEXT NOT NULL DEFAULT 'free',
   plan_expires_at TIMESTAMPTZ,

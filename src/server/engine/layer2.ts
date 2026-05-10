@@ -133,10 +133,26 @@ export async function buildImportGraph(owner: string, repo: string): Promise<Dep
 }
 
 export function computeGraphMetrics(graph: DependencyGraph): GraphMetrics {
-  const nodes = graph.nodes;
-  const edges = graph.edges;
+  const nodes = graph?.nodes || [];
+  const edges = graph?.edges || [];
   const n = nodes.length;
   
+  if (n === 0) {
+    return {
+      nodeMetrics: [],
+      globalMetrics: {
+        avgPathLength: 0,
+        diameter: 0,
+        density: 0,
+        modularity: 0,
+        avgClusteringCoefficient: 0,
+        connectedComponents: 0,
+        cycleCount: 0,
+      },
+      structuralChanges: [],
+    };
+  }
+
   // 1. Initialize PageRank
   let pr = new Array(n).fill(1 / n);
   const damping = 0.85;

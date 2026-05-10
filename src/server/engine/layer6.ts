@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { completeText, normalizeLlmJsonText } from "../llm/client";
 import type {
   NarrativeDraft,
   EnrichedPR,
@@ -7,35 +7,48 @@ import type {
   Citation,
 } from "./types";
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+function normalizeSemanticResult(parsed: Record<string, unknown>): {
+  verified: boolean;
+  reason: string;
+  confidence: number;
+} {
+  const verified = Boolean(parsed.verified);
+  const reason = typeof parsed.reason === "string" ? parsed.reason : "";
+  const raw = parsed.confidence;
+  const confidence =
+    typeof raw === "number" && !Number.isNaN(raw)
+      ? Math.min(1, Math.max(0, raw))
+      : verified
+        ? 1
+        : 0;
+  return { verified, reason, confidence };
+}
 
 async function verifySemanticClaim(claim: string, patch: string): Promise<{ verified: boolean; reason: string; confidence: number }> {
   try {
     // Step 1: Initial Verification
-    const response = await anthropic.messages.create({
-      model: process.env.CLAUDE_MODEL ?? "claude-3-5-sonnet-20241022",
-      max_tokens: 300,
-      system: "You are a code verification agent. Determine if the technical CLAIM is supported by the provided DIFF PATCH. Respond ONLY in JSON: { \"verified\": boolean, \"reason\": \"string\", \"confidence\": number (0-1) }",
-      messages: [{ role: "user", content: `CLAIM: ${claim}\n\nDIFF:\n${patch}` }],
+    const verifySystem =
+      'You are a code verification agent. Determine if the technical CLAIM is supported by the provided DIFF PATCH. Respond ONLY in JSON: { "verified": boolean, "reason": "string", "confidence": number (0-1) }';
+    const content = await completeText({
+      system: verifySystem,
+      user: `CLAIM: ${claim}\n\nDIFF:\n${patch}`,
+      maxTokens: 300,
+      temperature: 0,
     });
-
-    const content = response.content[0].type === "text" ? response.content[0].text : "{}";
-    const initialResult = JSON.parse(content.replace(/^```json\n?/, "").replace(/\n?```$/, ""));
+    const initialResult = normalizeSemanticResult(JSON.parse(normalizeLlmJsonText(content) || "{}"));
 
     // Step 2: Self-Correction Loop (The "Adversarial" Check)
     // If the initial result is verified but confidence is not absolute, we ask the LLM to try and disprove it.
     if (initialResult.verified && initialResult.confidence < 0.9) {
-      const adversarialResponse = await anthropic.messages.create({
-        model: process.env.CLAUDE_MODEL ?? "claude-3-5-sonnet-20241022",
-        max_tokens: 300,
-        system: "You are an adversarial code reviewer. Your goal is to find why the CLAIM might NOT be fully supported by the DIFF. If you find a flaw, explain it. Respond in JSON: { \"flawFound\": boolean, \"explanation\": \"string\" }",
-        messages: [{ role: "user", content: `CLAIM: ${claim}\n\nDIFF:\n${patch}` }],
+      const advSystem =
+        'You are an adversarial code reviewer. Your goal is to find why the CLAIM might NOT be fully supported by the DIFF. If you find a flaw, explain it. Respond in JSON: { "flawFound": boolean, "explanation": "string" }';
+      const advRaw = await completeText({
+        system: advSystem,
+        user: `CLAIM: ${claim}\n\nDIFF:\n${patch}`,
+        maxTokens: 300,
+        temperature: 0,
       });
-      
-      const advContent = adversarialResponse.content[0].type === "text" ? adversarialResponse.content[0].text : "{}";
-      const advResult = JSON.parse(advContent.replace(/^```json\n?/, "").replace(/\n?```$/, ""));
+      const advResult = JSON.parse(normalizeLlmJsonText(advRaw) || "{}");
 
       if (advResult.flawFound) {
         return { 
@@ -50,6 +63,13 @@ async function verifySemanticClaim(claim: string, patch: string): Promise<{ veri
   } catch (e) {
     return { verified: false, reason: "Semantic engine error or timeout.", confidence: 0 };
   }
+}
+
+function weightCitationConfidence(c: Citation): number {
+  if (!c.verified) return 0;
+  const s = c.confidenceScore;
+  if (typeof s === "number" && !Number.isNaN(s)) return Math.min(1, Math.max(0, s));
+  return 1;
 }
 
 export async function verifyCitations(
@@ -111,8 +131,7 @@ export async function verifyCitations(
 }
 
 export function computeSelfConsistency(draft: NarrativeDraft): number {
-  const verifiedCount = draft.citations.filter(c => c.verified).length;
-  const weightedVerified = draft.citations.reduce((acc, c) => acc + (c.verified ? (c.confidenceScore || 0.5) : 0), 0);
+  const weightedVerified = draft.citations.reduce((acc, c) => acc + weightCitationConfidence(c), 0);
   return draft.citations.length > 0 ? weightedVerified / draft.citations.length : 1;
 }
 

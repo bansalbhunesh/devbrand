@@ -39,7 +39,7 @@ export function computeImpactProfile(
 
   // Calculate Impact Signature
   const totalModularity = graphMetrics.globalMetrics.modularity;
-  const isHighModularityChange = graphMetrics.structuralChanges.some(s => s.changeType === 'community_shift');
+  const isHighModularityChange = (graphMetrics.structuralChanges || []).some(s => s.changeType === 'community_shift');
   
   const dimensions: ImpactDimensions = {
     architecturalDisruption: (graphMetrics.structuralChanges?.length || 0) * 15 + (isHighModularityChange ? 30 : 0),

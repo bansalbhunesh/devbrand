@@ -1,15 +1,9 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { completeText, normalizeLlmJsonText } from "../llm/client";
 import type {
   NarrativeRequest,
   NarrativeDraft,
   Citation,
 } from "./types";
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
-
-const CLAUDE_MODEL = process.env.CLAUDE_MODEL ?? "claude-3-5-sonnet-20241022";
 
 async function generateSingleDraft(request: NarrativeRequest, temperature: number) {
   const systemPrompt = `You are an engineering impact analyst for DevBrand.
@@ -34,16 +28,13 @@ Return ONLY valid JSON with keys: linkedinPost1, linkedinPost2, linkedinPost3, r
   let attempts = 0;
   while (attempts < 3) {
     try {
-      const response = await anthropic.messages.create({
-        model: CLAUDE_MODEL,
-        max_tokens: 2500,
-        temperature,
+      const rawContent = await completeText({
         system: systemPrompt,
-        messages: [{ role: "user", content: userMessage }],
+        user: userMessage,
+        maxTokens: 2500,
+        temperature,
       });
-
-      const rawContent = response.content[0].type === "text" ? response.content[0].text.trim() : "";
-      const cleaned = rawContent.replace(/^```json\n?/, "").replace(/\n?```$/, "");
+      const cleaned = normalizeLlmJsonText(rawContent);
       return JSON.parse(cleaned);
     } catch (e) {
       attempts++;
@@ -75,15 +66,13 @@ Return ONLY valid JSON with exactly these keys:
 
   let judgeOutput = { bestDraftIndex: 0, consistencyScore: 80 };
   try {
-    const response = await anthropic.messages.create({
-      model: CLAUDE_MODEL,
-      max_tokens: 500,
-      temperature: 0,
+    const rawContent = await completeText({
       system: judgePrompt,
-      messages: [{ role: "user", content: judgeMessage }],
+      user: judgeMessage,
+      maxTokens: 500,
+      temperature: 0,
     });
-    const rawContent = response.content[0].type === "text" ? response.content[0].text.trim() : "";
-    const cleaned = rawContent.replace(/^```json\n?/, "").replace(/\n?```$/, "");
+    const cleaned = normalizeLlmJsonText(rawContent);
     judgeOutput = JSON.parse(cleaned);
   } catch (e) {
     console.warn("[Layer 5] Judge failed, falling back to draft 0", e);

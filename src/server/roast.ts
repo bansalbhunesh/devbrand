@@ -1,27 +1,20 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getHeader } from "vinxi/http";
 import { z } from "zod";
-import Anthropic from "@anthropic-ai/sdk";
 import { Octokit } from "octokit";
+import { completeText, normalizeLlmJsonText } from "./llm/client";
 import { db } from "./db";
 import { users, userEvents, roasts } from "./schema";
 
 import { eq, sql } from "drizzle-orm";
 import { rateLimit } from "./redis";
 
-let anthropic: Anthropic | null = null;
 let octokit: Octokit | null = null;
-
-function getAnthropic() {
-  if (!anthropic) anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-  return anthropic;
-}
 
 function getOctokit() {
   if (!octokit) octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
   return octokit;
 }
-const CLAUDE_MODEL = process.env.CLAUDE_MODEL ?? "claude-3-5-sonnet-20241022";
 
 const FREE_ROAST_LIMIT = 10;
 const PUBLIC_ANON_LIMIT = 3;
@@ -73,7 +66,6 @@ export const generateRoast = createServerFn({ method: "POST" })
     }
 
     const octokit = getOctokit();
-    const anthropic = getAnthropic();
 
     const [userRes, eventsRes, reposRes] = await Promise.all([
       octokit.rest.users.getByUsername({ username }),
@@ -120,15 +112,13 @@ export const generateRoast = createServerFn({ method: "POST" })
       commit_frequency_per_week: Math.round(pushEvents.length / 4),
     };
 
-    const response = await anthropic.messages.create({
-      model: CLAUDE_MODEL,
-      max_tokens: 1000,
+    const rawContent = await completeText({
       system: ROAST_PROMPT,
-      messages: [{ role: "user", content: JSON.stringify(profileSummary, null, 2) }],
+      user: JSON.stringify(profileSummary, null, 2),
+      maxTokens: 1000,
+      temperature: 0.7,
     });
-
-    const rawContent = response.content[0].type === "text" ? response.content[0].text.trim() : "";
-    const cleaned = rawContent.replace(/^```json\n?/, "").replace(/\n?```$/, "");
+    const cleaned = normalizeLlmJsonText(rawContent);
     const output = RoastOutputSchema.parse(JSON.parse(cleaned));
 
     const [inserted] = await db.insert(roasts).values({
