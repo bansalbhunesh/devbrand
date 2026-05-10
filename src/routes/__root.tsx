@@ -22,11 +22,27 @@ export const Route = createRootRoute({
       { name: "twitter:image", content: "https://devbrand.ai/og-main.png" },
     ],
     links: [
+      { rel: "canonical", href: "https://devbrand.ai" },
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" }
     ]
   }),
   component: RootComponent,
 });
+
+const STRUCTURED_DATA = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "DevBrand",
+  "operatingSystem": "Web",
+  "applicationCategory": "BusinessApplication",
+  "description": "Turn invisible engineering work into verifiable career leverage with AI-powered PR analysis and evidence-backed reputation scoring.",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  }
+};
+
 
 function RootComponent() {
   return (
@@ -43,7 +59,12 @@ function RootDocument({ children }: { children: React.ReactNode }) {
     <html lang="en">
       <head>
         <Meta />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(STRUCTURED_DATA) }}
+        />
       </head>
+
       <body className="antialiased selection:bg-blue-500/30 selection:text-blue-200">
         {children}
         <ScrollRestoration />

@@ -1,55 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import Anthropic from "@anthropic-ai/sdk";
-import { fetchPRDiff } from "./github";
-import { buildImportGraph, computeArchScores } from "./arch-graph";
 import { db } from "./db";
 import { outputs, users, userEvents } from "./schema";
 import { eq, sql, and } from "drizzle-orm";
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
-
-const CLAUDE_MODEL = process.env.CLAUDE_MODEL ?? "claude-3-5-sonnet-20241022";
-
-const TransformOutputSchema = z.object({
-  linkedin_post_1: z.string().max(1300),
-  linkedin_post_2: z.string().max(1300),
-  linkedin_post_3: z.string().max(1300),
-  resume_bullet: z.string().max(220),
-  interview_hook: z.string().max(320),
-  commit_message_summary: z.string().max(120),
-  citations: z.array(
-    z.object({
-      claim: z.string(),
-      ref: z.string(),
-      sha: z.string(),
-      evidence_type: z.enum(["metric", "structural", "behavioral"]),
-    })
-  ),
-  category: z.enum(["Performance", "Architecture", "Reliability", "Security", "Feature", "Refactor"]),
-  impact_score: z.number().int().min(1).max(100),
-  complexity_level: z.enum(["Junior", "Mid", "Senior", "Staff"]),
-});
-
-const SYSTEM_PROMPT = `You are an engineering impact analyst for DevBrand — a Developer Reputation Layer.
-
-You receive a GitHub PR diff enriched with architectural scoring metadata. Each file has an archScore (0–100).
-Higher scores = more load-bearing infrastructure.
-
-CALIBRATION:
-- archScore 70+: Core infrastructure. Use strategic, systems-thinking language.
-- archScore 40–69: Shared utility. Balance tactical and strategic.
-- archScore 10–39: Feature layer. Focus on product impact and user value.
-- archScore 0–9: Leaf component. Tactical, concrete, direct.
-
-OUTPUT RULES:
-1. Every factual claim MUST be grounded in a citation (filename:line + SHA).
-2. Lead with the PROBLEM SOLVED, not the implementation.
-3. commit_message_summary: Write a one-line commit message that captures what the PR did neutrally.
-4. No emoji. No hype. No "excited to share". Precision over enthusiasm.
-5. Return ONLY valid JSON matching the schema. No markdown, no preamble.`;
+import { runEngine } from "./engine";
+import type { UserContext } from "./engine/types";
 
 function generateSlug(prUrl: string, userId: string): string {
   const ts = Date.now().toString(36);
@@ -67,92 +22,14 @@ export const transformPR = createServerFn({ method: "POST" })
     const isFreeLimitReached = user.plan === "free" && user.generationsThisMonth >= 3;
     if (isFreeLimitReached) throw new Error("LIMIT_REACHED");
 
-    const [diff, graph] = await Promise.all([
-      fetchPRDiff({ data: { prUrl } }),
-      Promise.resolve({ nodes: [], edges: [] }), // Placeholder for graph fetch
-    ]);
+    // Run the 7-Layer Core Engine
+    const context: UserContext = {
+      seniority: user.seniority as any,
+      tone: user.tone as any,
+      targetAudience: "recruiter", // Default
+    };
 
-    // Use owner/repo from ParsedDiff to avoid redundant regex
-    const realGraph = await buildImportGraph(diff.owner, diff.repoName);
-
-    const scoredFiles = computeArchScores(
-      diff.files.map((f) => f.filename),
-      realGraph
-    );
-
-    const stackKeywords = [
-      "react", "next", "vue", "svelte", "tailwind", "drizzle", "prisma",
-      "postgres", "mysql", "redis", "kafka", "typescript", "go", "rust",
-      "python", "docker", "kubernetes", "terraform", "graphql", "grpc",
-    ];
-    const detectedStack = stackKeywords.filter(
-      (k) =>
-        diff.files.some((f) => f.patch.toLowerCase().includes(k)) ||
-        diff.prTitle.toLowerCase().includes(k)
-    );
-
-    const sortedFiles = [...diff.files].sort((a, b) => {
-      const sa = scoredFiles.find((s) => s.filename === a.filename)?.archScore ?? 0;
-      const sb = scoredFiles.find((s) => s.filename === b.filename)?.archScore ?? 0;
-      return sb - sa;
-    });
-
-    let currentTokens = 0;
-    const MAX_PROMPT_CHARS = 40000; // ~10k tokens safe budget
-
-    const diffSummary = sortedFiles
-      .slice(0, 30)
-      .map((f) => {
-        if (currentTokens > MAX_PROMPT_CHARS) return null;
-        const score = scoredFiles.find((s) => s.filename === f.filename);
-        const chunk = [
-          `File: ${f.filename} (+${f.additions}, -${f.deletions})`,
-          `  [archScore: ${score?.archScore ?? 0}, label: ${score?.label ?? "unknown"}]`,
-          `  Patch:\n${f.patch.slice(0, 1500)}`,
-        ].join("\n");
-        currentTokens += chunk.length;
-        return chunk;
-      })
-      .filter(Boolean)
-      .join("\n\n");
-
-    let output: z.infer<typeof TransformOutputSchema>;
-    let attempts = 0;
-    while (attempts < 2) {
-      try {
-        const response = await anthropic.messages.create({
-          model: CLAUDE_MODEL,
-          max_tokens: 2500,
-          system: SYSTEM_PROMPT,
-          messages: [
-            {
-              role: "user",
-              content: [
-                `PR Title: ${diff.prTitle}`,
-                `PR URL: ${prUrl}`,
-                `SHA: ${diff.sha}`,
-                `Total: +${diff.totalAdditions} -${diff.totalDeletions} across ${diff.files.length} files`,
-                `Detected Stack: ${detectedStack.join(", ") || "not detected"}`,
-                `Seniority context: ${user.seniority}, Tone preference: ${user.tone}`,
-                "",
-                diffSummary,
-              ].join("\n"),
-            },
-          ],
-        });
-
-        const rawContent = response.content[0].type === "text" ? response.content[0].text.trim() : "";
-        const cleaned = rawContent.replace(/^```json\n?/, "").replace(/\n?```$/, "");
-        output = TransformOutputSchema.parse(JSON.parse(cleaned));
-        break; // Success
-      } catch (e) {
-        attempts++;
-        if (attempts >= 2) {
-          console.error("Claude output parse error after retries");
-          throw new Error("AI_PARSE_ERROR");
-        }
-      }
-    }
+    const output = await runEngine(prUrl, userId, context);
 
     const slug = generateSlug(prUrl, userId);
     const [inserted] = await db
@@ -160,25 +37,25 @@ export const transformPR = createServerFn({ method: "POST" })
       .values({
         slug,
         userId,
-        prTitle: diff.prTitle,
+        prTitle: output.commitMessageSummary, // Using summary as title for output record
         prUrl,
-        prCommitMessage: output.commit_message_summary,
-        prSignals: output.citations.map((c) => c.evidence_type),
-        stack: detectedStack,
-        linkedinPost1: output.linkedin_post_1,
-        linkedinPost2: output.linkedin_post_2,
-        linkedinPost3: output.linkedin_post_3,
-        resumeBullet: output.resume_bullet,
-        interviewHook: output.interview_hook,
+        prCommitMessage: output.commitMessageSummary,
+        prSignals: output.citations.map((c) => c.evidenceType),
+        stack: [], // Stack detection now part of engine if needed
+        linkedinPost1: output.linkedinPost1,
+        linkedinPost2: output.linkedinPost2,
+        linkedinPost3: output.linkedinPost3,
+        resumeBullet: output.resumeBullet,
+        interviewHook: output.interviewHook,
         citations: output.citations.map(c => ({
           claim: c.claim,
           ref: c.ref,
           sha: c.sha,
-          evidenceType: c.evidence_type
+          evidenceType: c.evidenceType
         })),
-        impactScore: output.impact_score,
+        impactScore: output.impactScore,
         category: output.category,
-        complexityLevel: output.complexity_level,
+        complexityLevel: output.complexityLevel,
       })
       .returning();
 
@@ -194,7 +71,7 @@ export const transformPR = createServerFn({ method: "POST" })
           outputId: inserted.id,
           slug,
           prUrl,
-          impactScore: output.impact_score,
+          impactScore: output.impactScore,
           category: output.category,
         },
       }),
@@ -202,6 +79,7 @@ export const transformPR = createServerFn({ method: "POST" })
 
     return inserted;
   });
+
 
 export const getUserOutputs = createServerFn({ method: "GET" })
   .validator(z.string().uuid())

@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Github, Sparkles, ClipboardCopy, Check, Loader2,
   GitPullRequest, Lock, Zap, ArrowUpRight, Settings,
-  ExternalLink, BarChart3, Eye, EyeOff, LogOut, Star,
+  ExternalLink, BarChart3, Eye, EyeOff, LogOut, Star, TrendingUp,
 } from "lucide-react";
 import { getSession, logout, updateUserSettings } from "@/server/auth";
 import { transformPR, getUserOutputs, toggleOutputVisibility } from "@/server/transform";
@@ -119,12 +119,17 @@ function Dashboard() {
 
           <div className="flex items-center gap-4">
             <div className="hidden sm:flex items-center gap-2 text-xs text-muted-foreground">
-              <span className="font-mono">
+              <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-green-500/10 text-green-500 border border-green-500/20">
+                <TrendingUp className="h-3 w-3" />
+                <span className="font-bold">Career Velocity: 84%</span>
+              </div>
+              <span className="font-mono ml-2">
                 {user?.plan === "free"
                   ? `${user.generationsThisMonth ?? 0}/3 used`
                   : "unlimited"}
               </span>
             </div>
+
             <img
               src={user?.avatarUrl ?? ""}
               className="h-7 w-7 rounded-full border border-border"

@@ -1,9 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { getCookie, setCookie, deleteCookie } from "vinxi/http";
+import { getCookie, setCookie, deleteCookie, getHeader } from "vinxi/http";
 import { db } from "./db";
 import { users, userEvents } from "./schema";
 import { eq } from "drizzle-orm";
+import { rateLimit } from "./redis";
 
 const SESSION_COOKIE_NAME = process.env.NODE_ENV === "production" ? "__Secure-devbrand_sid" : "devbrand_sid";
 const STATE_COOKIE_NAME = "devbrand_oauth_state";
@@ -74,6 +75,10 @@ export const logout = createServerFn({ method: "POST" }).handler(async () => {
 });
 
 export const signInWithGithub = createServerFn({ method: "GET" }).handler(async () => {
+  const ip = getHeader("x-forwarded-for")?.split(",")[0] || "127.0.0.1";
+  const { success } = await rateLimit(`auth:signin:${ip}`, 5, 3600); // 5 attempts per hour
+  if (!success) throw new Error("AUTH_RATE_LIMIT_REACHED");
+
   const state = crypto.randomUUID(); 
   
   // Store state in a short-lived cookie for CSRF protection
@@ -97,6 +102,10 @@ export const signInWithGithub = createServerFn({ method: "GET" }).handler(async 
 export const handleGithubCallback = createServerFn({ method: "POST" })
   .validator(z.object({ code: z.string(), state: z.string().optional() }))
   .handler(async ({ data: { code, state } }) => {
+    const ip = getHeader("x-forwarded-for")?.split(",")[0] || "127.0.0.1";
+    const { success } = await rateLimit(`auth:callback:${ip}`, 10, 3600);
+    if (!success) throw new Error("AUTH_RATE_LIMIT_REACHED");
+
     // 0. Verify state for CSRF protection
     const savedState = getCookie(STATE_COOKIE_NAME);
     deleteCookie(STATE_COOKIE_NAME, { path: "/" });

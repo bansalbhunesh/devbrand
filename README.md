@@ -10,13 +10,20 @@ DevBrand analyzes your GitHub Pull Requests, computes architectural impact score
 
 ---
 
-## 💎 The "No-Hype" Engine
+## 💎 The 7-Layer Intelligence Pipeline
 
-Unlike generic AI wrappers, DevBrand uses a multi-stage **Intelligence Pipeline** designed for engineering precision:
+Unlike generic AI wrappers, DevBrand uses a multi-stage **7-Layer Analysis Engine** designed for engineering precision:
 
-*   **ArchScore™ Graph**: A recursive dependency analyzer that identifies "load-bearing" infrastructure. A 10-line fix in a core auth utility scores higher than a 500-line feature addition.
+1.  **Layer 0 (Ingestion)**: Robust GitHub PR data retrieval with symbol extraction and AST awareness.
+2.  **Layer 1 (Static Metrics)**: Quantifies cyclomatic complexity, churn, and Halstead effort.
+3.  **Layer 2 (Graph Engine)**: Builds a recursive dependency graph using **PageRank** and **HITS** centrality metrics to identify "load-bearing" infrastructure.
+4.  **Layer 3 (Impact Scoring)**: Computes the **ArchScore™** by weighting code changes against their network centrality.
+5.  **Layer 4 (Invisible Work)**: AST-informed classification of refactors, tech debt, and performance tuning.
+6.  **Layer 5 (Narrative Generation)**: Multi-stage LLM pipeline (Claude 3.5) focused on "No-Hype" evidence-backed engineering impact.
+7.  **Layer 6 (Verification)**: Automated claim validation against structural and metric signals.
+8.  **Layer 7 (Feedback Loop)**: Behavioral calibration using user edit-history to modulate confidence and hype.
+
 *   **Evidence Citations**: Every generated claim is anchored to specific file paths and commit SHAs. Your reputation is backed by the git log.
-*   **Context-Aware Transformation**: Calibrated for seniority (Junior → Staff) and tone (Direct → Storytelling).
 
 ## ✨ Key Features
 

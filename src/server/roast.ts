@@ -30,7 +30,12 @@ const RoastOutputSchema = z.object({
   criticality: z.enum(["LOW", "MEDIUM", "HIGH", "NUCLEAR"]),
   improvements: z.array(z.string()).min(1).max(5),
   redeeming_quality: z.string().max(200),
+  card_title: z.string().max(100),
+  roast_score: z.number().min(0).max(100),
+  technician_score: z.number().min(0).max(100),
+  share_summary: z.string().max(280),
 });
+
 
 const ROAST_PROMPT = `You are a brutally honest senior engineer doing a 360 review of someone's entire GitHub profile.
 
@@ -41,7 +46,14 @@ YOUR TASK: Write a roast that is:
 4. SHORT — under 200 words.
 5. BALANCED — always include one genuine "redeeming_quality" you actually respect.
 
+ADDITIONAL FIELDS:
+- card_title: A punchy 3-5 word summary (e.g., "The Spaghetti Architect").
+- roast_score: 0-100 (how hard you went).
+- technician_score: 0-100 (perceived skill based on repos/commits).
+- share_summary: A 280-char summary for X/Twitter sharing.
+
 Return ONLY valid JSON matching the schema. No markdown, no preamble.`;
+
 
 export const generateRoast = createServerFn({ method: "POST" })
   .validator(z.object({ username: z.string().min(1).max(39), userId: z.string().uuid().optional() }))

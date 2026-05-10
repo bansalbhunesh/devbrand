@@ -118,6 +118,28 @@ export function Roast() {
                     </div>
                   ) : roastData ? (
                     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-700">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="text-xl font-bold text-red-500 mb-1">{roastData.card_title}</h3>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Judgment Card</p>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-2xl font-black text-foreground">{roastData.roast_score}%</div>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Hype Level</p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-muted/30 p-4 rounded-2xl border border-border">
+                          <div className="text-2xl font-bold text-foreground mb-1">{roastData.technician_score}%</div>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Tech Proficiency</p>
+                        </div>
+                        <div className="bg-muted/30 p-4 rounded-2xl border border-border">
+                          <div className="text-2xl font-bold text-red-500 mb-1">{roastData.criticality === 'NUCLEAR' ? '99' : '42'}%</div>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Ego Threat</p>
+                        </div>
+                      </div>
+
                       <p className="text-foreground text-base leading-relaxed italic">
                         "{roastData.roast}"
                       </p>
@@ -154,11 +176,19 @@ export function Roast() {
                 {roastData && (
                   <div className="mt-10 pt-6 border-t border-border flex justify-between items-center">
                     <span className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-[0.2em]">Evidence-Backed Judgment</span>
-                    <button className="text-[10px] font-bold text-blue-500 hover:text-blue-600 transition flex items-center gap-1.5 group">
+                    <button 
+                      onClick={() => {
+                        const text = `${roastData.share_summary}\n\nGet roasted at: devbrand.dev/roast`;
+                        navigator.clipboard.writeText(text);
+                        alert("Copied shareable roast to clipboard!");
+                      }}
+                      className="text-[10px] font-bold text-blue-500 hover:text-blue-600 transition flex items-center gap-1.5 group"
+                    >
                       <Share2 className="h-3.5 w-3.5 group-hover:scale-110 transition" /> Share Roast
                     </button>
                   </div>
                 )}
+
               </div>
             </div>
           </div>
