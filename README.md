@@ -4,7 +4,7 @@ GitHub → LinkedIn posts + resume bullets. No hype. No emoji.
 
 ## Stack
 - Next.js 14 (App Router)
-- NextAuth with GitHub OAuth
+- NextAuth v4 with GitHub OAuth
 - Claude API (claude-sonnet-4-6)
 - Postgres (Neon free tier)
 - Stripe for $15/mo billing
@@ -29,6 +29,7 @@ Fill in:
 - `ANTHROPIC_API_KEY` — console.anthropic.com
 - `DATABASE_URL` — Neon free tier: neon.tech
 - `STRIPE_SECRET_KEY` / `STRIPE_PRO_PRICE_ID` / `STRIPE_WEBHOOK_SECRET` — dashboard.stripe.com
+- `CRON_SECRET` — run `openssl rand -base64 32`
 
 ### 3. Database
 ```bash
@@ -48,29 +49,52 @@ npm run dev
 ## File structure
 ```
 app/
-  page.tsx                    # Landing (redirects to /dashboard if authed)
-  dashboard/page.tsx          # Main dashboard (protected)
+  layout.tsx                    # Root layout with metadata + providers
+  page.tsx                      # Landing page
+  globals.css                   # Full design system
+  providers.tsx                 # SessionProvider wrapper
+  dashboard/
+    page.tsx                    # Main dashboard (protected by middleware)
+    loading.tsx                 # Loading skeleton
   api/
-    auth/[...nextauth]/       # NextAuth handler
-    generate/route.ts         # Core: GitHub scan → Claude → outputs
-    history/route.ts          # Fetch past outputs
-    upgrade/route.ts          # Stripe checkout
-    webhook/route.ts          # Stripe webhook (plan upgrades)
+    auth/[...nextauth]/route.ts # NextAuth handler
+    generate/route.ts           # Core: GitHub scan → Claude → outputs
+    history/route.ts            # Fetch past outputs
+    upgrade/route.ts            # Stripe checkout / billing portal
+    webhook/route.ts            # Stripe webhook (plan upgrades)
+    cron/reset/route.ts         # Monthly generation reset (Vercel cron)
 
 lib/
-  github.ts                   # PR fetcher + scorer + stack detector
-  claude.ts                   # Prompt builder + Claude API caller
-  db.ts                       # Postgres queries
-  auth.ts                     # NextAuth config
-  stripe.ts                   # Stripe helpers
+  auth.ts                       # NextAuth config + GitHub OAuth
+  github.ts                     # PR fetcher + scorer + stack detector
+  claude.ts                     # Prompt builder + Claude API caller
+  db.ts                         # Postgres queries + shared pool
+  stripe.ts                     # Stripe helpers (lazy init)
+  rate-limit.ts                 # In-memory rate limiter
 
 components/
-  Landing.tsx                 # Landing page
-  Dashboard.tsx               # Main UI
-  Providers.tsx               # SessionProvider wrapper
+  Landing.tsx                   # Landing page with pricing
+  Dashboard.tsx                 # Main UI with generate + history tabs
 
-schema.sql                    # Postgres schema
+types/
+  next-auth.d.ts                # Session type augmentation
+
+middleware.ts                   # Route protection for /dashboard
+schema.sql                      # Postgres schema
+vercel.json                     # Cron job config
 ```
+
+## Features
+- Smart PR scoring — filters noise, ranks by impact
+- Seniority-aware tone — junior/mid/senior
+- 3 LinkedIn post variations per PR (Problem / Tradeoff / Learnings)
+- STAR-format resume bullets
+- Interview hook generation
+- Generation history with copy-to-clipboard
+- Free (3/mo) and Pro (unlimited) plans
+- Stripe billing with customer portal
+- Rate limiting (5 req/min per user)
+- Monthly generation auto-reset
 
 ## Cost math
 - Claude API: ~$0.009 per generation session

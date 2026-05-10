@@ -1,6 +1,10 @@
 import { Pool } from 'pg'
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } })
+export const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false },
+  max: 5,
+})
 
 export interface User {
   id: string
@@ -11,15 +15,18 @@ export interface User {
   seniority: 'junior' | 'mid' | 'senior'
   tone: 'direct' | 'storytelling' | 'technical'
   plan: 'free' | 'pro'
+  plan_expires_at: string | null
   generations_this_month: number
+  month_reset_at: string
+  stripe_customer_id: string | null
 }
 
 export async function upsertUser(profile: {
   github_id: string
   github_login: string
-  name?: string
-  avatar_url?: string
-  email?: string
+  name?: string | null
+  avatar_url?: string | null
+  email?: string | null
 }): Promise<User> {
   const { rows } = await pool.query<User>(`
     INSERT INTO users (github_id, github_login, name, avatar_url, email)
@@ -49,12 +56,43 @@ export async function updateUserPrefs(githubId: string, prefs: { seniority?: str
   `, [githubId, prefs.seniority, prefs.tone])
 }
 
-export async function canGenerate(githubId: string): Promise<{ allowed: boolean; reason?: string }> {
+export async function canGenerate(githubId: string): Promise<{ allowed: boolean; reason?: string; user?: User }> {
   const user = await getUser(githubId)
   if (!user) return { allowed: false, reason: 'User not found' }
-  if (user.plan === 'pro') return { allowed: true }
-  if (user.generations_this_month >= 3) return { allowed: false, reason: 'Free plan limit reached (3/month). Upgrade to Pro.' }
-  return { allowed: true }
+
+  // Check if plan has expired
+  if (user.plan === 'pro' && user.plan_expires_at) {
+    const expires = new Date(user.plan_expires_at)
+    if (expires <= new Date()) {
+      // Plan expired — downgrade to free
+      await pool.query(`
+        UPDATE users SET plan = 'free', plan_expires_at = null, updated_at = now()
+        WHERE github_id = $1
+      `, [githubId])
+      user.plan = 'free'
+    }
+  }
+
+  if (user.plan === 'pro') return { allowed: true, user }
+
+  // Auto-reset monthly counter if month has rolled over
+  const resetAt = new Date(user.month_reset_at)
+  if (resetAt <= new Date()) {
+    await pool.query(`
+      UPDATE users SET
+        generations_this_month = 0,
+        month_reset_at = date_trunc('month', now()) + interval '1 month',
+        updated_at = now()
+      WHERE github_id = $1
+    `, [githubId])
+    user.generations_this_month = 0
+  }
+
+  if (user.generations_this_month >= 3) {
+    return { allowed: false, reason: 'Free plan limit reached (3/month). Upgrade to Pro for unlimited.', user }
+  }
+
+  return { allowed: true, user }
 }
 
 export async function incrementGenerations(githubId: string) {
@@ -81,7 +119,7 @@ export async function saveOutputs(userId: string, outputs: {
     `, [
       userId, o.pr_title, o.pr_url, o.pr_signals, o.repo_name, o.stack,
       o.linkedin_post_1, o.linkedin_post_2, o.linkedin_post_3,
-      o.resume_bullet, o.interview_hook
+      o.resume_bullet, o.interview_hook,
     ])
   }
 }
@@ -91,4 +129,14 @@ export async function getOutputHistory(userId: string, limit = 20) {
     SELECT * FROM outputs WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2
   `, [userId, limit])
   return rows
+}
+
+export async function resetAllMonthlyGenerations() {
+  await pool.query(`
+    UPDATE users SET
+      generations_this_month = 0,
+      month_reset_at = date_trunc('month', now()) + interval '1 month',
+      updated_at = now()
+    WHERE month_reset_at <= now()
+  `)
 }
