@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getHeader } from "vinxi/http";
 import { z } from "zod";
 import Anthropic from "@anthropic-ai/sdk";
 import { Octokit } from "octokit";
@@ -7,8 +8,18 @@ import { users, userEvents } from "./schema";
 import { eq, sql } from "drizzle-orm";
 import { rateLimit } from "./redis";
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
+let anthropic: Anthropic | null = null;
+let octokit: Octokit | null = null;
+
+function getAnthropic() {
+  if (!anthropic) anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  return anthropic;
+}
+
+function getOctokit() {
+  if (!octokit) octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
+  return octokit;
+}
 const CLAUDE_MODEL = process.env.CLAUDE_MODEL ?? "claude-3-5-sonnet-20241022";
 
 const FREE_ROAST_LIMIT = 10;
@@ -17,7 +28,7 @@ const PUBLIC_ANON_LIMIT = 3;
 const RoastOutputSchema = z.object({
   roast: z.string().max(1000),
   criticality: z.enum(["LOW", "MEDIUM", "HIGH", "NUCLEAR"]),
-  improvements: z.array(z.string()).length(3),
+  improvements: z.array(z.string()).min(1).max(5),
   redeeming_quality: z.string().max(200),
 });
 
@@ -42,10 +53,14 @@ export const generateRoast = createServerFn({ method: "POST" })
         throw new Error("ROAST_LIMIT_REACHED");
       }
     } else {
-      // Global IP-based rate limit for anonymous users
-      const { success } = await rateLimit(`roast:anon:${username}`, PUBLIC_ANON_LIMIT, 3600);
+      // IP-based rate limit for anonymous users
+      const ip = getHeader("x-forwarded-for")?.split(",")[0] || "127.0.0.1";
+      const { success } = await rateLimit(`roast:anon:${ip}`, PUBLIC_ANON_LIMIT, 3600);
       if (!success) throw new Error("PUBLIC_RATE_LIMIT_REACHED");
     }
+
+    const octokit = getOctokit();
+    const anthropic = getAnthropic();
 
     const [userRes, eventsRes, reposRes] = await Promise.all([
       octokit.rest.users.getByUsername({ username }),

@@ -16,8 +16,10 @@ export const Route = createRootRoute({
       { name: "description", content: "GitHub → LinkedIn posts + resume bullets. No hype. No emoji." },
       { property: "og:type", content: "website" },
       { property: "og:title", content: "DevBrand — Evidence-Backed Engineering Reputation" },
-      { property: "og:description", content: "Turn your PRs into verifiable career leverage." },
+      { property: "og:description", content: "Turn your PRs into verifiable career leverage. Evidence citations included." },
+      { property: "og:image", content: "https://devbrand.ai/og-main.png" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: "https://devbrand.ai/og-main.png" },
     ],
     links: [
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" }

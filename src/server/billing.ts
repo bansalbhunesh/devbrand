@@ -5,10 +5,14 @@ import { db } from "./db";
 import { users, subscriptions, userEvents } from "./schema";
 import { eq } from "drizzle-orm";
 
+let stripe: Stripe | null = null;
+
 function getStripe(): Stripe {
+  if (stripe) return stripe;
   const key = process.env.STRIPE_SECRET_KEY;
   if (!key) throw new Error("STRIPE_SECRET_KEY not set");
-  return new Stripe(key, { apiVersion: "2024-12-18.acacia" });
+  stripe = new Stripe(key, { apiVersion: "2024-12-18.acacia" });
+  return stripe;
 }
 
 export const createCheckoutSession = createServerFn({ method: "POST" })
@@ -81,6 +85,12 @@ export const handleStripeWebhook = createServerFn({ method: "POST" })
       throw new Error(`Webhook signature verification failed: ${err}`);
     }
 
+    // Idempotency check: check if we already processed this event
+    const existing = await db.query.userEvents.findFirst({
+      where: sql`${userEvents.payload}->>'stripeEventId' = ${event.id}`
+    });
+    if (existing) return { received: true, duplicate: true };
+
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
@@ -102,7 +112,11 @@ export const handleStripeWebhook = createServerFn({ method: "POST" })
             target: subscriptions.stripeSubscriptionId,
             set: { status: sub.status, currentPeriodEnd: new Date(sub.current_period_end * 1000) },
           }),
-          db.insert(userEvents).values({ userId, eventType: "upgraded_to_pro", payload: { subId: sub.id } }),
+          db.insert(userEvents).values({ 
+            userId, 
+            eventType: "upgraded_to_pro", 
+            payload: { subId: sub.id, stripeEventId: event.id } 
+          }),
         ]);
         break;
       }
@@ -110,7 +124,7 @@ export const handleStripeWebhook = createServerFn({ method: "POST" })
       case "customer.subscription.updated": {
         const sub = event.data.object as Stripe.Subscription;
         const userId = sub.metadata?.devbrand_user_id;
-        const newPlan = sub.status === "active" ? "pro" : "free";
+        const newPlan = (sub.status === "active" || sub.status === "trialing") ? "pro" : "free";
         if (userId) {
           await Promise.all([
             db.update(users).set({ plan: newPlan, updatedAt: new Date() }).where(eq(users.id, userId)),
@@ -120,6 +134,11 @@ export const handleStripeWebhook = createServerFn({ method: "POST" })
               cancelAtPeriodEnd: sub.cancel_at_period_end,
               updatedAt: new Date(),
             }).where(eq(subscriptions.stripeSubscriptionId, sub.id)),
+            db.insert(userEvents).values({
+              userId,
+              eventType: "subscription_updated",
+              payload: { subId: sub.id, status: sub.status, stripeEventId: event.id }
+            })
           ]);
         }
         break;
@@ -133,7 +152,11 @@ export const handleStripeWebhook = createServerFn({ method: "POST" })
             db.update(users).set({ plan: "free", updatedAt: new Date() }).where(eq(users.id, userId)),
             db.update(subscriptions).set({ status: "canceled", updatedAt: new Date() })
               .where(eq(subscriptions.stripeSubscriptionId, sub.id)),
-            db.insert(userEvents).values({ userId, eventType: "subscription_canceled" }),
+            db.insert(userEvents).values({ 
+              userId, 
+              eventType: "subscription_canceled", 
+              payload: { stripeEventId: event.id } 
+            }),
           ]);
         }
         break;

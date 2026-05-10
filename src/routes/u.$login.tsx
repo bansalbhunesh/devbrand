@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { createServerFn } from "@tanstack/react-start";
 import { db } from "@/server/db";
 import { users, outputs } from "@/server/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import { Github, Globe, Star, ShieldCheck, Zap, Activity, ExternalLink } from "lucide-react";
 
 const getProfileData = createServerFn({ method: "GET" })
@@ -19,7 +19,7 @@ const getProfileData = createServerFn({ method: "GET" })
     if (!user) return null;
 
     const publicOutputs = await db.query.outputs.findMany({
-      where: eq(outputs.userId, user.id) && eq(outputs.isPublic, true),
+      where: and(eq(outputs.userId, user.id), eq(outputs.isPublic, true)),
       orderBy: [desc(outputs.createdAt)],
       limit: 10,
     });

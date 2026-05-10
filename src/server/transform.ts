@@ -5,7 +5,7 @@ import { fetchPRDiff } from "./github";
 import { buildImportGraph, computeArchScores } from "./arch-graph";
 import { db } from "./db";
 import { outputs, users, userEvents } from "./schema";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, and } from "drizzle-orm";
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -69,15 +69,15 @@ export const transformPR = createServerFn({ method: "POST" })
 
     const [diff, graph] = await Promise.all([
       fetchPRDiff({ data: { prUrl } }),
-      buildImportGraph(
-        prUrl.match(/github\.com\/([^/]+)\/([^/]+)\/pull\/\d+/)?.[1] ?? "",
-        prUrl.match(/github\.com\/([^/]+)\/([^/]+)\/pull\/\d+/)?.[2] ?? ""
-      ),
+      Promise.resolve({ nodes: [], edges: [] }), // Placeholder for graph fetch
     ]);
+
+    // Use owner/repo from ParsedDiff to avoid redundant regex
+    const realGraph = await buildImportGraph(diff.owner, diff.repoName);
 
     const scoredFiles = computeArchScores(
       diff.files.map((f) => f.filename),
-      graph
+      realGraph
     );
 
     const stackKeywords = [
@@ -97,49 +97,61 @@ export const transformPR = createServerFn({ method: "POST" })
       return sb - sa;
     });
 
+    let currentTokens = 0;
+    const MAX_PROMPT_CHARS = 40000; // ~10k tokens safe budget
+
     const diffSummary = sortedFiles
-      .slice(0, 20)
+      .slice(0, 30)
       .map((f) => {
+        if (currentTokens > MAX_PROMPT_CHARS) return null;
         const score = scoredFiles.find((s) => s.filename === f.filename);
-        return [
+        const chunk = [
           `File: ${f.filename} (+${f.additions}, -${f.deletions})`,
           `  [archScore: ${score?.archScore ?? 0}, label: ${score?.label ?? "unknown"}]`,
-          `  Patch:\n${f.patch.slice(0, 2000)}`,
+          `  Patch:\n${f.patch.slice(0, 1500)}`,
         ].join("\n");
+        currentTokens += chunk.length;
+        return chunk;
       })
+      .filter(Boolean)
       .join("\n\n");
 
-    const response = await anthropic.messages.create({
-      model: CLAUDE_MODEL,
-      max_tokens: 2500,
-      system: SYSTEM_PROMPT,
-      messages: [
-        {
-          role: "user",
-          content: [
-            `PR Title: ${diff.prTitle}`,
-            `PR URL: ${prUrl}`,
-            `SHA: ${diff.sha}`,
-            `Total: +${diff.totalAdditions} -${diff.totalDeletions} across ${diff.files.length} files`,
-            `Detected Stack: ${detectedStack.join(", ") || "not detected"}`,
-            `Seniority context: ${user.seniority}, Tone preference: ${user.tone}`,
-            "",
-            diffSummary,
-          ].join("\n"),
-        },
-      ],
-    });
-
-    const rawContent =
-      response.content[0].type === "text" ? response.content[0].text.trim() : "";
-
     let output: z.infer<typeof TransformOutputSchema>;
-    try {
-      const cleaned = rawContent.replace(/^```json\n?/, "").replace(/\n?```$/, "");
-      output = TransformOutputSchema.parse(JSON.parse(cleaned));
-    } catch (e) {
-      console.error("Claude output parse error:", rawContent);
-      throw new Error("AI_PARSE_ERROR");
+    let attempts = 0;
+    while (attempts < 2) {
+      try {
+        const response = await anthropic.messages.create({
+          model: CLAUDE_MODEL,
+          max_tokens: 2500,
+          system: SYSTEM_PROMPT,
+          messages: [
+            {
+              role: "user",
+              content: [
+                `PR Title: ${diff.prTitle}`,
+                `PR URL: ${prUrl}`,
+                `SHA: ${diff.sha}`,
+                `Total: +${diff.totalAdditions} -${diff.totalDeletions} across ${diff.files.length} files`,
+                `Detected Stack: ${detectedStack.join(", ") || "not detected"}`,
+                `Seniority context: ${user.seniority}, Tone preference: ${user.tone}`,
+                "",
+                diffSummary,
+              ].join("\n"),
+            },
+          ],
+        });
+
+        const rawContent = response.content[0].type === "text" ? response.content[0].text.trim() : "";
+        const cleaned = rawContent.replace(/^```json\n?/, "").replace(/\n?```$/, "");
+        output = TransformOutputSchema.parse(JSON.parse(cleaned));
+        break; // Success
+      } catch (e) {
+        attempts++;
+        if (attempts >= 2) {
+          console.error("Claude output parse error after retries");
+          throw new Error("AI_PARSE_ERROR");
+        }
+      }
     }
 
     const slug = generateSlug(prUrl, userId);
@@ -207,6 +219,6 @@ export const toggleOutputVisibility = createServerFn({ method: "POST" })
     await db
       .update(outputs)
       .set({ isPublic })
-      .where(eq(outputs.id, outputId) && eq(outputs.userId, userId));
+      .where(and(eq(outputs.id, outputId), eq(outputs.userId, userId)));
     return { success: true };
-  });
+});

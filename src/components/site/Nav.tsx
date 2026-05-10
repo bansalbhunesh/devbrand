@@ -36,10 +36,6 @@ export function Nav() {
         </Link>
 
         <div className="hidden md:flex items-center gap-8 text-sm font-medium text-muted-foreground">
-          <Link to="/" className="hover:text-foreground transition">Intelligence</Link>
-          <Link to="/" className="hover:text-foreground transition">Roast</Link>
-          <Link to="/" className="hover:text-foreground transition">Wrapped</Link>
-          <Link to="/" className="hover:text-foreground transition">Pricing</Link>
         </div>
 
         <div className="flex items-center gap-3">
@@ -77,7 +73,6 @@ export function Nav() {
               <div className="flex flex-col gap-6 mt-12">
                 <Link to="/" className="text-lg font-medium hover:text-blue-500 transition">Intelligence</Link>
                 <Link to="/" className="text-lg font-medium hover:text-blue-500 transition">Roast</Link>
-                <Link to="/" className="text-lg font-medium hover:text-blue-500 transition">Wrapped</Link>
                 <Link to="/" className="text-lg font-medium hover:text-blue-500 transition">Pricing</Link>
                 <hr className="border-border/50" />
                 {session ? (

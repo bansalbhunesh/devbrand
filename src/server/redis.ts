@@ -11,13 +11,20 @@ if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) 
 
 export async function rateLimit(key: string, limit: number, windowSeconds: number): Promise<{ success: boolean; remaining: number }> {
   if (!redis) {
-    // Local dev fallback: no-op (allow all)
+    if (process.env.NODE_ENV === "production") {
+      console.warn("CRITICAL: Redis not configured in production. Rate limiting is DISABLED.");
+    }
     return { success: true, remaining: limit };
   }
 
-  const current = await redis.incr(key);
-  if (current === 1) {
-    await redis.expire(key, windowSeconds);
+  // Atomic set-if-not-exists with expiration + increment
+  const isNew = await redis.set(key, 1, { nx: true, ex: windowSeconds });
+  let current: number;
+  
+  if (isNew) {
+    current = 1;
+  } else {
+    current = (await redis.incr(key)) as number;
   }
 
   if (current > limit) {

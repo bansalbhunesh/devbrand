@@ -5,7 +5,8 @@ import { db } from "./db";
 import { users, userEvents } from "./schema";
 import { eq } from "drizzle-orm";
 
-const SESSION_COOKIE_NAME = "devbrand_sid";
+const SESSION_COOKIE_NAME = process.env.NODE_ENV === "production" ? "__Secure-devbrand_sid" : "devbrand_sid";
+const STATE_COOKIE_NAME = "devbrand_oauth_state";
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
 
 // ── HMAC helpers ────────────────────────────────────────────────────────────
@@ -68,12 +69,22 @@ export const getSession = createServerFn({ method: "GET" }).handler(async () => 
 });
 
 export const logout = createServerFn({ method: "POST" }).handler(async () => {
-  deleteCookie(SESSION_COOKIE_NAME);
+  deleteCookie(SESSION_COOKIE_NAME, { path: "/" });
   return { success: true };
 });
 
 export const signInWithGithub = createServerFn({ method: "GET" }).handler(async () => {
   const state = crypto.randomUUID(); 
+  
+  // Store state in a short-lived cookie for CSRF protection
+  setCookie(STATE_COOKIE_NAME, state, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 60 * 10, // 10 minutes
+    path: "/",
+  });
+
   const params = new URLSearchParams({
     client_id: process.env.GITHUB_CLIENT_ID!,
     redirect_uri: `${process.env.APP_URL}/api/auth/callback/github`,
@@ -85,7 +96,15 @@ export const signInWithGithub = createServerFn({ method: "GET" }).handler(async 
 
 export const handleGithubCallback = createServerFn({ method: "POST" })
   .validator(z.object({ code: z.string(), state: z.string().optional() }))
-  .handler(async ({ data: { code } }) => {
+  .handler(async ({ data: { code, state } }) => {
+    // 0. Verify state for CSRF protection
+    const savedState = getCookie(STATE_COOKIE_NAME);
+    deleteCookie(STATE_COOKIE_NAME, { path: "/" });
+    
+    if (!state || !savedState || state !== savedState) {
+      throw new Error("Invalid OAuth state. Potential CSRF attack.");
+    }
+
     // 1. Exchange code for access token
     const tokenRes = await fetch("https://github.com/login/oauth/access_token", {
       method: "POST",
@@ -148,7 +167,7 @@ export const handleGithubCallback = createServerFn({ method: "POST" })
     setCookie(SESSION_COOKIE_NAME, signed, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      sameSite: "strict",
       maxAge: COOKIE_MAX_AGE,
       path: "/",
     });

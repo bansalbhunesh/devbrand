@@ -112,7 +112,7 @@ function OutputPage() {
         
         <div className="mt-12 text-center">
           <p className="text-xs text-muted-foreground">
-            Want to transform your own PRs? <a href="/" className="text-blue-500 hover:underline font-medium">Join the waitlist →</a>
+            Want to transform your own PRs? <a href="/" className="text-blue-500 hover:underline font-medium">Get started with DevBrand →</a>
           </p>
         </div>
       </div>

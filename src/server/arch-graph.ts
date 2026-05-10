@@ -21,11 +21,15 @@ export async function buildImportGraph(owner: string, repo: string): Promise<Arc
   }
 
   try {
-    // 1. Get entire repo tree recursively
+    // 1. Get default branch dynamically
+    const { data: repoData } = await octokit.rest.repos.get({ owner, repo });
+    const defaultBranch = repoData.default_branch;
+
+    // 2. Get entire repo tree recursively
     const { data: treeRes } = await octokit.rest.git.getTree({
       owner,
       repo,
-      tree_sha: "main", // fallback to master if needed
+      tree_sha: defaultBranch,
       recursive: "true",
     });
 
@@ -97,8 +101,11 @@ function resolvePath(current: string, target: string, nodes: string[]): string |
   }
 
   const resolved = parts.join("/");
-  // Try exact match or with extensions
-  return nodes.find(n => n.startsWith(resolved)) || null;
+  // Try exact match or with extensions (ts, tsx, go, etc)
+  return nodes.find(n => {
+    const stem = n.replace(/\.[^/.]+$/, "");
+    return n === resolved || stem === resolved || n === `${resolved}/index`;
+  }) || null;
 }
 
 export function computeArchScores(files: string[], graph: ArchGraph) {
