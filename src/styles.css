@@ -1,0 +1,111 @@
+@import "tailwindcss";
+
+@plugin "tailwindcss-animate";
+
+@custom-variant hover (&:hover);
+
+:root {
+  --background: oklch(12.72% 0.006 286.32);
+  --foreground: oklch(98.51% 0 0);
+  --muted: oklch(24.02% 0.013 286.64);
+  --muted-foreground: oklch(70.71% 0.013 286.64);
+  --popover: oklch(12.72% 0.006 286.32);
+  --popover-foreground: oklch(98.51% 0 0);
+  --card: oklch(12.72% 0.006 286.32);
+  --card-foreground: oklch(98.51% 0 0);
+  --border: oklch(24.02% 0.013 286.64);
+  --border-strong: oklch(35% 0.013 286.64);
+  --input: oklch(24.02% 0.013 286.64);
+  --primary: oklch(98.51% 0 0);
+  --primary-foreground: oklch(12.72% 0.006 286.32);
+  --secondary: oklch(24.02% 0.013 286.64);
+  --secondary-foreground: oklch(98.51% 0 0);
+  --accent: oklch(24.02% 0.013 286.64);
+  --accent-foreground: oklch(98.51% 0 0);
+  --destructive: oklch(62.8% 0.258 28.98);
+  --destructive-foreground: oklch(98.51% 0 0);
+  --ring: oklch(70.71% 0.013 286.64);
+  --chart-1: oklch(64.6% 0.222 41.11);
+  --chart-2: oklch(60% 0.118 184.7);
+  --chart-3: oklch(39.8% 0.07 227.39);
+  --chart-4: oklch(82.8% 0.189 84.43);
+  --chart-5: oklch(76.9% 0.188 70.08);
+  --radius: 0.75rem;
+
+  /* Custom brand colors */
+  --blue: oklch(65% 0.2 250);
+  --purple: oklch(65% 0.2 300);
+  --green: oklch(75% 0.15 150);
+  --surface: oklch(16% 0.01 286);
+  --surface-2: oklch(20% 0.01 286);
+
+  /* Gradients */
+  --gradient-radial: radial-gradient(circle at 50% -20%, oklch(25% 0.1 250 / 0.15), transparent 80%);
+  --gradient-mesh: radial-gradient(at 100% 100%, oklch(30% 0.1 300 / 0.1), transparent 50%),
+                   radial-gradient(at 0% 0%, oklch(20% 0.1 200 / 0.1), transparent 50%);
+}
+
+@theme {
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+
+  /* Brand Colors */
+  --color-blue: var(--blue);
+  --color-purple: var(--purple);
+  --color-green: var(--green);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  --shadow-soft: 0 8px 30px rgba(0, 0, 0, 0.3);
+  --ring-soft: 0 0 0 1px var(--border-strong), 0 0 0 4px oklch(100% 0 0 / 0.03);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased selection:bg-blue/20 selection:text-blue;
+    font-feature-settings: "ss01", "ss03", "cv01", "cv11";
+  }
+}
+
+@layer utilities {
+  .bg-grid {
+    background-image: 
+      linear-gradient(to right, oklch(100% 0 0 / 0.03) 1px, transparent 1px),
+      linear-gradient(to bottom, oklch(100% 0 0 / 0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    mask-image: radial-gradient(ellipse at center, black, transparent 80%);
+  }
+
+  .gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-br from-foreground via-foreground to-muted-foreground;
+  }
+
+  .divider-soft {
+    background: linear-gradient(to right, transparent, var(--border-strong), transparent);
+  }
+}
