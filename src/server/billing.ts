@@ -16,9 +16,14 @@ function getStripe(): Stripe {
   return stripe;
 }
 
+import { getSession } from "./auth";
+
 export const createCheckoutSession = createServerFn({ method: "POST" })
-  .validator(z.object({ userId: z.string().uuid() }))
-  .handler(async ({ data: { userId } }) => {
+  .handler(async () => {
+    const sessionUser = await getSession();
+    if (!sessionUser) throw new Error("UNAUTHORIZED");
+
+    const userId = sessionUser.id;
     const stripe = getStripe();
     const user = await db.query.users.findFirst({ where: eq(users.id, userId) });
     if (!user) throw new Error("USER_NOT_FOUND");
@@ -58,8 +63,11 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
   });
 
 export const createBillingPortal = createServerFn({ method: "POST" })
-  .validator(z.object({ userId: z.string().uuid() }))
-  .handler(async ({ data: { userId } }) => {
+  .handler(async () => {
+    const sessionUser = await getSession();
+    if (!sessionUser) throw new Error("UNAUTHORIZED");
+
+    const userId = sessionUser.id;
     const stripe = getStripe();
     const user = await db.query.users.findFirst({ where: eq(users.id, userId) });
     if (!user?.stripeCustomerId) throw new Error("No Stripe customer found");
@@ -71,6 +79,7 @@ export const createBillingPortal = createServerFn({ method: "POST" })
 
     return { url: session.url };
   });
+
 
 export const handleStripeWebhook = createServerFn({ method: "POST" })
   .validator(z.object({ body: z.string(), signature: z.string() }))
@@ -175,11 +184,15 @@ export const handleStripeWebhook = createServerFn({ method: "POST" })
   });
 
 export const getSubscriptionStatus = createServerFn({ method: "GET" })
-  .validator(z.string().uuid())
-  .handler(async ({ data: userId }) => {
+  .handler(async () => {
+    const sessionUser = await getSession();
+    if (!sessionUser) return null;
+
+    const userId = sessionUser.id;
     const sub = await db.query.subscriptions.findFirst({
       where: eq(subscriptions.userId, userId),
       orderBy: (s, { desc }) => [desc(s.createdAt)],
     });
     return sub ?? null;
   });
+

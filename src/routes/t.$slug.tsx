@@ -99,16 +99,25 @@ function OutputPage() {
                   href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Check out my engineering impact report on DevBrand: ${output.prTitle}`)}&url=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-foreground text-background text-sm font-bold hover:opacity-90 transition shadow-lg shadow-foreground/5"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#1DA1F2] text-white text-xs font-bold hover:brightness-110 transition shadow-lg shadow-blue-500/10"
                 >
                   Share on X
                 </a>
+                <a 
+                  href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#0077b5] text-white text-xs font-bold hover:brightness-110 transition shadow-lg shadow-blue-700/10"
+                >
+                  Share on LinkedIn
+                </a>
                 <button
                   onClick={() => { navigator.clipboard?.writeText(window.location.href); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
-                  className="p-3 rounded-xl border border-border text-muted-foreground hover:text-foreground transition"
+                  className="p-3 rounded-xl border border-border text-muted-foreground hover:text-foreground transition bg-muted/20"
                 >
                   {copied ? <Check className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
                 </button>
+
               </div>
 
               

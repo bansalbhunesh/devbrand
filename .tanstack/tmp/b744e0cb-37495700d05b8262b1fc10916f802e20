@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WrappedRouteImport } from './routes/wrapped'
+import { Route as RoastRouteImport } from './routes/roast'
 import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
@@ -17,10 +18,16 @@ import { Route as ULoginRouteImport } from './routes/u.$login'
 import { Route as TeamIdRouteImport } from './routes/team.$id'
 import { Route as TSlugRouteImport } from './routes/t.$slug'
 import { Route as RIdRouteImport } from './routes/r.$id'
+import { Route as ApiBadgeLoginRouteImport } from './routes/api.badge.$login'
 
 const WrappedRoute = WrappedRouteImport.update({
   id: '/wrapped',
   path: '/wrapped',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RoastRoute = RoastRouteImport.update({
+  id: '/roast',
+  path: '/roast',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ExploreRoute = ExploreRouteImport.update({
@@ -58,37 +65,48 @@ const RIdRoute = RIdRouteImport.update({
   path: '/r/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiBadgeLoginRoute = ApiBadgeLoginRouteImport.update({
+  id: '/api/badge/$login',
+  path: '/api/badge/$login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
   '/explore': typeof ExploreRoute
+  '/roast': typeof RoastRoute
   '/wrapped': typeof WrappedRoute
   '/r/$id': typeof RIdRoute
   '/t/$slug': typeof TSlugRoute
   '/team/$id': typeof TeamIdRoute
   '/u/$login': typeof ULoginRoute
+  '/api/badge/$login': typeof ApiBadgeLoginRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
   '/explore': typeof ExploreRoute
+  '/roast': typeof RoastRoute
   '/wrapped': typeof WrappedRoute
   '/r/$id': typeof RIdRoute
   '/t/$slug': typeof TSlugRoute
   '/team/$id': typeof TeamIdRoute
   '/u/$login': typeof ULoginRoute
+  '/api/badge/$login': typeof ApiBadgeLoginRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
   '/explore': typeof ExploreRoute
+  '/roast': typeof RoastRoute
   '/wrapped': typeof WrappedRoute
   '/r/$id': typeof RIdRoute
   '/t/$slug': typeof TSlugRoute
   '/team/$id': typeof TeamIdRoute
   '/u/$login': typeof ULoginRoute
+  '/api/badge/$login': typeof ApiBadgeLoginRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -96,42 +114,50 @@ export interface FileRouteTypes {
     | '/'
     | '/dashboard'
     | '/explore'
+    | '/roast'
     | '/wrapped'
     | '/r/$id'
     | '/t/$slug'
     | '/team/$id'
     | '/u/$login'
+    | '/api/badge/$login'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/dashboard'
     | '/explore'
+    | '/roast'
     | '/wrapped'
     | '/r/$id'
     | '/t/$slug'
     | '/team/$id'
     | '/u/$login'
+    | '/api/badge/$login'
   id:
     | '__root__'
     | '/'
     | '/dashboard'
     | '/explore'
+    | '/roast'
     | '/wrapped'
     | '/r/$id'
     | '/t/$slug'
     | '/team/$id'
     | '/u/$login'
+    | '/api/badge/$login'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DashboardRoute: typeof DashboardRoute
   ExploreRoute: typeof ExploreRoute
+  RoastRoute: typeof RoastRoute
   WrappedRoute: typeof WrappedRoute
   RIdRoute: typeof RIdRoute
   TSlugRoute: typeof TSlugRoute
   TeamIdRoute: typeof TeamIdRoute
   ULoginRoute: typeof ULoginRoute
+  ApiBadgeLoginRoute: typeof ApiBadgeLoginRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -141,6 +167,13 @@ declare module '@tanstack/react-router' {
       path: '/wrapped'
       fullPath: '/wrapped'
       preLoaderRoute: typeof WrappedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/roast': {
+      id: '/roast'
+      path: '/roast'
+      fullPath: '/roast'
+      preLoaderRoute: typeof RoastRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/explore': {
@@ -192,6 +225,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/badge/$login': {
+      id: '/api/badge/$login'
+      path: '/api/badge/$login'
+      fullPath: '/api/badge/$login'
+      preLoaderRoute: typeof ApiBadgeLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -199,11 +239,13 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DashboardRoute: DashboardRoute,
   ExploreRoute: ExploreRoute,
+  RoastRoute: RoastRoute,
   WrappedRoute: WrappedRoute,
   RIdRoute: RIdRoute,
   TSlugRoute: TSlugRoute,
   TeamIdRoute: TeamIdRoute,
   ULoginRoute: ULoginRoute,
+  ApiBadgeLoginRoute: ApiBadgeLoginRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

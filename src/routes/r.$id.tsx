@@ -18,7 +18,24 @@ const getRoast = createServerFn({ method: "GET" })
 
 export const Route = createFileRoute("/r/$id")({
   component: RoastPage,
+  head: (ctx) => {
+    const id = ctx.params.id;
+    return {
+      meta: [
+        { title: "DevBrand // Verified GitHub Roast" },
+        { name: "description", content: "Our AI just judged this GitHub profile. See the fallout." },
+        { property: "og:title", content: "DevBrand // Humiliation Registry" },
+        { property: "og:description", content: "A verifiable judgment of technical reputation." },
+        { property: "og:image", content: `${process.env.APP_URL}/api/og/roast/${id}` },
+        { name: "twitter:card", content: "summary_large_image" },
+        { name: "twitter:title", content: "DevBrand Roast // Impact Verified" },
+        { name: "twitter:description", content: "Click to see the full technical roast." },
+        { name: "twitter:image", content: `${process.env.APP_URL}/api/og/roast/${id}` },
+      ],
+    };
+  },
 });
+
 
 function RoastPage() {
   const { id } = Route.useParams();
@@ -78,22 +95,34 @@ function RoastPage() {
            </div>
         </div>
 
-        <div className="flex items-center justify-center gap-4">
-           <a 
-            href={twitterUrl} 
-            target="_blank" 
-            rel="noreferrer"
-            className="flex items-center gap-3 px-8 py-4 rounded-full bg-white text-black font-bold hover:brightness-90 transition shadow-[0_0_40px_rgba(255,255,255,0.1)]"
-           >
-             <Twitter className="h-5 w-5" /> Share Humiliation
-           </a>
-           <button 
-            onClick={() => navigator.clipboard.writeText(window.location.href)}
-            className="p-4 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 transition"
-           >
-             <Share2 className="h-5 w-5" />
-           </button>
-        </div>
+         <div className="flex flex-wrap items-center justify-center gap-4">
+            <a 
+             href={twitterUrl} 
+             target="_blank" 
+             rel="noreferrer"
+             className="flex items-center gap-3 px-8 py-4 rounded-full bg-white text-black font-bold hover:brightness-90 transition shadow-[0_0_40px_rgba(255,255,255,0.1)]"
+            >
+              <Twitter className="h-5 w-5" /> Share on X
+            </a>
+            <a 
+             href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}`} 
+             target="_blank" 
+             rel="noreferrer"
+             className="flex items-center gap-3 px-8 py-4 rounded-full bg-[#0077b5] text-white font-bold hover:brightness-110 transition shadow-[0_0_40px_rgba(0,119,181,0.1)]"
+            >
+              <Share2 className="h-5 w-5" /> Share on LinkedIn
+            </a>
+            <button 
+             onClick={() => {
+               navigator.clipboard.writeText(window.location.href);
+               alert("Link copied!");
+             }}
+             className="p-4 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 transition"
+            >
+              <Github className="h-5 w-5" />
+            </button>
+         </div>
+
       </div>
     </div>
   );

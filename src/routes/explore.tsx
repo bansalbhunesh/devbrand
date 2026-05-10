@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 
 const getPublicFeed = createServerFn({ method: "GET" })
   .handler(async () => {
-    const [feed, topRoasts] = await Promise.all([
+    const [feed, topRoasts, topEngineers] = await Promise.all([
       db.query.outputs.findMany({
         where: eq(outputs.isPublic, true),
         orderBy: [desc(outputs.createdAt)],
@@ -20,10 +20,25 @@ const getPublicFeed = createServerFn({ method: "GET" })
         where: eq(roasts.isPublic, true),
         orderBy: [desc(roasts.createdAt)],
         limit: 10,
+      }),
+      db.query.users.findMany({
+        limit: 5,
+        with: { outputs: true }
       })
     ]);
-    return { feed, topRoasts };
+
+    // Rank engineers by total impact score
+    const rankedEngineers = topEngineers
+      .map(u => ({
+        ...u,
+        totalImpact: u.outputs.reduce((s, o) => s + o.impactScore, 0),
+        avgImpact: Math.round(u.outputs.reduce((s, o) => s + o.impactScore, 0) / (u.outputs.length || 1))
+      }))
+      .sort((a, b) => b.totalImpact - a.totalImpact);
+
+    return { feed, topRoasts, topEngineers: rankedEngineers };
   });
+
 
 export const Route = createFileRoute("/explore")({
   component: ExplorePage,
@@ -106,11 +121,40 @@ function ExplorePage() {
             )}
           </div>
 
-          {/* Roast Sidebar */}
-          <div className="space-y-8">
-            <h2 className="text-xl font-bold flex items-center gap-2">
-              <Flame className="h-5 w-5 text-red-500" /> Recent Roasts
-            </h2>
+          {/* Sidebars */}
+          <div className="space-y-12">
+            {/* Leaderboard */}
+            <div className="space-y-6">
+              <h2 className="text-xl font-bold flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-blue" /> Top Engineers
+              </h2>
+              <div className="space-y-3">
+                {feed?.topEngineers?.map((eng, i) => (
+                  <Link key={eng.id} to="/u/$login" params={{ login: eng.githubLogin }} className="flex items-center justify-between p-3 rounded-xl border border-border bg-surface/20 hover:bg-surface/40 transition group">
+                    <div className="flex items-center gap-3">
+                      <div className="h-6 w-6 rounded bg-muted grid place-items-center text-[10px] font-bold text-muted-foreground group-hover:text-blue group-hover:bg-blue/10 transition">
+                        {i + 1}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <img src={eng.avatarUrl ?? ""} className="h-6 w-6 rounded shadow-sm" alt="" />
+                        <span className="text-xs font-bold truncate max-w-[80px]">{eng.githubLogin}</span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-[10px] font-black text-blue tracking-tighter">{eng.avgImpact}%</div>
+                      <div className="text-[8px] text-muted-foreground uppercase font-bold tracking-widest">Avg Impact</div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            {/* Roast Sidebar */}
+            <div className="space-y-6">
+              <h2 className="text-xl font-bold flex items-center gap-2">
+                <Flame className="h-5 w-5 text-red-500" /> Recent Roasts
+              </h2>
+
             <div className="space-y-4">
               {feed?.topRoasts?.length ? feed.topRoasts.map((roast) => (
                 <Link key={roast.id} to="/r/$id" params={{ id: roast.id }} className="block p-4 rounded-xl border border-border bg-surface/20 hover:border-red-500/50 transition">
@@ -129,10 +173,32 @@ function ExplorePage() {
                   <div className="text-[9px] text-muted-foreground font-mono">Score: {roast.roastData.roast_score}/100</div>
                 </Link>
               )) : (
-                <div className="p-8 rounded-xl border border-border bg-surface/10 text-center opacity-50">
-                  <p className="text-[10px] font-bold uppercase tracking-widest">No roast victims yet.</p>
+                <div className="space-y-4">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 mb-4 px-2">Featured Sacrifices</p>
+                  {[
+                    { name: "torvalds", score: 99, crit: "NUCLEAR", roast: "Your code is the reason C programmers have night terrors. You built Linux out of pure spite and it shows in every single goto statement." },
+                    { name: "gaearon", score: 82, crit: "HIGH", roast: "You've deprecated more libraries than I've written lines of code. Your hooks have more side effects than a prescription drug commercial." },
+                    { name: "tj", score: 94, crit: "NUCLEAR", roast: "You write frameworks faster than the NPM registry can index them. I'm convinced you're actually a very complex shell script." }
+                  ].map((f) => (
+                    <div key={f.name} className="block p-4 rounded-xl border border-border bg-surface/10 opacity-60">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">@{f.name}</span>
+                        <span className={cn(
+                          "text-[8px] font-black px-1.5 py-0.5 rounded border uppercase tracking-tighter",
+                          f.crit === "NUCLEAR" ? "bg-red-500/20 text-red-500 border-red-500/30" : "text-red-500 border-red-500/30"
+                        )}>
+                          {f.crit}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-foreground/50 leading-relaxed italic line-clamp-3 mb-2">
+                        "{f.roast}"
+                      </p>
+                      <div className="text-[9px] text-muted-foreground/30 font-mono">Score: {f.score}/100</div>
+                    </div>
+                  ))}
                 </div>
               )}
+
             </div>
           </div>
 

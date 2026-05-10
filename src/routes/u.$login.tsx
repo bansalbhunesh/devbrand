@@ -150,7 +150,30 @@ function UserProfile() {
               )}
             </div>
             
+            <div className="p-8 rounded-3xl border border-border bg-muted/10 backdrop-blur-sm">
+              <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-6">GitHub README Badge</h3>
+              <div className="space-y-4">
+                <div className="p-4 rounded-xl bg-background border border-border flex flex-col items-center gap-4">
+                  <img src={`/api/badge/${user.githubLogin}`} alt="DevBrand Reputation" />
+                  <button 
+                    onClick={() => {
+                      const code = `[![DevBrand Reputation](https://devbrand.ai/api/badge/${user.githubLogin})](https://devbrand.ai/u/${user.githubLogin})`;
+                      navigator.clipboard.writeText(code);
+                      alert("Markdown copied!");
+                    }}
+                    className="text-[10px] font-bold text-blue-500 hover:underline"
+                  >
+                    Copy Markdown
+                  </button>
+                </div>
+                <p className="text-[10px] text-muted-foreground leading-relaxed text-center">
+                  Embed your verified reputation directly in your GitHub profile.
+                </p>
+              </div>
+            </div>
+            
             <div className="text-center p-6 border border-blue-500/10 rounded-2xl bg-blue-500/5">
+
               <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold mb-2">Registry Status</p>
               <div className="flex items-center justify-center gap-2 text-xs font-bold text-blue-500">
                 <ShieldCheck className="h-4 w-4" /> VERIFIED BY DEVBRAND

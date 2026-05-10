@@ -45,6 +45,10 @@ Return ONLY valid JSON with keys: linkedinPost1, linkedinPost2, linkedinPost3, r
       const cleaned = rawContent.replace(/^```json\n?/, "").replace(/\n?```$/, "");
       const output = JSON.parse(cleaned);
 
+      // Calculate hype score based on impact profile and invisible work
+      const rawHype = (request.impactProfile.archScore * 0.7) + (request.invisibleWorkReport.invisibleWorkScore * 0.3);
+      const hypeScore = Math.min(100, Math.round(rawHype));
+
       return {
         version: 1,
         linkedinPost1: output.linkedinPost1,
@@ -57,10 +61,11 @@ Return ONLY valid JSON with keys: linkedinPost1, linkedinPost2, linkedinPost3, r
         category: request.staticMetrics.changeTypeClassification[0]?.type || "Feature",
         impactScore: request.impactProfile.archScore,
         complexityLevel: request.userContext.seniority,
-        hypeScore: 0,
-        selfConsistencyScore: 1,
-        evidenceDensityScore: 1,
+        hypeScore,
+        selfConsistencyScore: 0, // Will be set by Layer 6
+        evidenceDensityScore: 0, // Will be set by Layer 6
       };
+
     } catch (e) {
       attempts++;
       if (attempts >= MAX_ATTEMPTS) throw e;

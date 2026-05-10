@@ -40,8 +40,9 @@ export async function runEngine(prUrl: string, userId: string, context: UserCont
       userContext: context,
     });
 
-    // Layer 6: Verification & Evidence Linking
-    const verifiedNarrative = runLayer6(narrative, enrichedPR, staticMetrics, impactProfile);
+    // Layer 6: Verification & Evidence Linking (Semantic Upgrade)
+    const verifiedNarrative = await runLayer6(narrative, enrichedPR, staticMetrics, impactProfile);
+
 
     // Layer 7: Feedback Loop & Continuous Learning
     const finalNarrative = await runLayer7(userId, verifiedNarrative);
