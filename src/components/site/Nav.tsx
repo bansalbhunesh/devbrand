@@ -4,6 +4,7 @@ import { Link } from "@tanstack/react-router";
 import { Github, Menu } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 export function Nav() {
   const [scrolled, setScrolled] = useState(false);
@@ -51,9 +52,24 @@ export function Nav() {
           >
             <Github className="h-4 w-4" /> Start for free
           </Link>
-          <button className="md:hidden p-2 text-muted-foreground">
-            <Menu className="h-5 w-5" />
-          </button>
+
+          <Sheet>
+            <SheetTrigger asChild>
+              <button className="md:hidden p-2 text-muted-foreground hover:text-foreground transition">
+                <Menu className="h-5 w-5" />
+              </button>
+            </SheetTrigger>
+            <SheetContent side="right" className="bg-background/95 backdrop-blur-xl border-border">
+              <div className="flex flex-col gap-6 mt-12">
+                <Link to="/" className="text-lg font-medium hover:text-blue transition">Intelligence</Link>
+                <Link to="/" className="text-lg font-medium hover:text-blue transition">Roast</Link>
+                <Link to="/" className="text-lg font-medium hover:text-blue transition">Wrapped</Link>
+                <Link to="/" className="text-lg font-medium hover:text-blue transition">Pricing</Link>
+                <hr className="border-border/50" />
+                <Link to="/" className="text-lg font-medium">Sign in</Link>
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
     </nav>

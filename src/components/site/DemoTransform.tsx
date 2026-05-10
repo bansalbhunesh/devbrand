@@ -2,62 +2,48 @@
 
 import { useState } from "react";
 import { ArrowRight, Check, Link2, Sparkles, GitCommit } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { getDemoOutputs } from "@/server/outputs";
 
-const pairs = [
+const fallbackPairs = [
   {
     before: "Fixed API issue.",
-    after: (
-      <>
-        Redesigned <C n={1}>async retry handling</C> to improve backend reliability under{" "}
-        <C n={2}>concurrent transaction loads</C>.
-      </>
-    ),
+    after: "Redesigned async retry handling to improve backend reliability under concurrent transaction loads.",
     tag: "Reliability",
     repo: "payments-svc",
     pr: "#1428",
-    citations: [
-      { ref: "lib/retry.ts:42",   sha: "a4f1c2" },
-      { ref: "queue/worker.ts:118", sha: "a4f1c2" },
-    ],
+    citations: [{ ref: "lib/retry.ts:42", sha: "a4f1c2" }],
     slug: "9f2c",
   },
   {
     before: "Refactored auth.",
-    after: (
-      <>
-        Migrated session handling from <C n={1}>cookie-bound state to a stateless JWT pipeline</C>,
-        cutting <C n={2}>auth latency p95 by 38%</C>.
-      </>
-    ),
+    after: "Migrated session handling from cookie-bound state to a stateless JWT pipeline, cutting auth latency p95 by 38%.",
     tag: "Architecture",
     repo: "edge-gateway",
     pr: "#812",
-    citations: [
-      { ref: "auth/session.ts:1", sha: "7b22ee" },
-      { ref: "obs/p95.json:24",   sha: "7b22ee" },
-    ],
+    citations: [{ ref: "auth/session.ts:1", sha: "7b22ee" }],
     slug: "3a71",
-  },
-  {
-    before: "Cleaned up DB queries.",
-    after: (
-      <>
-        Rewrote <C n={1}>N+1 hotspots in the orders service</C> with batched loaders, removing{" "}
-        <C n={2}>70% of query volume during peak</C>.
-      </>
-    ),
-    tag: "Performance",
-    repo: "orders-api",
-    pr: "#377",
-    citations: [
-      { ref: "loaders/orders.ts:88", sha: "11c0a9" },
-      { ref: "metrics/peak.csv:3",   sha: "11c0a9" },
-    ],
-    slug: "b612",
   },
 ];
 
 export function DemoTransform() {
+  const { data: dbOutputs } = useQuery({
+    queryKey: ["demo-outputs"],
+    queryFn: () => getDemoOutputs(),
+  });
+
+  const displayPairs = dbOutputs?.length 
+    ? dbOutputs.map(o => ({
+        before: "Optimized code.", // Generic before for now
+        after: o.linkedinPost1,
+        tag: o.category ?? "Impact",
+        repo: o.prUrl?.split("/").slice(-3, -1).join("/") ?? "repo",
+        pr: `#${o.prUrl?.split("/").pop()}`,
+        citations: [{ ref: "diff", sha: "head" }],
+        slug: o.id.slice(0, 4),
+      }))
+    : fallbackPairs;
+
   return (
     <section id="demo" className="relative py-28">
       <div className="mx-auto max-w-7xl px-6">
@@ -71,14 +57,14 @@ export function DemoTransform() {
         </p>
 
         <div className="mt-14 grid gap-5">
-          {pairs.map((p, i) => <Pair key={i} {...p} />)}
+          {displayPairs.map((p, i) => <Pair key={i} {...p} />)}
         </div>
       </div>
     </section>
   );
 }
 
-function Pair(p: typeof pairs[number]) {
+function Pair(p: typeof fallbackPairs[number]) {
   const [copied, setCopied] = useState(false);
   const url = `devbrand.app/t/${p.slug}`;
   return (
@@ -128,15 +114,6 @@ function Pair(p: typeof pairs[number]) {
         <div className="mt-3 text-[11px] font-mono text-muted-foreground">{url}</div>
       </div>
     </div>
-  );
-}
-
-function C({ n, children }: { n: number; children: React.ReactNode }) {
-  return (
-    <span className="relative">
-      <span className="bg-blue/10 text-foreground rounded-[3px] px-0.5 -mx-0.5 ring-1 ring-blue/20">{children}</span>
-      <sup className="ml-0.5 text-[10px] font-mono text-blue">[{n}]</sup>
-    </span>
   );
 }
 

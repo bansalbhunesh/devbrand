@@ -61,3 +61,22 @@ CREATE INDEX outputs_public_score_idx ON outputs(is_public, impact_score DESC);
 -- Generation limits
 -- free: 3 per month
 -- pro:  unlimited
+
+-- Repository Graphs (for Phase 3)
+CREATE TABLE repo_graphs (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  owner         TEXT NOT NULL,
+  repo          TEXT NOT NULL,
+  graph_data    JSONB NOT NULL,
+  computed_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE(owner, repo)
+);
+
+-- User Events (for tracking)
+CREATE TABLE user_events (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id       UUID REFERENCES users(id) ON DELETE CASCADE,
+  event_type    TEXT NOT NULL,
+  payload       JSONB,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+);
