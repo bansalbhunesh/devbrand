@@ -187,3 +187,23 @@ export const subscriptions = pgTable("subscriptions", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+export const roasts = pgTable("roasts", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: uuid("user_id").references(() => users.id),
+  githubUsername: text("github_username").notNull(),
+  roastData: text("roast_data", { mode: "json" }).$type<{
+    roast: string;
+    criticality: "LOW" | "MEDIUM" | "HIGH" | "NUCLEAR";
+    card_title: string;
+    roast_score: number;
+    technician_score: number;
+    share_summary: string;
+  }>().notNull(),
+  isPublic: boolean("is_public").notNull().default(true),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  index("roasts_username_idx").on(t.githubUsername),
+  index("roasts_public_idx").on(t.isPublic),
+]);
+
+

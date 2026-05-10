@@ -4,7 +4,8 @@ import { z } from "zod";
 import Anthropic from "@anthropic-ai/sdk";
 import { Octokit } from "octokit";
 import { db } from "./db";
-import { users, userEvents } from "./schema";
+import { users, userEvents, roasts } from "./schema";
+
 import { eq, sql } from "drizzle-orm";
 import { rateLimit } from "./redis";
 
@@ -141,8 +142,20 @@ export const generateRoast = createServerFn({ method: "POST" })
           eventType: "roast",
           payload: { username, criticality: output.criticality },
         }),
+        db.insert(roasts).values({
+          userId,
+          githubUsername: username,
+          roastData: output,
+        }),
       ]);
+    } else {
+      // Still persist anonymous roasts for viral sharing!
+      await db.insert(roasts).values({
+        githubUsername: username,
+        roastData: output,
+      });
     }
+
 
     return output;
   });

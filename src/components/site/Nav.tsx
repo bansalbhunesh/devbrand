@@ -36,7 +36,10 @@ export function Nav() {
         </Link>
 
         <div className="hidden md:flex items-center gap-8 text-sm font-medium text-muted-foreground">
+          <Link to="/explore" className="hover:text-foreground transition">Explore</Link>
+          <Link to="/wrapped" className="hover:text-foreground transition">Wrapped</Link>
         </div>
+
 
         <div className="flex items-center gap-3">
           {session ? (

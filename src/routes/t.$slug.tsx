@@ -94,13 +94,23 @@ function OutputPage() {
             </div>
 
             <div className="mt-12 pt-8 border-t border-border flex flex-wrap gap-4 items-center justify-between">
-              <button
-                onClick={() => { navigator.clipboard?.writeText(window.location.href); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-foreground text-background text-sm font-bold hover:opacity-90 transition shadow-lg shadow-foreground/5"
-              >
-                {copied ? <Check className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
-                {copied ? "Copied Link" : "Share Impact"}
-              </button>
+              <div className="flex items-center gap-3">
+                <a 
+                  href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Check out my engineering impact report on DevBrand: ${output.prTitle}`)}&url=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-foreground text-background text-sm font-bold hover:opacity-90 transition shadow-lg shadow-foreground/5"
+                >
+                  Share on X
+                </a>
+                <button
+                  onClick={() => { navigator.clipboard?.writeText(window.location.href); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+                  className="p-3 rounded-xl border border-border text-muted-foreground hover:text-foreground transition"
+                >
+                  {copied ? <Check className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
+                </button>
+              </div>
+
               
               <div className="flex flex-col items-end gap-1">
                 <div className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">Powered by</div>
