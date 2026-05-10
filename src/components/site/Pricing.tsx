@@ -2,8 +2,8 @@
 
 import { Check, Github, LayoutDashboard, Loader2, Zap } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { getSession, signInWithGithub } from "@/server/auth";
-import { createCheckoutSession } from "@/server/billing";
+import { getSession, signInWithGithub } from "@/rpc.server";
+import { createCheckoutSession } from "@/rpc.server";
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";

@@ -1,31 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { createServerFn } from "@tanstack/react-start";
-import { db } from "@/server/db";
-import { users, outputs } from "@/server/schema";
-import { eq, desc, and } from "drizzle-orm";
+import { getProfileData } from "@/rpc.server";
 import { Github, Globe, Star, ShieldCheck, Zap, Activity, ExternalLink } from "lucide-react";
-
-const getProfileData = createServerFn({ method: "GET" })
-  .validator((login: string) => login)
-  .handler(async ({ data: login }) => {
-    const user = await db.query.users.findFirst({
-      where: eq(users.githubLogin, login),
-      with: {
-        profile: true,
-      },
-    });
-
-    if (!user) return null;
-
-    const publicOutputs = await db.query.outputs.findMany({
-      where: and(eq(outputs.userId, user.id), eq(outputs.isPublic, true)),
-      orderBy: [desc(outputs.createdAt)],
-      limit: 10,
-    });
-
-    return { user, publicOutputs };
-  });
+import * as React from "react";
 
 export const Route = createFileRoute("/u/$login")({
   component: UserProfile,

@@ -2,8 +2,8 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Flame, Terminal, Loader2, ShieldAlert, Share2 } from "lucide-react";
-import { getSession } from "@/server/auth";
-import { generateRoast } from "@/server/roast";
+import { getSession } from "@/rpc.server";
+import { generateRoast } from "@/rpc.server";
 import { cn } from "@/lib/utils";
 
 export function Roast() {

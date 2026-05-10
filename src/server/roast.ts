@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getHeader } from "vinxi/http";
+import { getHeader } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { Octokit } from "octokit";
 import { completeText, normalizeLlmJsonText } from "./llm/client";
@@ -31,26 +31,35 @@ const RoastOutputSchema = z.object({
 });
 
 
-const ROAST_PROMPT = `You are a brutally honest senior engineer doing a 360 review of someone's entire GitHub profile.
+const ROAST_PROMPT = `You are a Salty Senior Staff Engineer who has been on call for 48 hours straight. You are doing a code-level audit of a GitHub profile. 
 
-YOUR TASK: Write a roast that is:
-1. FUNNY — precision comedy, not cruelty.
-2. TECHNICALLY ACCURATE — ground every observation in the data given.
-3. BACKHANDED — compliment that is actually a criticism.
-4. SHORT — under 200 words.
-5. BALANCED — always include one genuine "redeeming_quality" you actually respect.
+YOUR PERSONA:
+- You hate over-engineering.
+- You hate "fix" or "update" commit message spam.
+- You judge people who have 500 followers but zero meaningful contributions.
+- You are unimpressed by boilerplate and "Todo list" apps.
 
-ADDITIONAL FIELDS:
-- card_title: A punchy 3-5 word summary (e.g., "The Spaghetti Architect").
-- roast_score: 0-100 (how hard you went).
-- technician_score: 0-100 (perceived skill based on repos/commits).
-- share_summary: A 280-char summary for X/Twitter sharing.
+YOUR TASK:
+- Write a roast that is technically deep and hilarious.
+- Mention specific repo names, languages, or commit patterns from the data.
+- Use "The [Something] Architect" or similar titles for the card_title.
+- Be brutal but stay within community guidelines (no hate speech, just engineering judgment).
 
-Return ONLY valid JSON matching the schema. No markdown, no preamble.`;
+OUTPUT JSON SCHEMA:
+- roast: The main roast text (max 1000 chars).
+- criticality: LOW, MEDIUM, HIGH, or NUCLEAR.
+- improvements: 3-5 technical "repentance" steps.
+- redeeming_quality: One thing you actually respect (e.g., "At least your commit frequency is consistent").
+- card_title: A punchy 3-5 word summary.
+- roast_score: 0-100 (severity of the burn).
+- technician_score: 0-100 (actual skill estimate).
+- share_summary: A 280-char summary for social media.
+
+Return ONLY valid JSON. No preamble.`;
 
 
 export const generateRoast = createServerFn({ method: "POST" })
-  .validator(z.object({ username: z.string().min(1).max(39), userId: z.string().uuid().optional() }))
+  .inputValidator(z.object({ username: z.string().min(1).max(39), userId: z.string().uuid().optional() }))
   .handler(async ({ data: { username, userId } }) => {
     // 1. Rate limiting
     if (userId) {
@@ -91,6 +100,10 @@ export const generateRoast = createServerFn({ method: "POST" })
         return acc;
       }, {});
 
+    const lowEffortCommits = commitMessages.filter(m => 
+      /^(fix|update|test|chore|merge|tmp|save|.)(\s|$|:)/i.test(m) || m.length < 5
+    ).length;
+
     const profileSummary = {
       login: ghUser.login,
       bio: ghUser.bio ?? "No bio",
@@ -109,6 +122,7 @@ export const generateRoast = createServerFn({ method: "POST" })
       })),
       language_breakdown: languages,
       recent_commits: commitMessages,
+      low_effort_commit_count: lowEffortCommits,
       commit_frequency_per_week: Math.round(pushEvents.length / 4),
     };
 

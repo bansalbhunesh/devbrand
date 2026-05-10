@@ -160,6 +160,20 @@ export function computeGraphMetrics(graph: DependencyGraph): GraphMetrics {
 
   for (let iter = 0; iter < iterations; iter++) {
     const nextPr = new Array(n).fill((1 - damping) / n);
+    
+    // Handle dangling nodes (nodes with no out-degree)
+    let danglingWeight = 0;
+    for (let i = 0; i < n; i++) {
+      const outDegree = edges.filter(e => e.source === nodes[i].id).length;
+      if (outDegree === 0) {
+        danglingWeight += damping * (pr[i] / n);
+      }
+    }
+    
+    for (let i = 0; i < n; i++) {
+      nextPr[i] += danglingWeight;
+    }
+
     for (const edge of edges) {
       const sourceIdx = nodes.findIndex(node => node.id === edge.source);
       const targetIdx = nodes.findIndex(node => node.id === edge.target);

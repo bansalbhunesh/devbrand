@@ -14,7 +14,7 @@ function generateSlug(prUrl: string, userId: string): string {
 }
 
 export const transformPR = createServerFn({ method: "POST" })
-  .validator(z.object({ prUrl: z.string().url() }))
+  .inputValidator(z.object({ prUrl: z.string().url() }))
   .handler(async ({ data: { prUrl } }) => {
     const user = await getSession();
     if (!user) throw new Error("UNAUTHORIZED");
@@ -98,7 +98,7 @@ export const getUserOutputs = createServerFn({ method: "GET" })
   });
 
 export const toggleOutputVisibility = createServerFn({ method: "POST" })
-  .validator(z.object({ outputId: z.string().uuid(), isPublic: z.boolean() }))
+  .inputValidator(z.object({ outputId: z.string().uuid(), isPublic: z.boolean() }))
   .handler(async ({ data: { outputId, isPublic } }) => {
     const user = await getSession();
     if (!user) throw new Error("UNAUTHORIZED");

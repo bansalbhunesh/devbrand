@@ -1,35 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { createServerFn } from "@tanstack/react-start";
-import { db } from "@/server/db";
-import { users } from "@/server/schema";
-import { eq, count } from "drizzle-orm";
-import { getSession } from "@/server/auth";
+import { getReferralData } from "@/rpc.server";
 import { Users, Copy, CheckCircle2, Gift } from "lucide-react";
 import { useState } from "react";
-
-const getReferralData = createServerFn({ method: "GET" })
-  .handler(async () => {
-    const session = await getSession();
-    if (!session) throw new Error("Unauthorized");
-
-    const [user] = await db.query.users.findMany({
-      where: eq(users.id, session.userId)
-    });
-
-    if (!user) throw new Error("User not found");
-
-    const [referredCountRes] = await db
-      .select({ count: count() })
-      .from(users)
-      .where(eq(users.referredBy, session.userId));
-
-    return {
-      referralCode: user.referralCode,
-      referredCount: referredCountRes.count,
-      generationsBonus: referredCountRes.count * 5,
-    };
-  });
+import * as React from "react";
 
 export const Route = createFileRoute("/referrals")({
   component: ReferralsPage,

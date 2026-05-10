@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { getWrappedStats } from "@/server/wrapped";
-import { getSession } from "@/server/auth";
+import { getWrappedStats } from "@/rpc.server";
+import { getSession } from "@/rpc.server";
 import { 
   Trophy, Zap, BarChart3, Rocket, Star, 
   ArrowRight, Share2, Twitter, Linkedin, 

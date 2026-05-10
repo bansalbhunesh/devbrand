@@ -1,13 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { db } from "@/server/db";
-import { roasts } from "@/server/schema";
-import { eq } from "drizzle-orm";
+import { getOgRoastData } from "@/rpc.server";
 
 export const Route = createFileRoute("/api/og/roast/$id")({
   loader: async ({ params }) => {
-    const roast = await db.query.roasts.findFirst({
-      where: eq(roasts.id, params.id),
-    });
+    const roast = await getOgRoastData({ data: params.id });
 
     if (!roast) {
       return new Response("Not Found", { status: 404 });

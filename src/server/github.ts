@@ -26,7 +26,7 @@ const octokit = new Octokit({
 });
 
 export const fetchPRDiff = createServerFn({ method: "POST" })
-  .validator(z.object({ prUrl: z.string().url() }))
+  .inputValidator(z.object({ prUrl: z.string().url() }))
   .handler(async ({ data: { prUrl } }): Promise<ParsedDiff> => {
     const match = prUrl.match(/github\.com\/([^/]+)\/([^/]+)\/pull\/(\d+)/);
     if (!match) throw new Error("Invalid GitHub PR URL");

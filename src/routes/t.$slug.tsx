@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { getOutputBySlug } from "@/server/outputs";
+import { getOutputBySlug } from "@/rpc.server";
 import { GitCommit, Sparkles, ArrowRight, Link2, Check } from "lucide-react";
+import * as React from "react";
 import { useState } from "react";
 
 export const Route = createFileRoute("/t/$slug")({

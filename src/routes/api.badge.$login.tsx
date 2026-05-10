@@ -1,26 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { db } from "@/server/db";
-import { users, outputs } from "@/server/schema";
-import { eq, avg } from "drizzle-orm";
+import { getBadgeData } from "@/rpc.server";
 
 export const Route = createFileRoute("/api/badge/$login")({
   loader: async ({ params }) => {
-    const user = await db.query.users.findFirst({
-      where: eq(users.githubLogin, params.login),
-    });
+    const data = await getBadgeData({ data: params.login });
 
-    if (!user) {
+    if (!data) {
       return new Response("User not found", { status: 404 });
     }
 
-    // Calculate average impact score
-    const result = await db.select({ 
-      avgScore: avg(outputs.impactScore) 
-    })
-    .from(outputs)
-    .where(eq(outputs.userId, user.id));
-
-    const score = Math.round(Number(result[0]?.avgScore || 0));
+    const { score } = data;
     const level = score > 80 ? "Elite" : score > 50 ? "High" : "Verified";
     const color = score > 80 ? "#3b82f6" : "#6366f1";
 

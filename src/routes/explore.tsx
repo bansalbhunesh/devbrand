@@ -1,43 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { createServerFn } from "@tanstack/react-start";
-import { db } from "@/server/db";
-import { outputs, users, roasts } from "@/server/schema";
-import { eq, desc, and } from "drizzle-orm";
+import { getPublicFeed } from "@/rpc.server";
 import { Compass, Sparkles, TrendingUp, ArrowUpRight, Zap, ExternalLink, Flame } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const getPublicFeed = createServerFn({ method: "GET" })
-  .handler(async () => {
-    const [feed, topRoasts, topEngineers] = await Promise.all([
-      db.query.outputs.findMany({
-        where: eq(outputs.isPublic, true),
-        orderBy: [desc(outputs.createdAt)],
-        limit: 30,
-        with: { user: true }
-      }),
-      db.query.roasts.findMany({
-        where: eq(roasts.isPublic, true),
-        orderBy: [desc(roasts.createdAt)],
-        limit: 30,
-      }),
-      db.query.users.findMany({
-        limit: 5,
-        with: { outputs: true }
-      })
-    ]);
-
-    // Rank engineers by total impact score
-    const rankedEngineers = topEngineers
-      .map(u => ({
-        ...u,
-        totalImpact: u.outputs.reduce((s, o) => s + o.impactScore, 0),
-        avgImpact: Math.round(u.outputs.reduce((s, o) => s + o.impactScore, 0) / (u.outputs.length || 1))
-      }))
-      .sort((a, b) => b.totalImpact - a.totalImpact);
-
-    return { feed, topRoasts, topEngineers: rankedEngineers };
-  });
+import * as React from "react";
 
 
 export const Route = createFileRoute("/explore")({

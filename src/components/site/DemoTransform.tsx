@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ArrowRight, Check, Link2, Sparkles, GitCommit } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { getDemoOutputs } from "@/server/outputs";
+import { getDemoOutputs } from "@/rpc.server";
 import { cn } from "@/lib/utils";
 
 const fallbackPairs = [
@@ -34,15 +34,19 @@ export function DemoTransform() {
   });
 
   const displayPairs = dbOutputs?.length 
-    ? dbOutputs.map(o => ({
-        before: o.prCommitMessage || "Updated logic and optimized performance.",
-        after: o.linkedinPost1,
-        tag: o.category ?? "Impact",
-        repo: o.prUrl?.split("/").slice(-3, -1).join("/") ?? "repo",
-        pr: `#${o.prUrl?.split("/").pop()}`,
-        citations: (o.citations as any[])?.slice(0, 1) || [{ ref: "diff", sha: "head" }],
-        slug: o.slug,
-      }))
+    ? dbOutputs.map(o => {
+        const rawCitations = Array.isArray(o.citations) ? o.citations : [];
+        const citations = rawCitations.length > 0 ? rawCitations : [{ ref: "diff", sha: "head" }];
+        return {
+          before: o.prCommitMessage || "Updated logic and optimized performance.",
+          after: o.linkedinPost1,
+          tag: o.category ?? "Impact",
+          repo: o.prUrl?.split("/").slice(-3, -1).join("/") ?? "repo",
+          pr: `#${o.prUrl?.split("/").pop()}`,
+          citations,
+          slug: o.slug,
+        };
+      })
     : fallbackPairs;
 
   return (
@@ -81,7 +85,7 @@ function Pair(p: any) {
         </div>
         <p className="font-mono text-base text-foreground/80 leading-relaxed italic">"{p.before}"</p>
         <div className="mt-8 flex items-center gap-2 text-[10px] font-mono text-muted-foreground uppercase tracking-widest font-bold">
-          <GitCommit className="h-3.5 w-3.5 text-blue-500" /> {p.citations[0].sha.slice(0, 7)}
+          <GitCommit className="h-3.5 w-3.5 text-blue-500" /> {p.citations[0]?.sha?.slice(0, 7) ?? "head"}
         </div>
       </div>
 
@@ -118,7 +122,7 @@ function Pair(p: any) {
                 <span className="text-blue-500 font-bold">[{idx + 1}]</span>
                 <span className="text-foreground/70">{c.ref}</span>
                 <span className="opacity-20">·</span>
-                <span className="opacity-40">{c.sha.slice(0, 7)}</span>
+                <span className="opacity-40">{c.sha?.slice(0, 7) ?? "head"}</span>
               </li>
             ))}
           </ol>

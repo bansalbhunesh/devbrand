@@ -82,7 +82,7 @@ export const createBillingPortal = createServerFn({ method: "POST" })
 
 
 export const handleStripeWebhook = createServerFn({ method: "POST" })
-  .validator(z.object({ body: z.string(), signature: z.string() }))
+  .inputValidator(z.object({ body: z.string(), signature: z.string() }))
   .handler(async ({ data: { body, signature } }) => {
     const stripe = getStripe();
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;

@@ -97,8 +97,8 @@ export function calculateHalsteadMetrics(code: string) {
 }
 
 export function classifyChangeType(diff: FileDiff): ChangeType {
-  const filename = diff.filename.toLowerCase();
-  const patch = diff.patch.toLowerCase();
+  const filename = (diff.filename || "").toLowerCase();
+  const patch = (diff.patch || "").toLowerCase();
 
   if (filename.endsWith(".md") || filename.endsWith(".json")) {
     return { type: "documentation", description: "Doc update", files: [diff.filename] };
@@ -119,14 +119,15 @@ export function classifyChangeType(diff: FileDiff): ChangeType {
 export function analyzeStaticMetrics(enrichedPR: EnrichedPR): StaticMetrics {
   const fileMetrics: FileMetrics[] = enrichedPR.diffs.map((diff) => {
     const codeToAnalyze = diff.fullContent || diff.patch;
-    const complexity = calculateCyclomaticComplexity(codeToAnalyze);
-    const halstead = calculateHalsteadMetrics(codeToAnalyze);
+    const hasContent = !!(codeToAnalyze && codeToAnalyze.trim());
+    const complexity = hasContent ? calculateCyclomaticComplexity(codeToAnalyze) : 0;
+    const halstead = hasContent ? calculateHalsteadMetrics(codeToAnalyze) : { volume: 0, difficulty: 0 };
 
     return {
       filename: diff.filename,
       churnScore: calculateChurnScore(diff.additions, diff.deletions),
       churnRatio: (diff.additions + diff.deletions) / 100, 
-      cyclomaticComplexity: complexity,
+      cyclomaticComplexity: complexity || (hasContent ? 1 : 0),
       halsteadVolume: halstead.volume,
       halsteadDifficulty: halstead.difficulty,
       linesAdded: diff.additions,

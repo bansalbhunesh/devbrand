@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { getCookie, setCookie, deleteCookie, getHeader } from "vinxi/http";
+import { getCookie, setCookie, deleteCookie, getHeader } from "@tanstack/react-start/server";
 import { db } from "./db";
 import { users, userEvents } from "./schema";
 import { eq } from "drizzle-orm";
@@ -107,7 +107,7 @@ export const signInWithGithub = createServerFn({ method: "GET" }).handler(async 
 });
 
 export const handleGithubCallback = createServerFn({ method: "POST" })
-  .validator(z.object({ code: z.string(), state: z.string().optional() }))
+  .inputValidator(z.object({ code: z.string(), state: z.string().optional() }))
   .handler(async ({ data: { code, state } }) => {
     const ip = getHeader("x-forwarded-for")?.split(",")[0] || "127.0.0.1";
     const { success } = await rateLimit(`auth:callback:${ip}`, 10, 3600);
@@ -193,7 +193,7 @@ export const handleGithubCallback = createServerFn({ method: "POST" })
   });
 
 export const updateUserSettings = createServerFn({ method: "POST" })
-  .validator(
+  .inputValidator(
     z.object({
       seniority: z.enum(["junior", "mid", "senior", "staff"]).optional(),
       tone: z.enum(["direct", "storytelling", "technical"]).optional(),

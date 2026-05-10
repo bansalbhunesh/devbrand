@@ -25,17 +25,25 @@ export function analyzeInvisibleWork(
     // 1. Structural Refactoring (Extract Method / Move)
     const symbolsChanged = astDiff.removedSymbols.length + astDiff.addedSymbols.length;
     const isHighChurnLowImpact = diff.additions > 0 && diff.deletions > 0 && Math.abs(diff.additions - diff.deletions) < 15;
+    const isExplicitRefactor = astDiff.semanticChange === 'refactor' || (diff.patch || "").toLowerCase().includes("refactor");
     
-    if (symbolsChanged > 0 && isHighChurnLowImpact) {
-      structuralRefactoringScore += symbolsChanged * 2;
+    if ((symbolsChanged > 0 && isHighChurnLowImpact) || isExplicitRefactor) {
+      structuralRefactoringScore += (symbolsChanged || 5) * 2;
       refactoredFiles.push(astDiff.filename);
-      refactorEvidence.push(`Detected ${astDiff.removedSymbols.length} removed and ${astDiff.addedSymbols.length} added symbols with balanced line churn in ${astDiff.filename}.`);
+      refactorEvidence.push(`Detected restructuring in ${astDiff.filename}${symbolsChanged > 0 ? ` with ${symbolsChanged} symbol changes` : ""}.`);
     }
 
     // 2. Code Cleanup / Tech Debt Elimination
-    if (diff.deletions > diff.additions * 2 && diff.deletions > 20) {
-      codeDeletionScore += Math.floor(diff.deletions / 10);
+    const isCodeCleanup = diff.deletions > diff.additions * 2 && diff.deletions > 20;
+    const hasTechDebtMarkers = ["todo", "fixme", "hack", "workaround"].some(m => (diff.patch || "").toLowerCase().includes(m));
+
+    if (isCodeCleanup || hasTechDebtMarkers || astDiff.semanticChange === 'cleanup') {
+      const cleanupScore = isCodeCleanup ? Math.floor(diff.deletions / 10) : 5;
+      codeDeletionScore += cleanupScore;
       cleanupFiles.push(astDiff.filename);
+      if (hasTechDebtMarkers) {
+        refactorEvidence.push(`Addressed technical debt markers in ${astDiff.filename}.`);
+      }
     }
   });
 

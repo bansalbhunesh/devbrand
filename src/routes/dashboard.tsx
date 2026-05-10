@@ -23,10 +23,18 @@ import {
   Plus,
   Lock,
 } from "lucide-react";
-import { getSession, logout, updateUserSettings } from "@/server/auth";
-import { transformPR, getUserOutputs, toggleOutputVisibility } from "@/server/transform";
-import { createCheckoutSession, createBillingPortal } from "@/server/billing";
+import { 
+  getSession, 
+  logout, 
+  updateUserSettings, 
+  transformPR, 
+  getUserOutputs, 
+  toggleOutputVisibility, 
+  createCheckoutSession, 
+  createBillingPortal 
+} from "@/rpc.server";
 import { cn } from "@/lib/utils";
+import * as React from "react";
 
 export const Route = createFileRoute("/dashboard")({
   beforeLoad: async () => {

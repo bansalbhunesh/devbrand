@@ -6,7 +6,7 @@ import { Github, Menu, LayoutDashboard } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { getSession } from "@/server/auth";
+import { getSession } from "@/rpc.server";
 
 export function Nav() {
   const [scrolled, setScrolled] = useState(false);

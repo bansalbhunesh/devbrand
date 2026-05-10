@@ -5,7 +5,7 @@ import { outputs, users } from "./schema";
 import { eq, and, gte, lte, sql } from "drizzle-orm";
 
 export const getWrappedStats = createServerFn({ method: "GET" })
-  .validator(z.string().uuid())
+  .inputValidator(z.string().uuid())
   .handler(async ({ data: userId }) => {
     const year = new Date().getFullYear() - 1;
     const startOfYear = new Date(`${year}-01-01T00:00:00Z`);

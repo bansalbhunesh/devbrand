@@ -20,20 +20,20 @@ export function computeImpactProfile(
     // Weight by Graph Importance (PageRank + Betweenness Centrality)
     // Betweenness Centrality is a high-signal metric for architectural load-bearing files.
     const graphWeight = 
-      (gMetric?.pageRank || 0) * 40 + 
-      (gMetric?.betweennessCentrality || 0) * 60 + 
-      (gMetric?.authorityScore || 0) * 20;
+      (gMetric?.pageRank || 0) * 0.4 + 
+      ((gMetric?.betweennessCentrality || 0) / 100) * 0.6 + 
+      (gMetric?.authorityScore || 0) * 0.2;
 
-    const staticWeight = (sMetric?.cyclomaticComplexity || 1) * 0.4 + (sMetric?.churnScore || 0) * 0.1;
+    const staticWeight = (sMetric?.cyclomaticComplexity || 1) * 0.4 + ((sMetric?.churnScore || 0) / 100) * 0.1;
     
-    const contribution = Math.min(100, (graphWeight * staticWeight) * 5);
+    const contribution = Math.min(100, (graphWeight * staticWeight) * 100);
 
     return {
       filename: d.filename,
       archScoreContribution: contribution,
       primaryReason: contribution > 60 ? "Critical architectural load-bearing change" : 
                     contribution > 30 ? "Significant component modification" : "Local feature adjustment",
-      changeType: sMetric && sMetric.testToCodeRatio > 0 ? "feature" : "feature", 
+      changeType: (sMetric?.testToCodeRatio || 0) > 0.5 ? "test" : "feature", 
     };
   });
 

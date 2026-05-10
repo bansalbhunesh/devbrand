@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowRight, Github, Sparkles, GitPullRequest, Check, Link2, LayoutDashboard, Loader2 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { getSession, signInWithGithub } from "@/server/auth";
+import { getSession, signInWithGithub } from "@/rpc.server";
 
 export function Hero() {
   const cardRef = useRef<HTMLDivElement>(null);

@@ -13,7 +13,7 @@ export const getDemoOutputs = createServerFn({ method: "GET" }).handler(async ()
 });
 
 export const getOutputBySlug = createServerFn({ method: "GET" })
-  .validator(z.string())
+  .inputValidator(z.string())
   .handler(async ({ data: slug }) => {
     return db.query.outputs.findFirst({
       where: eq(outputs.slug, slug),

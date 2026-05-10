@@ -1,13 +1,7 @@
-import { createRootRoute } from "@tanstack/react-router";
-import { Outlet, ScrollRestoration } from "@tanstack/react-router";
-import { Meta, Scripts } from "@tanstack/react-start";
+import { createRootRoute, Outlet, ScrollRestoration, HeadContent, Scripts } from "@tanstack/react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "@/styles.css";
 import * as React from "react";
-
-
-
-
 
 
 const queryClient = new QueryClient();
@@ -119,7 +113,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <head>
-        <Meta />
+        <HeadContent />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(STRUCTURED_DATA) }}

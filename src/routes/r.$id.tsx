@@ -1,29 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { createServerFn } from "@tanstack/react-start";
-import { db } from "@/server/db";
-import { roasts } from "@/server/schema";
-import { eq } from "drizzle-orm";
+import { getRoast, postToX } from "@/rpc.server";
 import { Github, Share2, Twitter, Flame } from "lucide-react";
-
-const getRoast = createServerFn({ method: "GET" })
-  .validator((id: string) => id)
-  .handler(async ({ data: id }) => {
-    const roast = await db.query.roasts.findFirst({
-      where: eq(roasts.id, id),
-    });
-    if (!roast) throw new Error("ROAST_NOT_FOUND");
-    return roast;
-  });
-
-const postToX = createServerFn({ method: "POST" })
-  .validator((data: { id: string; content: string }) => data)
-  .handler(async ({ data }) => {
-    // Mock posting to X/Twitter
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    return { success: true, url: `https://x.com/DevBrand/status/mock-${data.id}` };
-  });
+import * as React from "react";
 
 export const Route = createFileRoute("/r/$id")({
   component: RoastPage,

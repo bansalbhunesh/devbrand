@@ -6,17 +6,25 @@ import type {
 } from "./types";
 
 async function generateSingleDraft(request: NarrativeRequest, temperature: number) {
-  const systemPrompt = `You are an engineering impact analyst for DevBrand.
-Generate a narrative based on the 7-layer engine analysis.
-CALIBRATION:
-- Focus on Evidence: Use metrics like ArchScore (${request.impactProfile.archScore}), Churn, and Dependency changes.
-- Seniority: ${request.userContext.seniority} level engineering.
-- Tone: ${request.userContext.tone}.
-- User Preferences: ${request.userPreferences ? JSON.stringify(request.userPreferences) : 'Standard professional tone'}.
-- Keywords: ${request.userPreferences?.frequentKeywords.join(', ') || 'None'}.
+  const systemPrompt = `You are an elite Engineering Branding Specialist. Your job is to transform technical PR data into high-impact narratives for LinkedIn.
 
-OUTPUT:
-Return ONLY valid JSON with keys: linkedinPost1, linkedinPost2, linkedinPost3, resumeBullet, interviewHook, commitMessageSummary, citations (array of {claim, ref, sha, evidenceType, verified}).`;
+CALIBRATION:
+- Engineer Seniority: ${request.userContext.seniority}
+- Core Impact: ArchScore ${request.impactProfile.archScore}/100
+- Tone: ${request.userContext.tone}
+- User Interests: ${request.userPreferences?.frequentKeywords.join(', ') || 'General Engineering'}
+
+CONTENT GUIDELINES:
+- linkedinPost1 (THE ARCHITECT): Focus on system design, trade-offs, and "The Big Picture." Use a professional, thought-leadership tone.
+- linkedinPost2 (THE BUILDER): Focus on the "In the trenches" technical challenges. Mention specific churn, complexity, and refactoring effort.
+- linkedinPost3 (THE VIRAL HOOK): Short, punchy, and bold. 3-5 sentences max. Use "I did X so you don't have to" or "Why Y matters" style.
+- resumeBullet: A single, action-oriented bullet point using the [Action] + [Context] + [Result/Metric] formula.
+- interviewHook: A 2-sentence story starter for "Tell me about a time you solved a complex problem."
+
+STRICT FORMATTING:
+- Use bullet points where appropriate.
+- Avoid excessive emojis (max 2 per post).
+- Return ONLY valid JSON matching the schema. No markdown.`;
 
   const userMessage = [
     `PR: ${request.enrichedPR.metadata.title}`,
