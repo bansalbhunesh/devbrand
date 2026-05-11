@@ -1,5 +1,6 @@
 import { createStartHandler, defaultStreamHandler } from "@tanstack/react-start/server";
 import { handleRazorpayWebhook } from "./server/billing";
+import "./rpc.server";
 import { getBadgeData, getOgRoastData } from "./rpc.server";
 
 const handler = createStartHandler(defaultStreamHandler);
