@@ -2,108 +2,88 @@ import { createStartHandler, defaultStreamHandler } from "@tanstack/react-start/
 import { handleRazorpayWebhook } from "./server/billing";
 import { createRouter } from "./router";
 import "./rpc.server";
-import { getBadgeData, getOgRoastData } from "./rpc.server";
+import { getBadgeData } from "./rpc.server";
 
-// Lazy-initialized handler to ensure process.env is polyfilled before the framework starts
-let cachedHandler: any = null;
-
+// Standard framework handler (Lazy to avoid top-level evaluation crashes)
+let _handler: any;
 function getHandler() {
-  if (cachedHandler) return cachedHandler;
-  cachedHandler = createStartHandler({
-    createRouter,
-  })(defaultStreamHandler);
-  return cachedHandler;
+  if (!_handler) {
+    _handler = createStartHandler({
+      createRouter,
+    })(defaultStreamHandler);
+  }
+  return _handler;
 }
 
-export default {
-  async fetch(request: Request, env: any, ctx: any) {
-    // 1. Polyfill process.env IMMEDIATELY
-    if (env) {
-      Object.keys(env).forEach((key) => {
-        if (typeof env[key] === "string") {
-          process.env[key] = env[key];
-        }
-      });
-    }
+/**
+ * Unified fetch handler for both local development and Cloudflare production.
+ */
+async function unifiedFetch(request: any, env?: any, ctx?: any) {
+  // 1. Polyfill process.env for Cloudflare
+  if (env && typeof env === "object") {
+    Object.assign(process.env, env);
+  }
 
-    // 2. Standardize the URL. Cloudflare Workers usually provide absolute URLs,
-    // but we ensure it's absolute to satisfy the underlying H3/Nitro engine.
-    let url: URL;
+  // 2. Extract and Normalize URL
+  // Vite Dev Server sometimes passes a Node.js-like request object instead of Fetch Request.
+  const rawUrl = request?.url || "";
+  let url: URL;
+  try {
+    // We must ensure the URL is absolute for the H3 engine used by TanStack Start.
+    url = new URL(rawUrl);
+  } catch (e) {
+    const base = process.env.APP_URL || "http://localhost";
+    const origin = base.startsWith("http") ? base : `https://${base}`;
+    url = new URL(rawUrl, origin);
+  }
+
+  const { pathname } = url;
+
+  // 3. Manual API Routes
+  if (pathname === "/api/webhook/razorpay" && request?.method === "POST") {
     try {
-      url = new URL(request.url);
-    } catch (e) {
-      const base = env?.APP_URL || process.env.APP_URL || "http://localhost";
-      const origin = base.startsWith("http") ? base : `https://${base}`;
-      url = new URL(request.url, origin);
-    }
-
-    // 3. Set APP_URL if missing
-    if (!process.env.APP_URL) {
-      process.env.APP_URL = url.origin;
-    }
-
-    // 4. Handle manual API routes
-    
-    // Razorpay Webhook
-    if (url.pathname === "/api/webhook/razorpay" && request.method === "POST") {
-      try {
-        const signature = request.headers.get("x-razorpay-signature") || "";
-        const body = await request.json();
-        await handleRazorpayWebhook({ data: { body, signature } });
-        return new Response(JSON.stringify({ received: true }), {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        });
-      } catch (error: any) {
-        return new Response(JSON.stringify({ error: error.message }), { status: 400 });
-      }
-    }
-
-    // Badge API
-    const badgeMatch = url.pathname.match(/^\/api\/badge\/(.+)$/);
-    if (badgeMatch) {
-      try {
-        const login = badgeMatch[1];
-        const data = await getBadgeData({ data: login });
-        if (!data) return new Response("User not found", { status: 404 });
-        const { score } = data;
-        const level = score > 80 ? "Elite" : score > 50 ? "High" : "Verified";
-        const color = score > 80 ? "#3b82f6" : "#6366f1";
-        const svg = `<svg width="200" height="40" viewBox="0 0 200 40" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="40" rx="8" fill="#09090b" stroke="#27272a" stroke-width="1"/><text x="12" y="24" fill="#a1a1aa" font-family="Inter, system-ui, sans-serif" font-size="10" font-weight="bold" letter-spacing="0.05em">DEVBRAND</text><line x1="85" y1="12" x2="85" y2="28" stroke="#27272a" stroke-width="1"/><text x="96" y="24" fill="#f4f4f5" font-family="Inter, system-ui, sans-serif" font-size="11" font-weight="bold">${level} · ${score}%</text><circle cx="184" cy="20" r="4" fill="${color}"><animate attributeName="opacity" values="1;0.4;1" dur="2s" repeatCount="indefinite" /></circle></svg>`;
-        return new Response(svg, { headers: { "Content-Type": "image/svg+xml", "Cache-Control": "public, max-age=3600" } });
-      } catch (e) {
-         return new Response("Error generating badge", { status: 500 });
-      }
-    }
-
-    // OG Roast API
-    const ogMatch = url.pathname.match(/^\/api\/og\/roast\/(.+)$/);
-    if (ogMatch) {
-      try {
-        const id = ogMatch[1];
-        const roast = await getOgRoastData({ data: id });
-        if (!roast) return new Response("Not Found", { status: 404 });
-        const data = roast.roastData as any;
-        const score = data.roast_score || 0;
-        const criticality = data.criticality || "MEDIUM";
-        const color = criticality === "NUCLEAR" ? "#ef4444" : "#f97316";
-        const svg = `<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="1200" height="630" fill="#09090b"/><rect width="1200" height="630" fill="url(#grad1)"/><defs><radialGradient id="grad1" cx="50%" cy="50%" r="50%" fx="80%" fy="20%"><stop offset="0%" style="stop-color:${color};stop-opacity:0.15" /><stop offset="100%" style="stop-color:#09090b;stop-opacity:0" /></radialGradient></defs><rect x="40" y="40" width="1120" height="550" rx="40" stroke="#27272a" stroke-width="2"/><text x="80" y="110" fill="#a1a1aa" font-family="Inter, sans-serif" font-size="20" font-weight="bold">DEVBRAND // CRITIC.AI</text><text x="240" y="360" fill="white" font-family="Inter, sans-serif" font-size="80" font-weight="black" text-anchor="middle">${score}%</text><text x="440" y="240" fill="${color}" font-family="Inter, sans-serif" font-size="48" font-weight="black">${data.card_title || 'Sacrifice Detected'}</text></svg>`;
-        return new Response(svg, { headers: { "Content-Type": "image/svg+xml", "Cache-Control": "public, max-age=86400" } });
-      } catch (e) {
-        return new Response("Error generating OG image", { status: 500 });
-      }
-    }
-
-    // 5. Framework Execution
-    // IMPORTANT: We clone the request with an absolute URL. This bypasses the H3Event crash
-    // that occurs if the framework tries to parse a relative or empty URL header.
-    try {
-      const absoluteRequest = new Request(url.toString(), request);
-      const handler = getHandler();
-      return await (handler as any)(absoluteRequest, env, ctx);
+      const signature = (request.headers.get?.("x-razorpay-signature")) || (request.headers?.["x-razorpay-signature"]) || "";
+      const body = typeof request.json === 'function' ? await request.json() : request.body;
+      await handleRazorpayWebhook({ data: { body, signature } });
+      return new Response(JSON.stringify({ received: true }), { status: 200 });
     } catch (error: any) {
-      console.error("Framework execution failed:", error);
-      return new Response(`Internal Server Error: ${error.message}`, { status: 500 });
+      return new Response(JSON.stringify({ error: error.message }), { status: 400 });
     }
-  },
-};
+  }
+
+  if (pathname.startsWith("/api/badge/")) {
+    try {
+      const login = pathname.split("/").pop() || "";
+      const data = await getBadgeData({ data: login });
+      if (!data) return new Response("Not Found", { status: 404 });
+      const svg = `<svg width="200" height="40" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="40" rx="8" fill="#09090b"/><text x="10" y="25" fill="#fff" font-family="sans-serif">${login}: ${data.score}%</text></svg>`;
+      return new Response(svg, { headers: { "Content-Type": "image/svg+xml" } });
+    } catch (e) {
+      return new Response("Error", { status: 500 });
+    }
+  }
+
+  // 4. Delegate to TanStack Start
+  try {
+    // Critical: Create a fresh Request with the absolute URL.
+    // This is the core fix for the Cloudflare "Invalid URL string" error.
+    const absoluteRequest = new Request(url.toString(), {
+      method: request.method,
+      headers: request.headers,
+      body: (request.method !== 'GET' && request.method !== 'HEAD') ? (typeof request.arrayBuffer === 'function' ? await request.arrayBuffer() : request.body) : undefined,
+      // @ts-ignore
+      duplex: 'half',
+    });
+    
+    return await getHandler()(absoluteRequest, env, ctx);
+  } catch (error: any) {
+    console.error("Framework Runtime Error:", error);
+    return new Response(`SSR Runtime Error: ${error.message}`, { status: 500 });
+  }
+}
+
+// Final export strategy
+const exportHandler = (request: any, ...args: any[]) => unifiedFetch(request, ...args);
+(exportHandler as any).fetch = unifiedFetch;
+
+export default exportHandler;
