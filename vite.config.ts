@@ -11,7 +11,8 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 // @cloudflare/vite-plugin builds from this — wrangler.jsonc main alone is insufficient.
 export default defineConfig({
   tanstackStart: {
-    // Let TanStack Start auto-detect the platform (Vercel/Cloudflare/etc.)
+    // @ts-ignore - Ensure Vercel-compatible build output is generated
+    preset: "vercel",
   },
   vite: {
     resolve: {
