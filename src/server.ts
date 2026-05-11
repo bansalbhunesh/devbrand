@@ -25,11 +25,9 @@ async function unifiedFetch(request: any, env?: any, ctx?: any) {
   }
 
   // 2. Extract and Normalize URL
-  // Vite Dev Server sometimes passes a Node.js-like request object instead of Fetch Request.
   const rawUrl = request?.url || "";
   let url: URL;
   try {
-    // We must ensure the URL is absolute for the H3 engine used by TanStack Start.
     url = new URL(rawUrl);
   } catch (e) {
     const base = process.env.APP_URL || "http://localhost";
@@ -65,8 +63,6 @@ async function unifiedFetch(request: any, env?: any, ctx?: any) {
 
   // 4. Delegate to TanStack Start
   try {
-    // Critical: Create a fresh Request with the absolute URL.
-    // This is the core fix for the Cloudflare "Invalid URL string" error.
     const absoluteRequest = new Request(url.toString(), {
       method: request.method,
       headers: request.headers,
@@ -82,8 +78,11 @@ async function unifiedFetch(request: any, env?: any, ctx?: any) {
   }
 }
 
-// Final export strategy
-const exportHandler = (request: any, ...args: any[]) => unifiedFetch(request, ...args);
-(exportHandler as any).fetch = unifiedFetch;
-
-export default exportHandler;
+/**
+ * Standard Cloudflare Module Worker export.
+ */
+export default {
+  async fetch(request: any, env?: any, ctx?: any) {
+    return unifiedFetch(request, env, ctx);
+  }
+};
