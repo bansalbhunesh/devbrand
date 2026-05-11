@@ -1,52 +1,39 @@
-// Triggering fresh build for Cloudflare resolution
-// @lovable.dev/vite-tanstack-config already includes the following — do NOT add them manually
-// or the app will break with duplicate plugins:
-//   - tanstackStart, viteReact, tailwindcss, tsConfigPaths, cloudflare (build-only),
-//     componentTagger (dev-only), VITE_* env injection, @ path alias, React/TanStack dedupe,
-//     error logger plugins, and sandbox detection (port/host/strictPort).
-// You can pass additional config via defineConfig({ vite: { ... } }) if needed.
-import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import { defineConfig } from "vite";
+import { tanstackStart } from "@tanstack/react-start/config";
+import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
+import tsconfigPaths from "vite-tsconfig-paths";
 
-// Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
-// @cloudflare/vite-plugin builds from this — wrangler.jsonc main alone is insufficient.
 export default defineConfig({
-  tanstackStart: {
-    // @ts-ignore - Ensure Vercel-compatible build output is generated
-    preset: "vercel",
+  plugins: [
+    tanstackStart({
+      // @ts-ignore
+      preset: "vercel",
+    }),
+    react(),
+    tailwindcss(),
+    tsconfigPaths(),
+  ],
+  resolve: {
+    alias: {
+      "@tanstack/react-start/api": "@tanstack/react-start",
+    },
   },
-  vite: {
-    resolve: {
-      alias: {
-        "@tanstack/react-start/api": "@tanstack/react-start",
+  build: {
+    minify: "terser",
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+        pure_funcs: ["console.log", "console.info", "console.debug", "console.trace"],
+      },
+      mangle: {
+        safari10: true,
+      },
+      format: {
+        comments: false,
       },
     },
-    build: {
-      minify: "terser",
-      terserOptions: {
-        compress: {
-          drop_console: true,
-          drop_debugger: true,
-          pure_funcs: ["console.log", "console.info", "console.debug", "console.trace"],
-        },
-        mangle: {
-          safari10: true,
-        },
-        format: {
-          comments: false,
-        },
-      },
-      chunkSizeWarningLimit: 1000,
-      reportCompressedSize: true,
-    },
-    optimizeDeps: {
-      include: [
-        "react",
-        "react-dom",
-        "@tanstack/react-router",
-        "@tanstack/react-query",
-        "@tanstack/react-start",
-        "framer-motion",
-      ],
-    },
+    chunkSizeWarningLimit: 1000,
   },
 });
