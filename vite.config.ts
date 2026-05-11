@@ -25,7 +25,7 @@ export default defineConfig({
         compress: {
           drop_console: true,
           drop_debugger: true,
-          passes: 2,
+          pure_funcs: ["console.log", "console.info", "console.debug", "console.trace"],
         },
         mangle: {
           safari10: true,
@@ -34,26 +34,7 @@ export default defineConfig({
           comments: false,
         },
       },
-      rollupOptions: {
-        output: {
-          manualChunks: (id) => {
-            if (id.includes("node_modules")) {
-              if (id.includes("react")) return "vendor-react";
-              if (id.includes("@tanstack")) return "vendor-tanstack";
-              if (id.includes("@radix-ui")) return "vendor-radix";
-              if (id.includes("framer-motion")) return "vendor-framer";
-              if (
-                id.includes("clsx") ||
-                id.includes("tailwind-merge") ||
-                id.includes("class-variance-authority")
-              )
-                return "vendor-utils";
-              return "vendor";
-            }
-          },
-        },
-      },
-      chunkSizeWarningLimit: 600,
+      chunkSizeWarningLimit: 1000,
       reportCompressedSize: true,
     },
     optimizeDeps: {
