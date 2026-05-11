@@ -10,7 +10,7 @@ const startHandler = createStartHandler({
 
 export default {
   async fetch(request: Request, env: any, ctx: any) {
-    // Polyfill process.env for Cloudflare Workers
+    // 1. Polyfill process.env immediately
     if (env) {
       Object.keys(env).forEach((key) => {
         if (typeof env[key] === "string") {
@@ -19,20 +19,24 @@ export default {
       });
     }
 
-    // Ensure APP_URL has a fallback to prevent "Invalid URL string" during validation or runtime
-    if (!process.env.APP_URL) {
-      process.env.APP_URL = new URL(request.url).origin;
-    }
-
+    // 2. Robust URL parsing for the incoming request
     let url: URL;
     try {
-      url = new URL(request.url);
+      // Use a dummy base to handle relative URLs during Cloudflare validation
+      const rawUrl = request.url || "/";
+      const base = (env?.APP_URL || process.env.APP_URL || "http://localhost");
+      url = new URL(rawUrl, base.startsWith("http") ? base : `https://${base}`);
     } catch (e) {
-      // Fallback for invalid/relative URLs during Cloudflare validation
-      url = new URL(request.url, process.env.APP_URL || "http://localhost");
+      // Absolute fallback if everything fails
+      url = new URL("http://localhost/");
     }
 
-    // 1. Handle Razorpay Webhook
+    // 3. Ensure APP_URL is set for later use in the code
+    if (!process.env.APP_URL) {
+      process.env.APP_URL = url.origin;
+    }
+
+    // 4. Handle Razorpay Webhook
     if (url.pathname === "/api/webhook/razorpay" && request.method === "POST") {
       const signature = request.headers.get("x-razorpay-signature") || "";
       try {
@@ -47,7 +51,7 @@ export default {
       }
     }
 
-    // 2. Handle Badge API (/api/badge/$login)
+    // 5. Handle Badge API (/api/badge/$login)
     const badgeMatch = url.pathname.match(/^\/api\/badge\/(.+)$/);
     if (badgeMatch) {
       const login = badgeMatch[1];
@@ -71,7 +75,7 @@ export default {
       return new Response(svg, { headers: { "Content-Type": "image/svg+xml", "Cache-Control": "public, max-age=3600" } });
     }
 
-    // 3. Handle OG Roast API (/api/og/roast/$id)
+    // 6. Handle OG Roast API (/api/og/roast/$id)
     const ogMatch = url.pathname.match(/^\/api\/og\/roast\/(.+)$/);
     if (ogMatch) {
       const id = ogMatch[1];
@@ -101,6 +105,12 @@ export default {
       return new Response(svg, { headers: { "Content-Type": "image/svg+xml", "Cache-Control": "public, max-age=86400" } });
     }
 
-    return (startHandler as any)(request, env, ctx);
+    // 7. Pass to the main TanStack Start handler
+    try {
+      return await (startHandler as any)(request, env, ctx);
+    } catch (error: any) {
+      // Final safety net for framework-level errors
+      return new Response(`Server error: ${error.message}`, { status: 500 });
+    }
   },
 };
