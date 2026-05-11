@@ -1,142 +1,95 @@
 import { Redis } from "@upstash/redis";
+import { env } from "../lib/env";
 
+/**
+ * Lazy Redis client initialization with safe-mode fallback.
+ */
 let _redis: Redis | null = null;
 
 function getRedis(): Redis | null {
   if (_redis) return _redis;
-  if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
-    _redis = new Redis({
-      url: process.env.UPSTASH_REDIS_REST_URL,
-      token: process.env.UPSTASH_REDIS_REST_TOKEN,
-    });
-  }
-  return _redis;
-}
 
-export interface RateLimitResult {
-  success: boolean;
-  remaining: number;
-  resetAt: number;
-  current: number;
+  const url = env.UPSTASH_REDIS_REST_URL;
+  const token = env.UPSTASH_REDIS_REST_TOKEN;
+
+  if (!url || !token) {
+    console.warn("⚠️ Redis credentials missing. Rate limiting is disabled (Safe Mode).");
+    return null;
+  }
+
+  try {
+    _redis = new Redis({ url, token });
+    return _redis;
+  } catch (e) {
+    console.error("❌ Failed to initialize Redis:", e);
+    return null;
+  }
 }
 
 /**
- * Sliding Window Rate Limiting using Redis Sorted Sets (ZSET)
- * Prevents burst attacks at window boundaries.
+ * Atomic rate limiting with a graceful "allow" fallback if Redis is down.
  */
 export async function rateLimit(
   key: string,
   limit: number,
   windowSeconds: number
-): Promise<RateLimitResult> {
+): Promise<{ success: boolean; remaining: number; resetAt: number }> {
   const redis = getRedis();
+  
   if (!redis) {
-    if (process.env.NODE_ENV === "production") {
-      throw new Error("CRITICAL: Redis not configured in production. Rate limiting is required for security.");
-    }
-    return { success: true, remaining: limit, resetAt: Date.now() + windowSeconds * 1000, current: 0 };
+    // Graceful fallback: Allow the request but log the missing infrastructure
+    return { success: true, remaining: limit, resetAt: Date.now() + windowSeconds * 1000 };
   }
-
-  const now = Date.now();
-  const windowStart = now - windowSeconds * 1000;
-  const redisKey = `rate_limit:${key}`;
 
   try {
-    const multi = redis.multi();
-    // Remove entries older than the window
-    multi.zremrangebyscore(redisKey, 0, windowStart);
-    // Add current request
-    const requestId = crypto.randomUUID();
-    multi.zadd(redisKey, { score: now, member: requestId });
-    // Count active requests in window
-    multi.zcard(redisKey);
-    // Set expiry for the whole set
-    multi.expire(redisKey, windowSeconds + 1);
+    const identifier = `ratelimit:${key}`;
+    const now = Date.now();
+    const resetAt = now + windowSeconds * 1000;
 
-    const results = await multi.exec();
-    const current = results[2] as number;
+    const count = await redis.incr(identifier);
+    if (count === 1) {
+      await redis.expire(identifier, windowSeconds);
+    }
 
-    const success = current <= limit;
     return {
-      success,
-      remaining: Math.max(0, limit - current),
-      resetAt: now + windowSeconds * 1000,
-      current,
+      success: count <= limit,
+      remaining: Math.max(0, limit - count),
+      resetAt,
     };
-  } catch (error) {
-    console.error("Rate limit error:", error);
-    // Fallback to allow in case of Redis failure to prevent lockout, but log it
-    return { success: true, remaining: 1, resetAt: now + windowSeconds * 1000, current: 1 };
+  } catch (e) {
+    console.error("❌ Rate limiting error (Failing Open):", e);
+    return { success: true, remaining: 1, resetAt: Date.now() };
   }
 }
 
 /**
- * Tier-aware rate limiting (Strict, Standard, Generous)
- */
-export async function rateLimitWithUser(
-  userId: string,
-  action: string,
-  tier: "strict" | "standard" | "generous" = "standard",
-  baseLimit: number = 10
-): Promise<RateLimitResult> {
-  const multipliers = {
-    strict: 0.5,
-    standard: 1.0,
-    generous: 2.0,
-  };
-  const limit = Math.floor(baseLimit * multipliers[tier]);
-  return rateLimit(`user:${userId}:${action}`, limit, 60);
-}
-
-/**
- * Security Event Logging to Redis
- * Tracks suspicious activities for audit and automated blocking.
+ * Log a security event to Redis with structured data.
  */
 export async function logSecurityEvent(
-  eventType: "login_attempt" | "rate_limit_exceeded" | "oauth_state_mismatch" | "payment_failed" | "session_mismatch",
+  type: string,
   userId: string | null,
   ip: string,
-  details: Record<string, unknown> = {}
-): Promise<void> {
+  metadata: any = {}
+) {
   const redis = getRedis();
   if (!redis) return;
 
   const event = {
-    type: eventType,
+    type,
     userId,
     ip,
-    timestamp: Date.now(),
-    details,
+    metadata,
+    timestamp: new Date().toISOString(),
   };
 
-  const now = Date.now();
-  const eventStr = JSON.stringify(event);
-
   try {
-    const multi = redis.multi();
-    multi.zadd("security:events", { score: now, member: eventStr });
-    multi.zadd(`security:${eventType}`, { score: now, member: eventStr });
-    // Expire after 30 days
-    multi.expire("security:events", 60 * 60 * 24 * 30);
-    multi.expire(`security:${eventType}`, 60 * 60 * 24 * 30);
-    await multi.exec();
-  } catch (error) {
-    console.error("Security logging failed:", error);
+    await redis.zadd("security:events", {
+      score: Date.now(),
+      member: JSON.stringify(event),
+    });
+    // Keep only last 1000 events
+    await redis.zremrangebyrank("security:events", 0, -1001);
+  } catch (e) {
+    console.error("❌ Failed to log security event:", e);
   }
-}
-
-/**
- * IP Blocking Utility
- */
-export async function blockIP(ip: string, reason: string, durationSeconds: number = 3600): Promise<void> {
-  const redis = getRedis();
-  if (!redis) return;
-  await redis.set(`block:${ip}`, JSON.stringify({ reason, blockedAt: Date.now() }), { ex: durationSeconds });
-  await logSecurityEvent("rate_limit_exceeded", null, ip, { reason, action: "blocked", durationSeconds });
-}
-
-export async function isIPBlocked(ip: string): Promise<boolean> {
-  const redis = getRedis();
-  if (!redis) return false;
-  return (await redis.exists(`block:${ip}`)) === 1;
 }

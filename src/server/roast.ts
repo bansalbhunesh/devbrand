@@ -5,14 +5,14 @@ import { Octokit } from "octokit";
 import { completeText, normalizeLlmJsonText } from "./llm/client";
 import { db } from "./db";
 import { users, userEvents, roasts } from "./schema";
-
 import { eq, sql } from "drizzle-orm";
 import { rateLimit } from "./redis";
+import { env } from "../lib/env";
 
 let octokit: Octokit | null = null;
 
 function getOctokit() {
-  if (!octokit) octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
+  if (!octokit) octokit = new Octokit({ auth: env.GITHUB_TOKEN || env.GITHUB_CLIENT_SECRET });
   return octokit;
 }
 
@@ -60,12 +60,12 @@ export const generateRoast = createServerFn({ method: "POST" })
       if (!success) throw new Error("PUBLIC_RATE_LIMIT_REACHED");
     }
 
-    const octokit = getOctokit();
+    const octokitInstance = getOctokit();
 
     const [userRes, eventsRes, reposRes] = await Promise.all([
-      octokit.rest.users.getByUsername({ username }),
-      octokit.rest.activity.listPublicEventsForUser({ username, per_page: 50 }),
-      octokit.rest.repos.listForUser({ username, sort: "updated", per_page: 10 }),
+      octokitInstance.rest.users.getByUsername({ username }),
+      octokitInstance.rest.activity.listPublicEventsForUser({ username, per_page: 50 }),
+      octokitInstance.rest.repos.listForUser({ username, sort: "updated", per_page: 10 }),
     ]);
 
     const ghUser = userRes.data;
@@ -163,4 +163,3 @@ Return ONLY valid JSON. No preamble.`;
 
     return { ...output, id: inserted.id, githubUsername: username };
   });
-

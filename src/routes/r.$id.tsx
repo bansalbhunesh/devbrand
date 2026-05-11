@@ -5,6 +5,8 @@ import { getRoast, postToX } from "@/rpc.server";
 import { Share2, Twitter, Flame, ArrowRight, ShieldCheck, Check, Link2 } from "lucide-react";
 import { toast } from "sonner";
 
+import { env } from "@/lib/env";
+
 export const Route = createFileRoute("/r/$id")({
   component: RoastPage,
   head: (ctx) => {
@@ -15,11 +17,11 @@ export const Route = createFileRoute("/r/$id")({
         { name: "description", content: "Our AI just judged this GitHub profile. See the fallout." },
         { property: "og:title", content: "DevBrand // Humiliation Registry" },
         { property: "og:description", content: "A verifiable judgment of technical reputation." },
-        { property: "og:image", content: `${process.env.APP_URL}/api/og/roast/${id}` },
+        { property: "og:image", content: `${env.APP_URL}/api/og/roast/${id}` },
         { name: "twitter:card", content: "summary_large_image" },
         { name: "twitter:title", content: "DevBrand Roast // Impact Verified" },
         { name: "twitter:description", content: "Click to see the full technical roast." },
-        { name: "twitter:image", content: `${process.env.APP_URL}/api/og/roast/${id}` },
+        { name: "twitter:image", content: `${env.APP_URL}/api/og/roast/${id}` },
       ],
     };
   },

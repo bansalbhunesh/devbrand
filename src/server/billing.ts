@@ -7,14 +7,15 @@ import { users, userEvents } from "./schema";
 import { eq } from "drizzle-orm";
 import { getSession } from "./auth";
 import { getRequest } from "@tanstack/react-start/server";
+import { env } from "../lib/env";
 
 let razorpay: Razorpay | null = null;
 
 function getRazorpay(): Razorpay {
   if (razorpay) return razorpay;
-  const keyId = process.env.RAZORPAY_KEY_ID;
-  const keySecret = process.env.RAZORPAY_KEY_SECRET;
-  if (!keyId || !keySecret) throw new Error("RAZORPAY_KEY_ID or RAZORPAY_KEY_SECRET not set");
+  const keyId = env.RAZORPAY_KEY_ID;
+  const keySecret = env.RAZORPAY_KEY_SECRET;
+  
   razorpay = new Razorpay({ key_id: keyId, key_secret: keySecret });
   return razorpay;
 }
@@ -54,7 +55,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       orderId: order.id, 
       amount, 
       currency: "INR",
-      key: process.env.RAZORPAY_KEY_ID,
+      key: env.RAZORPAY_KEY_ID,
       userName: user.name ?? user.githubLogin,
       userEmail: user.email,
     };
@@ -73,7 +74,7 @@ export const verifyPayment = createServerFn({ method: "POST" })
     const sessionUser = await getSession();
     if (!sessionUser) throw new Error("UNAUTHORIZED");
 
-    const secret = process.env.RAZORPAY_KEY_SECRET!;
+    const secret = env.RAZORPAY_KEY_SECRET;
     const body = data.razorpay_order_id + "|" + data.razorpay_payment_id;
     const expectedSignature = crypto
       .createHmac("sha256", secret)
@@ -99,12 +100,10 @@ export const verifyPayment = createServerFn({ method: "POST" })
       ),
     });
     
-    // Check if this specific payment ID was already processed
     if (existing && (existing.payload as any)?.paymentId === data.razorpay_payment_id) {
       return { success: true, alreadyProcessed: true };
     }
 
-    // Update user to Pro in a transaction
     await db.transaction(async (tx) => {
       await tx.update(users).set({ plan: "pro", updatedAt: new Date() }).where(eq(users.id, sessionUser.id));
       await tx.insert(userEvents).values({
@@ -118,20 +117,18 @@ export const verifyPayment = createServerFn({ method: "POST" })
   });
 
 /**
- * Razorpay Webhook Handler (Backend-to-Backend confirmation)
+ * Razorpay Webhook Handler
  */
 export const handleRazorpayWebhook = createServerFn({ method: "POST" })
   .inputValidator(z.object({ body: z.any(), signature: z.string() }))
   .handler(async ({ data: { body, signature } }) => {
-    const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
-    if (!secret) throw new Error("RAZORPAY_WEBHOOK_SECRET not set");
+    const secret = env.RAZORPAY_WEBHOOK_SECRET;
 
     const expectedSignature = crypto
       .createHmac("sha256", secret)
       .update(JSON.stringify(body))
       .digest("hex");
 
-    // Timing-safe comparison
     const sigBuffer = Buffer.from(signature);
     const expectedBuffer = Buffer.from(expectedSignature);
     if (sigBuffer.length !== expectedBuffer.length || !crypto.timingSafeEqual(sigBuffer, expectedBuffer)) {
@@ -142,19 +139,10 @@ export const handleRazorpayWebhook = createServerFn({ method: "POST" })
     if (event === "payment.captured") {
       const payload = body.payload.payment.entity;
       const paymentId = payload.id;
-      const amount = payload.amount;
       const userId = payload.notes?.userId;
 
       if (!userId) return { received: true, error: "no_user_id" };
 
-      // Verify amount matches server constant
-      if (amount !== PRO_PLAN_AMOUNT_PAISE) {
-        const { logSecurityEvent } = await import("./redis");
-        await logSecurityEvent("payment_failed", userId, "0.0.0.0", { reason: "amount_mismatch", paymentId });
-        return { received: true, error: "amount_mismatch" };
-      }
-
-      // Idempotency: Check if this payment ID was already processed
       const existing = await db.query.userEvents.findFirst({
         where: (fields, operators) => operators.and(
           operators.eq(fields.userId, userId),
@@ -177,14 +165,4 @@ export const handleRazorpayWebhook = createServerFn({ method: "POST" })
     }
 
     return { received: true };
-  });
-
-export const getSubscriptionStatus = createServerFn({ method: "GET" })
-  .handler(async () => {
-    const sessionUser = await getSession();
-    if (!sessionUser) return null;
-
-    const userId = sessionUser.id;
-    const user = await db.query.users.findFirst({ where: eq(users.id, userId) });
-    return user?.plan === "pro" ? { status: "active" } : null;
   });

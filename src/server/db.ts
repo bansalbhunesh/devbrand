@@ -1,25 +1,41 @@
-import { neon } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-http';
-import * as schema from './schema';
+import { neonConfig, Pool } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/neon-serverless";
+import * as schema from "./schema";
+import { env } from "../lib/env";
 
-let _db: any = null;
+// Enable connection pooling for serverless environments
+neonConfig.fetchConnectionCache = true;
 
-export function getDb() {
-  if (_db) return _db;
+/**
+ * Lazy database client initialization.
+ * This prevents crashes if the database URL is missing during the initial script evaluation
+ * and allows the environment to be polyfilled before connection.
+ */
+function createDb() {
+  const databaseUrl = env.DATABASE_URL;
   
-  if (!process.env.DATABASE_URL) {
-    throw new Error('DATABASE_URL is not set');
+  if (!databaseUrl) {
+    console.warn("⚠️ DATABASE_URL is not set. Database operations will fail.");
+    // We return a proxy that throws on any access to provide clear error messages
+    return new Proxy({} as any, {
+      get() {
+        throw new Error("Database client accessed before DATABASE_URL was initialized.");
+      }
+    });
   }
 
-  const sql = neon(process.env.DATABASE_URL);
-  _db = drizzle(sql, { schema });
-  return _db;
+  const pool = new Pool({ connectionString: databaseUrl });
+  return drizzle(pool, { schema });
 }
 
-// Keep the export for backward compatibility but it will now throw if called before env is polyfilled
-// Alternatively, we should update callers to use getDb()
-export const db = new Proxy({} as any, {
-  get(target, prop) {
-    return getDb()[prop];
-  }
+// Export a proxy that initializes the database on first access
+export const db = new Proxy({} as ReturnType<typeof createDb>, {
+  get(target, prop, receiver) {
+    if (!(target as any)._initialized) {
+      const client = createDb();
+      Object.assign(target, client);
+      (target as any)._initialized = true;
+    }
+    return Reflect.get(target, prop, receiver);
+  },
 });

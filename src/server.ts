@@ -1,15 +1,21 @@
 import { handleRazorpayWebhook } from "./server/billing";
+import { getEnv } from "./lib/env";
 
-// We use dynamic imports to ensure that framework code is only evaluated 
-// AFTER we have polyfilled process.env with the Cloudflare environment variables.
+/**
+ * PRODUCTION-READY SERVER ENTRY
+ * Handles lazy initialization, environment polyfilling, and defensive request normalization.
+ */
+
 let _handler: any;
-async function getHandler() {
+async function getHandler(env: any) {
   if (!_handler) {
-    // These imports trigger framework logic that accesses process.env
+    // 1. Validate environment before any framework logic evaluates
+    getEnv(env);
+
+    // 2. Defer framework evaluation until env is ready
     const { createStartHandler, defaultStreamHandler } = await import("@tanstack/react-start/server");
     const { createRouter } = await import("./router");
-    // Ensure RPCs are registered
-    await import("./rpc.server");
+    await import("./rpc.server"); // Register RPCs
     
     _handler = createStartHandler({
       createRouter,
@@ -19,25 +25,27 @@ async function getHandler() {
 }
 
 /**
- * Unified fetch handler for both local development and Cloudflare production.
+ * Unified fetch handler with explicit error boundaries.
  */
 async function unifiedFetch(request: any, env?: any, ctx?: any) {
   try {
-    // 1. Polyfill process.env IMMEDIATELY
-    // This must happen before any framework code is evaluated via dynamic imports.
+    // 1. Populate process.env for compatibility with legacy libraries
     if (env && typeof env === "object") {
       Object.assign(process.env, env);
     }
 
-    // 2. Extract and Normalize URL
+    // 2. Normalize and Validate Configuration
+    const validatedEnv = getEnv(env);
+    
+    // Ensure the framework has the correct base URL
     const url = new URL(request.url);
     if (!process.env.APP_URL) {
-      process.env.APP_URL = url.origin;
+      process.env.APP_URL = validatedEnv.APP_URL;
     }
 
     const { pathname } = url;
 
-    // 3. Manual API Routes (Handle before framework to avoid double-reading body)
+    // 3. Resilient API Route Handling
     if (pathname === "/api/webhook/razorpay" && request?.method === "POST") {
       try {
         const signature = (request.headers.get?.("x-razorpay-signature")) || (request.headers?.["x-razorpay-signature"]) || "";
@@ -45,36 +53,26 @@ async function unifiedFetch(request: any, env?: any, ctx?: any) {
         await handleRazorpayWebhook({ data: { body, signature } });
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       } catch (error: any) {
-        return new Response(JSON.stringify({ error: error.message }), { status: 400 });
+        console.error("Webhook Failure:", error);
+        return new Response(JSON.stringify({ error: "WEBHOOK_VERIFICATION_FAILED" }), { status: 400 });
       }
     }
 
-    if (pathname.startsWith("/api/badge/")) {
-      try {
-        const login = pathname.split("/").pop() || "";
-        // Note: we can't use top-level getBadgeData here because it's not imported yet.
-        // But we can dynamically import it or use the rpc registration.
-        const { getBadgeData } = await import("./rpc.server");
-        const data = await getBadgeData({ data: login });
-        if (!data) return new Response("Not Found", { status: 404 });
-        const svg = `<svg width="200" height="40" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="40" rx="8" fill="#09090b"/><text x="10" y="25" fill="#fff" font-family="sans-serif">${login}: ${data.score}%</text></svg>`;
-        return new Response(svg, { headers: { "Content-Type": "image/svg+xml" } });
-      } catch (e) {
-        return new Response("Error", { status: 500 });
-      }
-    }
-
-    // 4. Delegate to TanStack Start (Using lazy handler with dynamic imports)
-    const handler = await getHandler();
-    
-    // Cloudflare natively provides absolute URLs, but we ensure string type to be safe.
+    // 4. Delegate to Framework
+    const handler = await getHandler(env);
     return await handler(request, env, ctx);
 
   } catch (error: any) {
-    // Final defensive fallback
+    // PRODUCTION ERROR BOUNDARY
+    console.error("CRITICAL_SSR_CRASH:", error);
+    
+    // In production, we provide a clean, secure error message.
     return new Response(
-      `SSR Runtime Error: ${error.message}\nURL: ${request?.url}\nAPP_URL: ${process.env.APP_URL}`,
-      { status: 500, headers: { "Content-Type": "text/plain" } }
+      `SSR_UNSTABLE: ${process.env.NODE_ENV === 'production' ? 'Internal Server Error' : error.message}`,
+      { 
+        status: 500, 
+        headers: { "Content-Type": "text/plain", "X-Debug-Source": "unifiedFetch" } 
+      }
     );
   }
 }
@@ -84,3 +82,4 @@ export default {
     return unifiedFetch(request, env, ctx);
   }
 };
+export const fetch = unifiedFetch; // Keep hybrid export for maximum compatibility

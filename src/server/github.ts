@@ -1,6 +1,5 @@
-import { createServerFn } from "@tanstack/react-start";
-import { z } from "zod";
 import { Octokit } from "octokit";
+import { env } from "@/lib/env";
 
 export interface ParsedDiff {
   prTitle: string;
@@ -22,7 +21,7 @@ export interface DiffFile {
 }
 
 const octokit = new Octokit({
-  auth: process.env.GITHUB_TOKEN,
+  auth: env.GITHUB_TOKEN || env.GITHUB_CLIENT_SECRET,
 });
 
 export const fetchPRDiff = createServerFn({ method: "POST" })

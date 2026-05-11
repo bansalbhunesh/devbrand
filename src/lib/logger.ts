@@ -1,3 +1,5 @@
+import { env } from "./env";
+
 /**
  * DevBrand Observability Wrapper
  * 
@@ -20,7 +22,7 @@ export const logger = {
     const payload = JSON.stringify({ timestamp, level, message, ...context });
     
     // In production, we'd send this to a log drain or Sentry
-    if (process.env.NODE_ENV === 'production') {
+    if (env.NODE_ENV === 'production') {
       console.log(`[DEVBRAND_LOG] ${payload}`);
       // if (Sentry) Sentry.captureMessage(message, { level, extra: context });
     } else {

@@ -1,5 +1,6 @@
 import { completionContentToText } from "./content";
 import { resolvedCompatChatBaseUrl, resolveOpenAiCompatApiKey, resolveOpenAiCompatModel } from "./resolve";
+import { env } from "@/lib/env";
 
 export type LlmProviderKind = "anthropic" | "openai_compatible";
 
@@ -11,8 +12,7 @@ export type CompleteTextParams = {
 };
 
 export function getLlmProvider(): LlmProviderKind {
-  const raw = (process.env.LLM_PROVIDER ?? "anthropic").trim().toLowerCase();
-  return raw === "openai_compatible" ? "openai_compatible" : "anthropic";
+  return env.LLM_PROVIDER;
 }
 
 export function normalizeLlmJsonText(raw: string): string {
@@ -65,8 +65,8 @@ async function completeOpenAiCompatible(params: CompleteTextParams): Promise<str
 
 async function completeAnthropic(params: CompleteTextParams): Promise<string> {
   const { default: AnthropicCtor } = await import("@anthropic-ai/sdk");
-  const client = new AnthropicCtor({ apiKey: process.env.ANTHROPIC_API_KEY });
-  const model = process.env.CLAUDE_MODEL ?? "claude-3-7-sonnet-20250219";
+  const client = new AnthropicCtor({ apiKey: env.ANTHROPIC_API_KEY });
+  const model = env.CLAUDE_MODEL;
   const response = await client.messages.create({
     model,
     max_tokens: params.maxTokens,
