@@ -410,4 +410,6 @@ export const signInWithGithub = createServerFn({ method: "GET" }).handler(
 
 export const handleGithubCallback = createServerFn({ method: "POST" })
   .inputValidator(z.object({ code: z.string(), state: z.string().optional() }))
-  .handler(async ({ data: { code, state } }) => completeGithubOAuth({ code, state }));
+  .handler(async ({ data: { code, state } }) =>
+    completeGithubOAuth({ code, state }),
+  );

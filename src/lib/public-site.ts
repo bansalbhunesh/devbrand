@@ -7,9 +7,11 @@ const DEFAULT_PRODUCTION_ORIGIN = "https://devbrand.ai";
 export function getPublicSiteUrl(): string {
   const vite =
     typeof import.meta !== "undefined" && import.meta.env
-      ? (import.meta.env.VITE_PUBLIC_APP_URL ||
+      ? (
+          import.meta.env.VITE_PUBLIC_APP_URL ||
           import.meta.env.VITE_APP_URL ||
-          "")?.trim()
+          ""
+        )?.trim()
       : "";
   if (vite) {
     const withProto = /^https?:\/\//i.test(vite) ? vite : `https://${vite}`;

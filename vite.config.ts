@@ -19,5 +19,52 @@ export default defineConfig({
         "@tanstack/react-start/api": "@tanstack/react-start",
       },
     },
+    build: {
+      minify: "terser",
+      terserOptions: {
+        compress: {
+          drop_console: true,
+          drop_debugger: true,
+          passes: 2,
+        },
+        mangle: {
+          safari10: true,
+        },
+        format: {
+          comments: false,
+        },
+      },
+      rollupOptions: {
+        output: {
+          manualChunks: (id) => {
+            if (id.includes("node_modules")) {
+              if (id.includes("react")) return "vendor-react";
+              if (id.includes("@tanstack")) return "vendor-tanstack";
+              if (id.includes("@radix-ui")) return "vendor-radix";
+              if (id.includes("framer-motion")) return "vendor-framer";
+              if (
+                id.includes("clsx") ||
+                id.includes("tailwind-merge") ||
+                id.includes("class-variance-authority")
+              )
+                return "vendor-utils";
+              return "vendor";
+            }
+          },
+        },
+      },
+      chunkSizeWarningLimit: 600,
+      reportCompressedSize: true,
+    },
+    optimizeDeps: {
+      include: [
+        "react",
+        "react-dom",
+        "@tanstack/react-router",
+        "@tanstack/react-query",
+        "@tanstack/react-start",
+        "framer-motion",
+      ],
+    },
   },
 });

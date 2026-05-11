@@ -234,10 +234,12 @@ export const createBillingPortal = createServerFn({ method: "POST" }).handler(
   },
 );
 
-export const getSession = createServerFn({ method: "GET" }).handler(async () => {
-  const { getSession: gs } = await import("@/server/auth");
-  return gs();
-});
+export const getSession = createServerFn({ method: "GET" }).handler(
+  async () => {
+    const { getSession: gs } = await import("@/server/auth");
+    return gs();
+  },
+);
 
 export const logout = createServerFn({ method: "POST" }).handler(async () => {
   const { logout: l } = await import("@/server/auth");

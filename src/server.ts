@@ -69,11 +69,9 @@ async function unifiedFetch(request: Request, env?: unknown, ctx?: unknown) {
     }
 
     const handler = await getHandler();
-    return await (handler as (r: Request, e: unknown, c: unknown) => Promise<Response>)(
-      request,
-      env,
-      ctx,
-    );
+    return await (
+      handler as (r: Request, e: unknown, c: unknown) => Promise<Response>
+    )(request, env, ctx);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
     console.error("CRITICAL_SSR_CRASH:", message, error);

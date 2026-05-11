@@ -45,7 +45,10 @@ export async function processRazorpayWebhookRaw(
     throw new Error("Webhook signature verification failed");
   }
 
-  let body: { event?: string; payload?: { payment?: { entity?: Record<string, unknown> } } };
+  let body: {
+    event?: string;
+    payload?: { payment?: { entity?: Record<string, unknown> } };
+  };
   try {
     body = JSON.parse(rawBody) as typeof body;
   } catch {
