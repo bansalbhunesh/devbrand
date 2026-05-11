@@ -20,9 +20,8 @@ import { Route as ULoginRouteImport } from './routes/u.$login'
 import { Route as TeamIdRouteImport } from './routes/team.$id'
 import { Route as TSlugRouteImport } from './routes/t.$slug'
 import { Route as RIdRouteImport } from './routes/r.$id'
-import { Route as ApiWebhookRazorpayRouteImport } from './routes/api.webhook.razorpay'
-import { Route as ApiBadgeLoginRouteImport } from './routes/api.badge.$login'
-import { Route as ApiOgRoastIdRouteImport } from './routes/api.og.roast.$id'
+import { Route as ApiBadgeLoginRouteImport } from './routes/api/badge.$login'
+import { Route as ApiOgRoastIdRouteImport } from './routes/api/og.roast.$id'
 
 const WrappedRoute = WrappedRouteImport.update({
   id: '/wrapped',
@@ -79,11 +78,6 @@ const RIdRoute = RIdRouteImport.update({
   path: '/r/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiWebhookRazorpayRoute = ApiWebhookRazorpayRouteImport.update({
-  id: '/api/webhook/razorpay',
-  path: '/api/webhook/razorpay',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiBadgeLoginRoute = ApiBadgeLoginRouteImport.update({
   id: '/api/badge/$login',
   path: '/api/badge/$login',
@@ -108,7 +102,6 @@ export interface FileRoutesByFullPath {
   '/team/$id': typeof TeamIdRoute
   '/u/$login': typeof ULoginRoute
   '/api/badge/$login': typeof ApiBadgeLoginRoute
-  '/api/webhook/razorpay': typeof ApiWebhookRazorpayRoute
   '/api/og/roast/$id': typeof ApiOgRoastIdRoute
 }
 export interface FileRoutesByTo {
@@ -124,7 +117,6 @@ export interface FileRoutesByTo {
   '/team/$id': typeof TeamIdRoute
   '/u/$login': typeof ULoginRoute
   '/api/badge/$login': typeof ApiBadgeLoginRoute
-  '/api/webhook/razorpay': typeof ApiWebhookRazorpayRoute
   '/api/og/roast/$id': typeof ApiOgRoastIdRoute
 }
 export interface FileRoutesById {
@@ -141,7 +133,6 @@ export interface FileRoutesById {
   '/team/$id': typeof TeamIdRoute
   '/u/$login': typeof ULoginRoute
   '/api/badge/$login': typeof ApiBadgeLoginRoute
-  '/api/webhook/razorpay': typeof ApiWebhookRazorpayRoute
   '/api/og/roast/$id': typeof ApiOgRoastIdRoute
 }
 export interface FileRouteTypes {
@@ -159,7 +150,6 @@ export interface FileRouteTypes {
     | '/team/$id'
     | '/u/$login'
     | '/api/badge/$login'
-    | '/api/webhook/razorpay'
     | '/api/og/roast/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -175,7 +165,6 @@ export interface FileRouteTypes {
     | '/team/$id'
     | '/u/$login'
     | '/api/badge/$login'
-    | '/api/webhook/razorpay'
     | '/api/og/roast/$id'
   id:
     | '__root__'
@@ -191,7 +180,6 @@ export interface FileRouteTypes {
     | '/team/$id'
     | '/u/$login'
     | '/api/badge/$login'
-    | '/api/webhook/razorpay'
     | '/api/og/roast/$id'
   fileRoutesById: FileRoutesById
 }
@@ -208,7 +196,6 @@ export interface RootRouteChildren {
   TeamIdRoute: typeof TeamIdRoute
   ULoginRoute: typeof ULoginRoute
   ApiBadgeLoginRoute: typeof ApiBadgeLoginRoute
-  ApiWebhookRazorpayRoute: typeof ApiWebhookRazorpayRoute
   ApiOgRoastIdRoute: typeof ApiOgRoastIdRoute
 }
 
@@ -291,13 +278,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/webhook/razorpay': {
-      id: '/api/webhook/razorpay'
-      path: '/api/webhook/razorpay'
-      fullPath: '/api/webhook/razorpay'
-      preLoaderRoute: typeof ApiWebhookRazorpayRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/badge/$login': {
       id: '/api/badge/$login'
       path: '/api/badge/$login'
@@ -328,7 +308,6 @@ const rootRouteChildren: RootRouteChildren = {
   TeamIdRoute: TeamIdRoute,
   ULoginRoute: ULoginRoute,
   ApiBadgeLoginRoute: ApiBadgeLoginRoute,
-  ApiWebhookRazorpayRoute: ApiWebhookRazorpayRoute,
   ApiOgRoastIdRoute: ApiOgRoastIdRoute,
 }
 export const routeTree = rootRouteImport
