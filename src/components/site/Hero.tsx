@@ -5,6 +5,8 @@ import { ArrowRight, Github, Sparkles, GitPullRequest, Check, Link2, LayoutDashb
 import { Link } from "@tanstack/react-router";
 import { signInWithGithub } from "@/rpc.server";
 import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from "framer-motion";
+import { useMemo } from "react";
+import { Route } from "@/routes/__root";
 
 export function Hero() {
   const cardRef = useRef<HTMLDivElement>(null);
@@ -14,7 +16,7 @@ export function Hero() {
   const { session } = Route.useRouteContext() as { session: any };
 
   // Phase 2.3: Ambient particles
-  const dots = React.useMemo(() => Array.from({ length: 14 }, (_, i) => ({
+  const dots = useMemo(() => Array.from({ length: 14 }, (_, i) => ({
     x: Math.random() * 100,
     y: Math.random() * 100,
     size: Math.random() * 2 + 1,
@@ -50,10 +52,10 @@ export function Hero() {
       y.set(0);
     };
     
-    window.addEventListener("mousemove", onMove);
+    el.addEventListener("mousemove", onMove);
     el.addEventListener("mouseleave", onLeave);
     return () => {
-      window.removeEventListener("mousemove", onMove);
+      el.removeEventListener("mousemove", onMove);
       el.removeEventListener("mouseleave", onLeave);
     };
   }, [x, y]);

@@ -37,6 +37,25 @@ export function GenerateTab({
   setTab
 }: GenerateTabProps) {
   const postLabels = ["Problem / Outcome", "Tradeoff / Decision", "Learnings"];
+  const [step, setStep] = React.useState(0);
+  const steps = [
+    "Reading diff & extracting metadata...",
+    "Analyzing architectural significance...",
+    "Scoring complexity & impact...",
+    "Synthesizing persona-aligned narrative..."
+  ];
+
+  React.useEffect(() => {
+    if (generating) {
+      const interval = setInterval(() => {
+        setStep(s => (s < 3 ? s + 1 : s));
+      }, 2000);
+      return () => {
+        clearInterval(interval);
+        setStep(0);
+      };
+    }
+  }, [generating]);
 
   return (
     <div className="grid lg:grid-cols-[1fr_1.3fr] gap-10 animate-in fade-in duration-500">
@@ -143,11 +162,28 @@ export function GenerateTab({
         )}
 
         {generating && (
-          <div className="h-96 rounded-2xl border border-border bg-muted/20 grid place-items-center">
-            <div className="text-center">
-              <Loader2 className="h-8 w-8 animate-spin text-blue-500 mx-auto mb-3" />
-              <p className="text-sm text-muted-foreground font-bold">Reading the diff...</p>
-              <p className="text-xs text-muted-foreground/60 mt-1">Scoring architecture · Building context · Writing story</p>
+          <div className="h-96 rounded-2xl border border-border bg-muted/20 p-8 flex flex-col justify-center">
+            <div className="space-y-6">
+              {steps.map((s, i) => (
+                <div key={i} className="flex items-center gap-4 group">
+                  <div className={cn(
+                    "h-6 w-6 rounded-full border-2 flex items-center justify-center transition-all duration-500",
+                    i < step ? "bg-blue-500 border-blue-500 text-white" : 
+                    i === step ? "border-blue-500 text-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)] animate-pulse" : 
+                    "border-muted text-muted-foreground opacity-30"
+                  )}>
+                    {i < step ? <Check className="h-3 w-3" /> : <span className="text-[10px] font-bold">{i + 1}</span>}
+                  </div>
+                  <div className={cn(
+                    "text-sm font-medium transition-all duration-500",
+                    i === step ? "text-foreground translate-x-1" : 
+                    i < step ? "text-muted-foreground" : 
+                    "text-muted-foreground opacity-30"
+                  )}>
+                    {s}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}

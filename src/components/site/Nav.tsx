@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { getSession } from "@/rpc.server";
+import { Route } from "@/routes/__root";
 
 export function Nav() {
   const [scrolled, setScrolled] = useState(false);
@@ -45,6 +46,7 @@ export function Nav() {
           <a href="#roast" className="hover:text-foreground transition">Roast</a>
           <a href="#pricing" className="hover:text-foreground transition">Pricing</a>
           <Link to="/explore" className="hover:text-foreground transition">Explore</Link>
+          <Link to="/wrapped" className="hover:text-foreground transition">Wrapped</Link>
         </div>
 
         <div className="flex items-center gap-3 shrink-0">
@@ -88,6 +90,7 @@ export function Nav() {
                 <a href="#roast" className="text-lg font-medium hover:text-blue-500 transition">Roast</a>
                 <a href="#pricing" className="text-lg font-medium hover:text-blue-500 transition">Pricing</a>
                 <Link to="/explore" className="text-lg font-medium hover:text-blue-500 transition">Explore</Link>
+                <Link to="/wrapped" className="text-lg font-medium hover:text-blue-500 transition">Wrapped</Link>
                 <hr className="border-border/50" />
                 {session ? (
                   <Link to="/dashboard" className="text-lg font-medium flex items-center gap-2 text-blue-500"><LayoutDashboard className="h-5 w-5" /> Dashboard</Link>

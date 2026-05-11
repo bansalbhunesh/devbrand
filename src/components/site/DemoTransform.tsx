@@ -50,7 +50,7 @@ export function DemoTransform() {
     : fallbackPairs;
 
   return (
-    <section id="demo" className="relative py-32 bg-background">
+    <section id="demo" className="relative py-32 bg-muted/[0.03] border-t border-border">
       <div className="mx-auto max-w-7xl px-6">
         <div className="mb-16">
           <SectionLabel>The transformation</SectionLabel>
@@ -77,7 +77,7 @@ function Pair(p: any) {
   const url = `devbrand.app/t/${p.slug}`;
   
   return (
-    <div className="group grid md:grid-cols-[1fr_auto_1.4fr] items-stretch gap-0 md:gap-8 rounded-[2.5rem] border border-border bg-muted/20 hover:border-blue-500/30 transition-all duration-500 overflow-hidden backdrop-blur-sm">
+    <div className="group grid md:grid-cols-[1fr_auto_1.4fr] items-stretch gap-0 md:gap-8 rounded-[2.5rem] border border-border bg-muted/20 hover:border-blue-500/30 hover:shadow-2xl hover:shadow-blue-500/5 transition-all duration-500 overflow-hidden backdrop-blur-sm">
       <div className="p-8 md:p-10 border-b md:border-b-0 md:border-r border-border bg-background/40">
         <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-bold mb-6">
           <span>BEFORE</span>

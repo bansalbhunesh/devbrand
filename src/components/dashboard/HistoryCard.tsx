@@ -169,6 +169,20 @@ export function HistoryCard({ output, userId, onQueryInvalidate }: { output: any
       <h3 className="text-base font-bold mb-2 group-hover:text-blue-500 transition leading-snug">
         {output.prTitle || "Untitled Impact"}
       </h3>
+
+      <div className="flex flex-wrap gap-1.5 mb-4">
+        {output.stack?.slice(0, 3).map((s: string) => (
+          <span key={s} className="text-[8px] font-mono font-black px-1.5 py-0.5 rounded bg-blue-500/5 text-blue-500/70 border border-blue-500/10 uppercase tracking-tighter">
+            {s}
+          </span>
+        ))}
+        <div className="ml-auto flex items-center gap-2">
+          <div className="h-1 w-12 bg-muted rounded-full overflow-hidden">
+            <div className="h-full bg-blue-500" style={{ width: `${output.impactScore}%` }} />
+          </div>
+          <span className="text-[9px] font-black text-blue-500/80">{output.impactScore}</span>
+        </div>
+      </div>
       
       <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3 mb-6 opacity-80 italic flex-1">
         "{output.linkedinPost1}"

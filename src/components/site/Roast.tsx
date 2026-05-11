@@ -51,7 +51,7 @@ export function Roast() {
 
   return (
     <section id="roast" className="relative py-32 border-t border-border overflow-hidden bg-background">
-      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-red-500/5 blur-[140px] rounded-full -mr-64 -mt-64 pointer-events-none" />
+      <div className="absolute top-0 right-0 w-72 h-72 bg-red-500/5 blur-[50px] rounded-full -mr-32 -mt-32 pointer-events-none" />
       
       <div className="mx-auto max-w-7xl px-6 relative">
         <div className="grid lg:grid-cols-2 gap-20 items-center">
@@ -84,7 +84,7 @@ export function Roast() {
                           : "bg-muted/30 text-muted-foreground border-border hover:border-red-500/30"
                       )}
                     >
-                      {t}
+                      {t === "salty" ? "Salty" : t === "helpful" ? "Helpful" : t === "nuclear" ? "☢ Nuclear" : "Technical"}
                     </button>
                   ))}
                 </div>
@@ -137,7 +137,7 @@ export function Roast() {
           </motion.div>
 
           <div className="relative">
-            <div className="absolute -inset-4 bg-gradient-to-br from-red-500/20 to-transparent blur-3xl opacity-20" />
+            <div className="absolute -inset-4 bg-gradient-to-br from-red-500/20 to-transparent blur-xl opacity-10" />
             <motion.div 
               layout
               className={cn(
@@ -307,7 +307,6 @@ export function Roast() {
                         onClick={() => {
                           const text = `${roastData.share_summary}\n\nRoast your lead at: devbrand.ai/roast`;
                           navigator.clipboard.writeText(text);
-                          alert("Copied shareable roast to clipboard!");
                         }}
                         className="text-[10px] font-bold text-muted-foreground hover:text-foreground transition flex items-center gap-1.5"
                       >

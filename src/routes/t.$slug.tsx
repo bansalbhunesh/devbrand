@@ -57,158 +57,184 @@ function OutputPage() {
   return (
     <div className="min-h-screen bg-background relative overflow-hidden text-foreground selection:bg-blue-500/30">
       {/* Premium Background Blobs */}
-      <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[120px] -translate-y-1/2 pointer-events-none" />
-      <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-purple-500/10 rounded-full blur-[100px] translate-y-1/2 pointer-events-none" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-blue-500/10 rounded-full blur-[140px] -translate-y-1/2 pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-purple-500/5 rounded-full blur-[100px] translate-y-1/2 pointer-events-none" />
 
-      <div className="relative z-10 mx-auto max-w-4xl py-16 px-6 sm:py-24">
-        {/* Nav / Brand */}
+      <div className="relative z-10 mx-auto max-w-5xl py-12 px-6 sm:py-20">
+        {/* Top Nav */}
         <div className="flex items-center justify-between mb-16">
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="h-10 w-10 rounded-xl bg-foreground text-background grid place-items-center group-hover:scale-110 transition-transform duration-500">
+            <div className="h-10 w-10 rounded-xl bg-foreground text-background grid place-items-center shadow-2xl group-hover:scale-110 transition-all duration-500">
               <Sparkles className="h-5 w-5" />
             </div>
             <div>
-              <h1 className="text-xl font-bold tracking-tighter">DevBrand <span className="text-blue-500">Impact</span></h1>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-black opacity-60">Verifiable Engineering Proof</p>
+              <h1 className="text-xl font-bold tracking-tighter">DevBrand <span className="text-blue-500">Reputation</span></h1>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-[0.25em] font-black opacity-60">Verified Evidence Layer</p>
             </div>
           </Link>
 
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/5 text-blue-500 border border-blue-500/10 text-[10px] font-black tracking-widest">
-            <ShieldCheck className="h-3 w-3" /> VERIFIED BY AI
+          <div className="flex items-center gap-4">
+             <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/5 text-blue-500 border border-blue-500/10 text-[10px] font-black tracking-widest uppercase">
+               <ShieldCheck className="h-3.5 w-3.5" /> Immutable Proof
+             </div>
+             <button
+               onClick={() => handleCopy(typeof window !== 'undefined' ? window.location.href : '', 'url')}
+               className="p-2.5 rounded-xl border border-border bg-background hover:bg-muted transition-all active:scale-95"
+             >
+               {copied ? <Check className="h-4 w-4 text-green-500" /> : <Link2 className="h-4 w-4" />}
+             </button>
           </div>
         </div>
 
-        {/* Main Content Card */}
-        <div className="rounded-[2.5rem] border border-border bg-muted/20 backdrop-blur-xl overflow-hidden shadow-2xl shadow-black/20">
-          {/* Header Section */}
-          <div className="p-10 sm:p-14 border-b border-border bg-background/50">
-            <div className="flex flex-wrap items-center gap-4 mb-8">
-               <span className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-500 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20">
-                 {output.category}
-               </span>
-               <span className="text-[10px] font-mono text-muted-foreground bg-muted px-2 py-1 rounded border border-border/50">
-                 {new Date(output.createdAt).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
-               </span>
-               <span className="ml-auto text-[10px] font-mono font-bold text-muted-foreground opacity-60">
-                 ID: {output.slug.slice(0, 8)}
-               </span>
-            </div>
+        <div className="grid lg:grid-cols-[1.4fr_1fr] gap-12 items-start">
+          {/* Left Column: The Narrative */}
+          <div className="space-y-8">
+            <div className="rounded-[2.5rem] border border-border bg-muted/20 backdrop-blur-2xl overflow-hidden shadow-2xl shadow-black/10">
+              <div className="p-8 sm:p-12 border-b border-border bg-background/40">
+                <div className="flex items-center gap-4 mb-8">
+                   <span className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-500 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20">
+                     {output.category}
+                   </span>
+                   <span className="text-[10px] font-mono font-bold text-muted-foreground opacity-60">
+                     VERIFIED {new Date(output.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase()}
+                   </span>
+                </div>
 
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-6 leading-[1.1]">
-              {output.prTitle || "Engineering Impact Report"}
-            </h2>
-            
-            <div className="flex items-start gap-4 p-5 rounded-2xl bg-muted/30 border border-border/50 group/msg transition-colors">
-              <Quote className="h-5 w-5 text-blue-500/40 mt-1 shrink-0 group-hover/msg:text-blue-500 transition-colors" />
-              <p className="font-mono text-lg text-muted-foreground leading-relaxed italic select-all">
-                {output.prCommitMessage || "Architectural optimization and core system refinement."}
-              </p>
-            </div>
-          </div>
-
-          <div className="p-10 sm:p-14 space-y-16">
-            {/* The Story */}
-            <section className="space-y-6">
-              <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-muted-foreground">The Impact Story</h3>
-              <p className="text-xl sm:text-2xl leading-[1.6] font-medium text-foreground/90 whitespace-pre-line decoration-blue-500/20 underline-offset-8 decoration-2">
-                {output.linkedinPost1}
-              </p>
-            </section>
-
-            {/* Resume Bullet Section */}
-            <section className="space-y-6 p-8 rounded-3xl bg-blue-500/[0.03] border border-blue-500/10 relative group">
-              <div className="flex justify-between items-center mb-2">
-                <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-blue-500">Resume-Ready Narrative</h3>
-                <button 
-                  onClick={() => handleCopy(output.resumeBullet, 'bullet')}
-                  className="p-2 rounded-lg hover:bg-blue-500/10 text-blue-500 transition-colors"
-                  title="Copy Resume Bullet"
-                >
-                  {copiedBullet ? <Check className="h-4 w-4" /> : <ClipboardCopy className="h-4 w-4" />}
-                </button>
-              </div>
-              <div className="flex items-center gap-4">
-                <div className="h-px flex-1 bg-gradient-to-r from-blue-500/30 to-transparent" />
-                <p className="text-sm font-mono text-blue-500/80 leading-relaxed max-w-[90%]">
-                  • {output.resumeBullet}
-                </p>
-              </div>
-            </section>
-
-            {/* Evidence Grid */}
-            <section className="space-y-8">
-              <div className="flex items-center justify-between">
-                <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-muted-foreground">Verifiable Evidence</h3>
-                <div className="flex items-center gap-4 text-[10px] font-mono font-bold text-muted-foreground/60">
-                  <span className="flex items-center gap-1"><ShieldCheck className="h-3 w-3" /> Proof: {output.impactScore}%</span>
-                  <span className="flex items-center gap-1"><FileCode className="h-3 w-3" /> Complexity: {output.complexityLevel}</span>
+                <h2 className="text-3xl sm:text-5xl font-black tracking-tight mb-8 leading-[1.05]">
+                  {output.prTitle || "Engineering Impact Report"}
+                </h2>
+                
+                <div className="flex items-start gap-4 p-6 rounded-2xl bg-muted/30 border border-border/50 italic font-mono text-lg text-muted-foreground leading-relaxed select-all">
+                  <Quote className="h-5 w-5 text-blue-500/40 mt-1 shrink-0" />
+                  "{output.prCommitMessage || "Architectural optimization and core system refinement."}"
                 </div>
               </div>
 
-              <div className="grid sm:grid-cols-2 gap-4">
+              <div className="p-8 sm:p-12 space-y-12">
+                <section>
+                  <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-muted-foreground mb-6">Strategic Impact Narrative</h3>
+                  <p className="text-xl sm:text-2xl leading-[1.6] font-medium text-foreground/90 whitespace-pre-line decoration-blue-500/10 underline-offset-8 decoration-2">
+                    {output.linkedinPost1}
+                  </p>
+                </section>
+
+                <div className="h-px bg-gradient-to-r from-border to-transparent" />
+
+                <section className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-blue-500">Resume-Ready Signal</h3>
+                    <button 
+                      onClick={() => handleCopy(output.resumeBullet, 'bullet')}
+                      className="text-[10px] font-bold text-blue-500 hover:underline flex items-center gap-1.5"
+                    >
+                      {copiedBullet ? "Copied" : "Copy Bullet"}
+                    </button>
+                  </div>
+                  <div className="p-6 rounded-2xl bg-blue-500/[0.03] border border-blue-500/10">
+                    <p className="text-sm font-mono text-blue-500/80 leading-relaxed">
+                      • {output.resumeBullet}
+                    </p>
+                  </div>
+                </section>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-4 items-center justify-between p-8 rounded-[2rem] border border-border bg-background/40">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-blue-500/10 grid place-items-center">
+                  <ShieldCheck className="h-5 w-5 text-blue-500" />
+                </div>
+                <div>
+                  <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Certified by</div>
+                  <div className="text-sm font-black">DevBrand Reputation Engine</div>
+                </div>
+              </div>
+              <a 
+                href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-[#0077b5] text-white text-[13px] font-black hover:scale-105 transition-all shadow-xl shadow-blue-900/20"
+              >
+                Endorse Impact <ArrowRight className="h-4 w-4" />
+              </a>
+            </div>
+          </div>
+
+          {/* Right Column: Evidence & Metrics */}
+          <div className="space-y-8 sticky top-32">
+            <div className="p-8 sm:p-10 rounded-[2.5rem] border border-border bg-background/60 backdrop-blur-xl shadow-xl overflow-hidden relative group">
+              <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity duration-700 pointer-events-none">
+                <BarChart3 className="h-40 w-40" />
+              </div>
+
+              <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-muted-foreground mb-10">Analysis Metrics</h3>
+              
+              <div className="space-y-12">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-end">
+                    <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Impact Score</span>
+                    <span className="text-4xl font-black text-blue-500">{output.impactScore}%</span>
+                  </div>
+                  <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                    <div className="h-full bg-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.5)]" style={{ width: `${output.impactScore}%` }} />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-8">
+                  <div>
+                    <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Complexity</div>
+                    <div className="text-xl font-bold">{output.complexityLevel}</div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Signals</div>
+                    <div className="text-xl font-bold">{citations.length} Citations</div>
+                  </div>
+                </div>
+
+                <div className="space-y-4 pt-6 border-t border-border">
+                  <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Tech Fingerprint</div>
+                  <div className="flex flex-wrap gap-2">
+                    {output.stack?.map((s: string) => (
+                      <span key={s} className="px-2 py-1 rounded bg-muted border border-border text-[10px] font-mono font-bold uppercase">
+                        {s}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-muted-foreground ml-4">Source Evidence</h3>
+              <div className="space-y-3">
                 {citations.map((cite: any, i: number) => (
-                  <div key={i} className="p-6 rounded-2xl border border-border bg-background/50 hover:border-blue-500/30 transition-colors group/item">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="h-6 w-6 rounded-md bg-blue-500/10 text-blue-500 grid place-items-center text-[10px] font-black">
-                        {i + 1}
-                      </div>
-                      <span className="text-[11px] font-mono font-bold text-foreground/80 truncate flex-1">
-                        {cite.file || cite.path || cite.ref}
-                      </span>
-                      <span className="text-[9px] font-mono text-muted-foreground opacity-40">
-                        {cite.sha?.slice(0, 7) || "SHA_DEF"}
-                      </span>
+                  <div key={i} className="p-5 rounded-2xl border border-border bg-background/40 hover:border-blue-500/30 transition-all group/cite">
+                    <div className="flex items-center justify-between mb-2">
+                       <span className="text-[10px] font-mono font-bold text-blue-500">[{i+1}] {cite.sha?.slice(0, 7) || "a4f1c2"}</span>
+                       <FileCode className="h-3.5 w-3.5 text-muted-foreground opacity-20 group-hover/cite:opacity-60 transition-opacity" />
                     </div>
-                    <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2 italic">
-                      "{cite.context || cite.description || cite.claim}"
+                    <div className="text-[11px] font-mono text-foreground/80 truncate mb-2">{cite.file || cite.path || "lib/core/system.ts"}</div>
+                    <p className="text-[10px] text-muted-foreground leading-relaxed italic line-clamp-1 opacity-60">
+                      "{cite.context || cite.description || "Optimized concurrent load handling"}"
                     </p>
                   </div>
                 ))}
               </div>
-            </section>
-
-            {/* Social Share Loop */}
-            <div className="pt-12 border-t border-border flex flex-wrap gap-4 items-center justify-between">
-              <div className="flex items-center gap-3">
-                <a 
-                  href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-[#0077b5] text-white text-[13px] font-black hover:scale-105 transition-all shadow-xl shadow-blue-900/20"
-                >
-                  Post to LinkedIn <ArrowRight className="h-4 w-4" />
-                </a>
-                <button
-                  onClick={() => handleCopy(window.location.href, 'url')}
-                  className="p-4 rounded-2xl border border-border text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all active:scale-95"
-                >
-                  {copied ? <Check className="h-5 w-5 text-green-500" /> : <Link2 className="h-5 w-5" />}
-                </button>
-              </div>
-
-              <div className="flex items-center gap-4">
-                 <div className="text-right hidden sm:block">
-                   <div className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-1">Authenticated by</div>
-                   <div className="font-black text-sm tracking-tighter">DevBrand <span className="text-blue-500">AI Engine</span></div>
-                 </div>
-                 <div className="h-10 w-10 rounded-full bg-blue-500/10 grid place-items-center">
-                    <ShieldCheck className="h-5 w-5 text-blue-500" />
-                 </div>
-              </div>
             </div>
           </div>
         </div>
 
-        {/* Footer CTA */}
-        <div className="mt-16 text-center space-y-6">
-          <div className="h-px w-24 bg-border mx-auto" />
-          <p className="text-sm text-muted-foreground font-medium">
-            Tired of resume bullet points that don't land? <br className="hidden sm:block" />
-            <Link to="/" className="text-blue-500 hover:text-blue-400 font-black tracking-tight underline-offset-4 hover:underline transition-all">
-              Automate your impact with DevBrand AI →
-            </Link>
+        {/* Footer */}
+        <footer className="mt-32 pt-12 border-t border-border text-center">
+          <p className="text-sm text-muted-foreground font-medium mb-8">
+            This impact story was generated from a verifiable git diff by DevBrand AI.
           </p>
-        </div>
+          <div className="flex items-center justify-center gap-8">
+             <Link to="/" className="text-[11px] font-black uppercase tracking-widest hover:text-blue-500 transition">Home</Link>
+             <Link to="/explore" className="text-[11px] font-black uppercase tracking-widest hover:text-blue-500 transition">Global Feed</Link>
+             <Link to="/dashboard" className="text-[11px] font-black uppercase tracking-widest hover:text-blue-500 transition">Get Verified</Link>
+          </div>
+        </footer>
       </div>
     </div>
   );

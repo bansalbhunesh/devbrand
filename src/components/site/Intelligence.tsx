@@ -2,6 +2,7 @@
 
 import { Sparkles, Cpu, Shield, Zap, GitBranch, Terminal } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
 const capabilities = [
   {
@@ -23,7 +24,7 @@ const capabilities = [
 
 export function Intelligence() {
   return (
-    <section id="intelligence" className="py-32 border-t border-border bg-muted/10 relative">
+    <section id="intelligence" className="py-32 border-t border-border bg-muted/5 relative">
       <div className="mx-auto max-w-7xl px-6">
         <div className="text-center mb-20">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-[10px] font-bold text-purple-500 uppercase tracking-widest mb-6">
@@ -38,13 +39,20 @@ export function Intelligence() {
 
         <div className="grid md:grid-cols-3 gap-8">
           {capabilities.map((cap, i) => (
-            <div key={i} className="group p-8 rounded-3xl border border-border bg-background hover:border-purple-500/30 transition-all hover:shadow-2xl hover:shadow-purple-500/5">
+            <motion.div 
+              key={i} 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1 }}
+              className="group p-8 rounded-3xl border border-border bg-background hover:border-purple-500/30 transition-all hover:shadow-2xl hover:shadow-purple-500/5"
+            >
               <div className="mb-6 p-3 rounded-2xl bg-muted border border-border w-fit group-hover:bg-purple-500/5 group-hover:border-purple-500/20 transition-colors">
                 {cap.icon}
               </div>
               <h3 className="text-lg font-bold mb-3">{cap.title}</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">{cap.desc}</p>
-            </div>
+            </motion.div>
           ))}
         </div>
 

@@ -119,7 +119,7 @@ export function Pricing() {
 
   return (
     <section id="pricing" className="py-32 border-t border-border bg-muted/10 relative overflow-hidden">
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-blue-500/5 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-500/5 blur-[60px] rounded-full pointer-events-none" />
       
       <div className="mx-auto max-w-7xl px-6 relative">
         <div className="text-center mb-12">
@@ -146,6 +146,7 @@ export function Pricing() {
             <span className={cn("text-sm font-medium transition", billingCycle === "monthly" ? "text-foreground" : "text-muted-foreground")}>Monthly</span>
             <button
               onClick={() => setBillingCycle(prev => prev === "monthly" ? "yearly" : "monthly")}
+              aria-label="Toggle billing cycle"
               className="relative w-12 h-6 rounded-full bg-muted border border-border p-1 transition-colors hover:border-blue-500/50"
             >
               <motion.div

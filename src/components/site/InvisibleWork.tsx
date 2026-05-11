@@ -2,11 +2,19 @@
 
 import { ShieldCheck, Activity, Search, Code2, Zap, ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 
 export function InvisibleWork() {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setMounted(true), 300);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <section className="py-32 bg-background relative overflow-hidden">
-      <div className="absolute top-1/2 left-0 w-96 h-96 bg-blue-500/5 blur-[120px] rounded-full -translate-y-1/2 -ml-48" />
+      <div className="absolute top-1/2 left-0 w-64 h-64 bg-blue-500/5 blur-[50px] rounded-full -translate-y-1/2 -ml-32" />
       
       <div className="mx-auto max-w-7xl px-6">
         <div className="grid lg:grid-cols-[1fr_1.2fr] gap-20 items-center">
@@ -42,7 +50,12 @@ export function InvisibleWork() {
             </div>
           </div>
 
-          <div className="relative">
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            className="relative"
+          >
             {/* Abstract visualization of a dependency graph */}
             <div className="rounded-[3rem] border border-border bg-muted/20 p-4 md:p-8 backdrop-blur-sm shadow-2xl">
               <div className="aspect-[4/3] relative bg-background rounded-[2rem] border border-border overflow-hidden p-8">
@@ -59,16 +72,16 @@ export function InvisibleWork() {
 
                   <div className="flex-1 grid grid-cols-2 gap-8 items-center">
                     <div className="space-y-6">
-                      <GraphNode active title="auth/middleware.ts" score={84} type="infra" />
-                      <GraphNode title="api/routes.ts" score={42} type="utility" />
-                      <GraphNode title="ui/button.tsx" score={12} type="leaf" />
+                      <GraphNode active title="auth/middleware.ts" score={84} type="infra" mounted={mounted} />
+                      <GraphNode title="api/routes.ts" score={42} type="utility" mounted={mounted} />
+                      <GraphNode title="ui/button.tsx" score={12} type="leaf" mounted={mounted} />
                     </div>
                     <div className="relative h-full">
                       {/* Decorative SVG connections */}
                       <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-20" viewBox="0 0 100 100">
-                        <path d="M 0 25 L 100 50" stroke="currentColor" strokeWidth="0.5" fill="none" />
-                        <path d="M 0 50 L 100 50" stroke="currentColor" strokeWidth="0.5" fill="none" />
-                        <path d="M 0 75 L 100 50" stroke="currentColor" strokeWidth="0.5" fill="none" />
+                        <path d="M 0 25 L 100 50" stroke="oklch(100% 0 0 / 0.15)" strokeWidth="0.5" fill="none" />
+                        <path d="M 0 50 L 100 50" stroke="oklch(100% 0 0 / 0.15)" strokeWidth="0.5" fill="none" />
+                        <path d="M 0 75 L 100 50" stroke="oklch(100% 0 0 / 0.15)" strokeWidth="0.5" fill="none" />
                       </svg>
                       <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-blue-500/10 rounded-full flex items-center justify-center border border-blue-500/20 shadow-2xl shadow-blue-500/10">
                         <div className="text-center">
@@ -86,7 +99,7 @@ export function InvisibleWork() {
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>
@@ -109,7 +122,7 @@ function FeatureRow({ icon, title, desc }: { icon: React.ReactNode, title: strin
   );
 }
 
-function GraphNode({ title, score, type, active }: { title: string, score: number, type: string, active?: boolean }) {
+function GraphNode({ title, score, type, active, mounted }: { title: string, score: number, type: string, active?: boolean, mounted: boolean }) {
   return (
     <div className={cn(
       "p-4 rounded-xl border transition-all duration-300",
@@ -120,7 +133,10 @@ function GraphNode({ title, score, type, active }: { title: string, score: numbe
         <span className="text-[10px] font-bold text-blue-500">{score}</span>
       </div>
       <div className="h-1 w-full bg-border rounded-full overflow-hidden">
-        <div className="h-full bg-blue-500 rounded-full transition-all duration-1000" style={{ width: `${score}%` }} />
+        <div 
+          className="h-full bg-blue-500 rounded-full transition-all duration-1000" 
+          style={{ width: mounted ? `${score}%` : "0%" }} 
+        />
       </div>
     </div>
   );
