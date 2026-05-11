@@ -1,8 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { getOutputBySlug } from "@/rpc.server";
-import { GitCommit, Sparkles, ArrowRight, Link2, Check } from "lucide-react";
+import { GitCommit, Sparkles, ArrowRight, Link2, Check, ShieldCheck, Github, ExternalLink, Quote, FileCode, ClipboardCopy } from "lucide-react";
 import * as React from "react";
 import { useState } from "react";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/t/$slug")({
   component: OutputPage,
@@ -29,110 +31,182 @@ export const Route = createFileRoute("/t/$slug")({
 function OutputPage() {
   const output = Route.useLoaderData();
   const [copied, setCopied] = useState(false);
+  const [copiedBullet, setCopiedBullet] = useState(false);
 
   if (!output) return <div className="min-h-screen grid place-items-center bg-background text-destructive font-mono">Impact not found.</div>;
 
+  const citations = Array.isArray(output.citations) 
+    ? output.citations 
+    : typeof output.citations === 'string' 
+      ? JSON.parse(output.citations) 
+      : [];
+
+  const handleCopy = (text: string, type: 'url' | 'bullet') => {
+    navigator.clipboard?.writeText(text);
+    if (type === 'url') {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      toast.success("Link copied");
+    } else {
+      setCopiedBullet(true);
+      setTimeout(() => setCopiedBullet(false), 2000);
+      toast.success("Resume bullet copied");
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-background py-20 px-6 text-foreground">
-      <div className="mx-auto max-w-3xl">
-        <div className="flex items-center gap-3 mb-12">
-          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 grid place-items-center">
-            <span className="text-[14px] font-bold text-white">DB</span>
-          </div>
-          <div>
-            <h1 className="text-xl font-bold tracking-tight">DevBrand Transform</h1>
-            <p className="text-xs text-muted-foreground uppercase tracking-widest font-medium">Evidence-Backed Engineering Impact</p>
+    <div className="min-h-screen bg-background relative overflow-hidden text-foreground selection:bg-blue-500/30">
+      {/* Premium Background Blobs */}
+      <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[120px] -translate-y-1/2 pointer-events-none" />
+      <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-purple-500/10 rounded-full blur-[100px] translate-y-1/2 pointer-events-none" />
+
+      <div className="relative z-10 mx-auto max-w-4xl py-16 px-6 sm:py-24">
+        {/* Nav / Brand */}
+        <div className="flex items-center justify-between mb-16">
+          <Link to="/" className="flex items-center gap-3 group">
+            <div className="h-10 w-10 rounded-xl bg-foreground text-background grid place-items-center group-hover:scale-110 transition-transform duration-500">
+              <Sparkles className="h-5 w-5" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold tracking-tighter">DevBrand <span className="text-blue-500">Impact</span></h1>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-black opacity-60">Verifiable Engineering Proof</p>
+            </div>
+          </Link>
+
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/5 text-blue-500 border border-blue-500/10 text-[10px] font-black tracking-widest">
+            <ShieldCheck className="h-3 w-3" /> VERIFIED BY AI
           </div>
         </div>
 
-        <div className="rounded-2xl border border-border bg-muted/20 overflow-hidden backdrop-blur-sm">
-          <div className="p-8 border-b border-border bg-background/40">
-            <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">
-              <span>Original Change</span>
-              <span className="font-mono normal-case tracking-normal text-[12px] opacity-60">{output.prTitle}</span>
+        {/* Main Content Card */}
+        <div className="rounded-[2.5rem] border border-border bg-muted/20 backdrop-blur-xl overflow-hidden shadow-2xl shadow-black/20">
+          {/* Header Section */}
+          <div className="p-10 sm:p-14 border-b border-border bg-background/50">
+            <div className="flex flex-wrap items-center gap-4 mb-8">
+               <span className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-500 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20">
+                 {output.category}
+               </span>
+               <span className="text-[10px] font-mono text-muted-foreground bg-muted px-2 py-1 rounded border border-border/50">
+                 {new Date(output.createdAt).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
+               </span>
+               <span className="ml-auto text-[10px] font-mono font-bold text-muted-foreground opacity-60">
+                 ID: {output.slug.slice(0, 8)}
+               </span>
             </div>
-            <p className="font-mono text-lg text-foreground/90 leading-relaxed italic">
-              "{output.prCommitMessage || 'Refactored code and improved system performance.'}"
-            </p>
-            <div className="mt-6 flex items-center gap-2 text-xs font-mono text-muted-foreground">
-              <GitCommit className="h-4 w-4" /> {output.slug}
+
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-6 leading-[1.1]">
+              {output.prTitle || "Engineering Impact Report"}
+            </h2>
+            
+            <div className="flex items-start gap-4 p-5 rounded-2xl bg-muted/30 border border-border/50 group/msg transition-colors">
+              <Quote className="h-5 w-5 text-blue-500/40 mt-1 shrink-0 group-hover/msg:text-blue-500 transition-colors" />
+              <p className="font-mono text-lg text-muted-foreground leading-relaxed italic select-all">
+                {output.prCommitMessage || "Architectural optimization and core system refinement."}
+              </p>
             </div>
           </div>
 
-          <div className="p-8 relative">
-            <div className="flex items-center justify-between mb-8">
-              <div className="text-[11px] uppercase tracking-[0.25em] text-blue-500 font-bold">The Impact Story</div>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-mono font-bold text-muted-foreground border border-border rounded-md px-2 py-0.5">{output.category}</span>
-                <span className="text-[10px] font-mono font-bold text-blue-500 border border-blue-500/30 bg-blue-500/10 rounded-md px-2 py-0.5">{output.complexityLevel}</span>
-              </div>
-            </div>
+          <div className="p-10 sm:p-14 space-y-16">
+            {/* The Story */}
+            <section className="space-y-6">
+              <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-muted-foreground">The Impact Story</h3>
+              <p className="text-xl sm:text-2xl leading-[1.6] font-medium text-foreground/90 whitespace-pre-line decoration-blue-500/20 underline-offset-8 decoration-2">
+                {output.linkedinPost1}
+              </p>
+            </section>
 
-            <p className="text-xl leading-relaxed text-pretty font-medium mb-10 text-foreground/90">
-              {output.linkedinPost1}
-            </p>
-
-            <div className="rounded-xl border border-border bg-background/40 p-5 space-y-4">
-              <div className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground font-medium">Verifiable Evidence</div>
-              <ol className="space-y-4 text-xs font-mono">
-                <li className="flex items-start gap-3">
-                  <span className="text-blue-500 font-bold mt-0.5">[1]</span>
-                  <div>
-                    <p className="text-foreground font-semibold">Impact Score: {output.impactScore}/100</p>
-                    <p className="text-muted-foreground text-[10px] mt-0.5">Weighted by architectural depth and fan-in complexity.</p>
-                  </div>
-                </li>
-                {output.citations && (output.citations as any[]).map((cit, i) => (
-                  <li key={i} className="flex items-start gap-3">
-                    <span className="text-blue-500 font-bold mt-0.5">[{i + 2}]</span>
-                    <div>
-                      <p className="text-foreground">{cit.claim}</p>
-                      <p className="text-muted-foreground text-[10px] mt-0.5 font-mono">{cit.ref} · {cit.sha.slice(0, 7)}</p>
-                    </div>
-                  </li>
-                ))}
-              </ol>
-            </div>
-
-            <div className="mt-12 pt-8 border-t border-border flex flex-wrap gap-4 items-center justify-between">
-              <div className="flex items-center gap-3">
-                <a 
-                  href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Check out my engineering impact report on DevBrand: ${output.prTitle}`)}&url=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#1DA1F2] text-white text-xs font-bold hover:brightness-110 transition shadow-lg shadow-blue-500/10"
+            {/* Resume Bullet Section */}
+            <section className="space-y-6 p-8 rounded-3xl bg-blue-500/[0.03] border border-blue-500/10 relative group">
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-blue-500">Resume-Ready Narrative</h3>
+                <button 
+                  onClick={() => handleCopy(output.resumeBullet, 'bullet')}
+                  className="p-2 rounded-lg hover:bg-blue-500/10 text-blue-500 transition-colors"
+                  title="Copy Resume Bullet"
                 >
-                  Share on X
-                </a>
+                  {copiedBullet ? <Check className="h-4 w-4" /> : <ClipboardCopy className="h-4 w-4" />}
+                </button>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="h-px flex-1 bg-gradient-to-r from-blue-500/30 to-transparent" />
+                <p className="text-sm font-mono text-blue-500/80 leading-relaxed max-w-[90%]">
+                  • {output.resumeBullet}
+                </p>
+              </div>
+            </section>
+
+            {/* Evidence Grid */}
+            <section className="space-y-8">
+              <div className="flex items-center justify-between">
+                <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-muted-foreground">Verifiable Evidence</h3>
+                <div className="flex items-center gap-4 text-[10px] font-mono font-bold text-muted-foreground/60">
+                  <span className="flex items-center gap-1"><ShieldCheck className="h-3 w-3" /> Proof: {output.impactScore}%</span>
+                  <span className="flex items-center gap-1"><FileCode className="h-3 w-3" /> Complexity: {output.complexityLevel}</span>
+                </div>
+              </div>
+
+              <div className="grid sm:grid-cols-2 gap-4">
+                {citations.map((cite: any, i: number) => (
+                  <div key={i} className="p-6 rounded-2xl border border-border bg-background/50 hover:border-blue-500/30 transition-colors group/item">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="h-6 w-6 rounded-md bg-blue-500/10 text-blue-500 grid place-items-center text-[10px] font-black">
+                        {i + 1}
+                      </div>
+                      <span className="text-[11px] font-mono font-bold text-foreground/80 truncate flex-1">
+                        {cite.file || cite.path || cite.ref}
+                      </span>
+                      <span className="text-[9px] font-mono text-muted-foreground opacity-40">
+                        {cite.sha?.slice(0, 7) || "SHA_DEF"}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2 italic">
+                      "{cite.context || cite.description || cite.claim}"
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* Social Share Loop */}
+            <div className="pt-12 border-t border-border flex flex-wrap gap-4 items-center justify-between">
+              <div className="flex items-center gap-3">
                 <a 
                   href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#0077b5] text-white text-xs font-bold hover:brightness-110 transition shadow-lg shadow-blue-700/10"
+                  className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-[#0077b5] text-white text-[13px] font-black hover:scale-105 transition-all shadow-xl shadow-blue-900/20"
                 >
-                  Share on LinkedIn
+                  Post to LinkedIn <ArrowRight className="h-4 w-4" />
                 </a>
                 <button
-                  onClick={() => { navigator.clipboard?.writeText(window.location.href); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
-                  className="p-3 rounded-xl border border-border text-muted-foreground hover:text-foreground transition bg-muted/20"
+                  onClick={() => handleCopy(window.location.href, 'url')}
+                  className="p-4 rounded-2xl border border-border text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all active:scale-95"
                 >
-                  {copied ? <Check className="h-4 w-4" /> : <Link2 className="h-4 w-4" />}
+                  {copied ? <Check className="h-5 w-5 text-green-500" /> : <Link2 className="h-5 w-5" />}
                 </button>
-
               </div>
 
-              
-              <div className="flex flex-col items-end gap-1">
-                <div className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">Powered by</div>
-                <div className="font-bold text-sm tracking-tighter">DevBrand <span className="text-blue-500">AI</span></div>
+              <div className="flex items-center gap-4">
+                 <div className="text-right hidden sm:block">
+                   <div className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-1">Authenticated by</div>
+                   <div className="font-black text-sm tracking-tighter">DevBrand <span className="text-blue-500">AI Engine</span></div>
+                 </div>
+                 <div className="h-10 w-10 rounded-full bg-blue-500/10 grid place-items-center">
+                    <ShieldCheck className="h-5 w-5 text-blue-500" />
+                 </div>
               </div>
             </div>
           </div>
         </div>
-        
-        <div className="mt-12 text-center">
-          <p className="text-xs text-muted-foreground">
-            Want to transform your own PRs? <a href="/" className="text-blue-500 hover:underline font-medium">Get started with DevBrand →</a>
+
+        {/* Footer CTA */}
+        <div className="mt-16 text-center space-y-6">
+          <div className="h-px w-24 bg-border mx-auto" />
+          <p className="text-sm text-muted-foreground font-medium">
+            Tired of resume bullet points that don't land? <br className="hidden sm:block" />
+            <Link to="/" className="text-blue-500 hover:text-blue-400 font-black tracking-tight underline-offset-4 hover:underline transition-all">
+              Automate your impact with DevBrand AI →
+            </Link>
           </p>
         </div>
       </div>

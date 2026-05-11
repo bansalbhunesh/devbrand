@@ -14,65 +14,31 @@ export const Route = createFileRoute("/")({
 });
 
 function LandingPage() {
-  const sectionVariants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: { duration: 0.6, ease: "easeOut" }
-    }
-  };
-
   return (
     <div className="min-h-screen bg-background">
       <Nav />
       <main>
         <Hero />
         
-        <motion.section 
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          variants={sectionVariants}
-        >
+        <section id="demo" className="scroll-mt-20">
           <DemoTransform />
-        </motion.section>
+        </section>
 
-        <motion.section 
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          variants={sectionVariants}
-        >
+        <section id="intelligence" className="scroll-mt-20">
           <Intelligence />
-        </motion.section>
+        </section>
 
-        <motion.section 
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          variants={sectionVariants}
-        >
+        <section id="invisible-work" className="scroll-mt-20">
           <InvisibleWork />
-        </motion.section>
+        </section>
 
-        <motion.section 
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          variants={sectionVariants}
-        >
+        <section id="roast" className="scroll-mt-20">
           <Roast />
-        </motion.section>
+        </section>
 
-        <motion.section 
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          variants={sectionVariants}
-        >
+        <section id="pricing" className="scroll-mt-20">
           <Pricing />
-        </motion.section>
+        </section>
       </main>
       <Footer />
     </div>

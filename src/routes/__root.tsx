@@ -2,11 +2,15 @@ import { createRootRoute, Outlet, ScrollRestoration, HeadContent, Scripts } from
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "@/styles.css";
 import * as React from "react";
-
+import { getSession } from "@/rpc.server";
 
 const queryClient = new QueryClient();
 
 export const Route = createRootRoute({
+  loader: async () => {
+    const session = await getSession();
+    return { session };
+  },
   head: () => ({
     meta: [
       { charSet: "utf-8" },
@@ -129,3 +133,4 @@ function RootDocument({ children }: { children: React.ReactNode }) {
     </html>
   );
 }
+

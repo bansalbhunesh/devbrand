@@ -1,7 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { getWrappedStats } from "@/rpc.server";
-import { getSession } from "@/rpc.server";
 import { 
   Trophy, Zap, BarChart3, Rocket, Star, 
   ArrowRight, Share2, Twitter, Linkedin, 
@@ -14,10 +13,7 @@ export const Route = createFileRoute("/wrapped")({
 });
 
 function WrappedPage() {
-  const { data: session } = useQuery({
-    queryKey: ["session"],
-    queryFn: () => getSession(),
-  });
+  const { session } = Route.useRouteContext() as { session: any };
 
   const { data: stats, isLoading } = useQuery({
     queryKey: ["wrapped", session?.id],
@@ -59,11 +55,11 @@ function WrappedPage() {
   const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent("https://devbrand.ai/wrapped")}`;
 
   return (
-    <div className="min-h-screen bg-black text-white selection:bg-blue/30 selection:text-blue-200 overflow-x-hidden">
-      {/* Background Glows */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue/10 blur-[150px] rounded-full" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-purple/10 blur-[150px] rounded-full" />
+    <div className="min-h-screen bg-black text-white selection:bg-blue/30 selection:text-blue-200 overflow-x-hidden contain-paint">
+      {/* Phase 1.2: Fix Wrapped GPU blobs */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-0 left-0 w-80 h-80 bg-blue/10 blur-[60px] rounded-full will-change-transform" />
+        <div className="absolute bottom-0 right-0 w-80 h-80 bg-purple/10 blur-[60px] rounded-full will-change-transform" />
       </div>
 
       <div className="relative mx-auto max-w-4xl px-6 py-24">

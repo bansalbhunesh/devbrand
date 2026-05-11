@@ -21,8 +21,10 @@ export const transformPR = createServerFn({ method: "POST" })
     if (!user) throw new Error("UNAUTHORIZED");
     const userId = user.id;
 
-
-    const isFreeLimitReached = user.plan === "free" && user.generationsThisMonth >= 3;
+    const { checkAndResetLimits } = await import("./limits");
+    const freshUser = await checkAndResetLimits(userId);
+    
+    const isFreeLimitReached = freshUser?.plan === "free" && (freshUser?.generationsThisMonth ?? 0) >= 3;
     if (isFreeLimitReached) throw new Error("LIMIT_REACHED");
 
     // Run the 7-Layer Core Engine

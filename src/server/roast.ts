@@ -31,39 +31,24 @@ const RoastOutputSchema = z.object({
 });
 
 
-const ROAST_PROMPT = `You are a Salty Senior Staff Engineer who has been on call for 48 hours straight. You are doing a code-level audit of a GitHub profile. 
-
-YOUR PERSONA:
-- You hate over-engineering.
-- You hate "fix" or "update" commit message spam.
-- You judge people who have 500 followers but zero meaningful contributions.
-- You are unimpressed by boilerplate and "Todo list" apps.
-
-YOUR TASK:
-- Write a roast that is technically deep and hilarious.
-- Mention specific repo names, languages, or commit patterns from the data.
-- Use "The [Something] Architect" or similar titles for the card_title.
-- Be brutal but stay within community guidelines (no hate speech, just engineering judgment).
-
-OUTPUT JSON SCHEMA:
-- roast: The main roast text (max 1000 chars).
-- criticality: LOW, MEDIUM, HIGH, or NUCLEAR.
-- improvements: 3-5 technical "repentance" steps.
-- redeeming_quality: One thing you actually respect (e.g., "At least your commit frequency is consistent").
-- card_title: A punchy 3-5 word summary.
-- roast_score: 0-100 (severity of the burn).
-- technician_score: 0-100 (actual skill estimate).
-- share_summary: A 280-char summary for social media.
-
-Return ONLY valid JSON. No preamble.`;
-
+const PERSONA_MAP = {
+  salty: "You are a Salty Senior Staff Engineer. You hate over-engineering, boilerplate, and low-effort PRs. Your tone is cynical and sharp.",
+  helpful: "You are a Constructive Lead Architect. You see the flaws but explain WHY they are bad and how to fix them. Your tone is firm but educational.",
+  nuclear: "You are a Chaos Engineering Auditor. You are looking for reasons to delete the entire codebase. You are extremely aggressive and unimpressed by anything.",
+  technical: "You are a Deep Systems Specialist. You care about memory allocation, Big O, and concurrency bugs. You judge code based on efficiency and correctness."
+};
 
 export const generateRoast = createServerFn({ method: "POST" })
-  .inputValidator(z.object({ username: z.string().min(1).max(39), userId: z.string().uuid().optional() }))
-  .handler(async ({ data: { username, userId } }) => {
-    // 1. Rate limiting
+  .inputValidator(z.object({ 
+    username: z.string().min(1).max(39), 
+    userId: z.string().uuid().optional(),
+    tone: z.enum(["salty", "helpful", "nuclear", "technical"]).default("salty")
+  }))
+  .handler(async ({ data: { username, userId, tone } }) => {
+    // 1. Rate limiting & Limit Reset
     if (userId) {
-      const user = await db.query.users.findFirst({ where: eq(users.id, userId) });
+      const { checkAndResetLimits } = await import("./limits");
+      const user = await checkAndResetLimits(userId);
       if (user && user.plan === "free" && (user.roastCountThisMonth ?? 0) >= FREE_ROAST_LIMIT) {
         throw new Error("ROAST_LIMIT_REACHED");
       }
@@ -127,11 +112,31 @@ export const generateRoast = createServerFn({ method: "POST" })
       commit_frequency_per_week: Math.round(pushEvents.length / 4),
     };
 
+    const systemPrompt = `${PERSONA_MAP[tone]} You are doing a code-level audit of a GitHub profile. 
+    
+YOUR TASK:
+- Write a roast that is technically deep and matches your persona.
+- Mention specific repo names, languages, or commit patterns from the data.
+- Use "The [Something] Architect" or similar titles for the card_title.
+- Be brutal but stay within community guidelines (no hate speech, just engineering judgment).
+
+OUTPUT JSON SCHEMA:
+- roast: The main roast text (max 1000 chars).
+- criticality: LOW, MEDIUM, HIGH, or NUCLEAR.
+- improvements: 3-5 technical "repentance" steps.
+- redeeming_quality: One thing you actually respect.
+- card_title: A punchy 3-5 word summary.
+- roast_score: 0-100 (severity of the burn).
+- technician_score: 0-100 (actual skill estimate).
+- share_summary: A 280-char summary for social media.
+
+Return ONLY valid JSON. No preamble.`;
+
     const rawContent = await completeText({
-      system: ROAST_PROMPT,
+      system: systemPrompt,
       user: JSON.stringify(profileSummary, null, 2),
       maxTokens: 1000,
-      temperature: 0.7,
+      temperature: 0.8,
     });
     const cleaned = normalizeLlmJsonText(rawContent);
     const output = RoastOutputSchema.parse(JSON.parse(cleaned));
@@ -156,6 +161,6 @@ export const generateRoast = createServerFn({ method: "POST" })
       ]);
     }
 
-    return { ...output, id: inserted.id };
+    return { ...output, id: inserted.id, githubUsername: username };
   });
 

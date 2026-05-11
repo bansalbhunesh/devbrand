@@ -1,27 +1,27 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Flame, Terminal, Loader2, ShieldAlert, Share2 } from "lucide-react";
-import { getSession } from "@/rpc.server";
 import { generateRoast } from "@/rpc.server";
 import { cn } from "@/lib/utils";
+import { Route } from "@/routes/__root";
 
 export function Roast() {
-  const { data: session } = useQuery({ queryKey: ["session"], queryFn: () => getSession() });
+  const { session } = Route.useRouteContext() as { session: any };
   const [loading, setLoading] = useState(false);
   const [roastData, setRoastData] = useState<any>(null);
   const [username, setUsername] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [scanStep, setScanStep] = useState(0);
+  const [tone, setTone] = useState<"salty" | "helpful" | "nuclear" | "technical">("salty");
 
   const scanLogs = [
-    "Initializing bypass of emotional filters...",
-    "Cloning public repository metadata...",
-    "Analyzing questionable variable naming conventions...",
-    "Detecting unused dependencies and dead code...",
-    "Measuring PR review latency vs. actual impact...",
-    "Synthesizing precision-engineered insults...",
-    "Calculating ego threat level..."
+    "Parsing diff structure [layer0]...",
+    "Detecting stack & patterns [layer1]...",
+    "Scoring architectural impact [layer2]...",
+    "Building evidence citations [layer4]...",
+    "Synthesizing career narrative [layer6]...",
+    "Calibrating tone & seniority [layer7]...",
+    "Precision-engineering insults..."
   ];
 
   const handleRoast = async () => {
@@ -36,7 +36,7 @@ export function Roast() {
     }, 800);
 
     try {
-      const data = await generateRoast({ data: { username, userId: session?.id } });
+      const data = await generateRoast({ data: { username, userId: session?.id, tone } });
       setRoastData(data);
     } catch (err: any) {
       console.error(err);
@@ -70,6 +70,26 @@ export function Roast() {
             </p>
             
             <div className="space-y-6 max-w-md">
+              <div className="space-y-3">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Select Persona</label>
+                <div className="grid grid-cols-4 gap-2">
+                  {(["salty", "helpful", "nuclear", "technical"] as const).map((t) => (
+                    <button
+                      key={t}
+                      onClick={() => setTone(t)}
+                      className={cn(
+                        "py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition border",
+                        tone === t 
+                          ? "bg-red-500 text-white border-red-500 shadow-lg shadow-red-500/20" 
+                          : "bg-muted/30 text-muted-foreground border-border hover:border-red-500/30"
+                      )}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div className="relative group">
                 <Terminal className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-red-500 transition-colors" />
                 <input

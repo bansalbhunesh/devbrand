@@ -3,43 +3,60 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowRight, Github, Sparkles, GitPullRequest, Check, Link2, LayoutDashboard, Loader2 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { getSession, signInWithGithub } from "@/rpc.server";
-import { motion, AnimatePresence } from "framer-motion";
+import { signInWithGithub } from "@/rpc.server";
+import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from "framer-motion";
 
 export function Hero() {
   const cardRef = useRef<HTMLDivElement>(null);
   const [copied, setCopied] = useState(false);
-  const [rotation, setRotation] = useState({ x: 0, y: 0 });
   const [loggingIn, setLoggingIn] = useState(false);
 
-  const { data: session } = useQuery({ queryKey: ["session"], queryFn: () => getSession() });
+  const { session } = Route.useRouteContext() as { session: any };
 
-  // Cursor-aware glow and 3D parallax
+  // Phase 2.3: Ambient particles
+  const dots = React.useMemo(() => Array.from({ length: 14 }, (_, i) => ({
+    x: Math.random() * 100,
+    y: Math.random() * 100,
+    size: Math.random() * 2 + 1,
+    delay: Math.random() * 4,
+    duration: Math.random() * 8 + 6,
+  })), []);
+
+  // Parallax using Motion Values for performance (no re-renders)
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+
+  const springConfig = { damping: 20, stiffness: 150, mass: 0.5 };
+  const rotateX = useSpring(useTransform(y, [-300, 300], [10, -10]), springConfig);
+  const rotateY = useSpring(useTransform(x, [-300, 300], [-10, 10]), springConfig);
+
   useEffect(() => {
     const el = cardRef.current;
     if (!el) return;
     const onMove = (e: MouseEvent) => {
       const r = el.getBoundingClientRect();
-      const x = e.clientX - r.left;
-      const y = e.clientY - r.top;
-      el.style.setProperty("--mx", `${x}px`);
-      el.style.setProperty("--my", `${y}px`);
-
-      // 3D Parallax
-      const rotateX = (y - r.height / 2) / 35;
-      const rotateY = -(x - r.width / 2) / 50;
-      setRotation({ x: rotateX, y: rotateY });
+      const centerX = r.left + r.width / 2;
+      const centerY = r.top + r.height / 2;
+      x.set(e.clientX - centerX);
+      y.set(e.clientY - centerY);
+      
+      const mouseX = e.clientX - r.left;
+      const mouseY = e.clientY - r.top;
+      el.style.setProperty("--mx", `${mouseX}px`);
+      el.style.setProperty("--my", `${mouseY}px`);
     };
-    const onLeave = () => setRotation({ x: 0, y: 0 });
+    const onLeave = () => {
+      x.set(0);
+      y.set(0);
+    };
     
-    el.addEventListener("mousemove", onMove);
+    window.addEventListener("mousemove", onMove);
     el.addEventListener("mouseleave", onLeave);
     return () => {
-      el.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mousemove", onMove);
       el.removeEventListener("mouseleave", onLeave);
     };
-  }, []);
+  }, [x, y]);
 
   const handleAuth = async () => {
     setLoggingIn(true);
@@ -54,8 +71,23 @@ export function Hero() {
 
   return (
     <section className="relative overflow-hidden pt-20">
-      <div className="absolute inset-0 bg-grid pointer-events-none" />
+      <div className="absolute inset-0 bg-grid pointer-events-none opacity-20" />
       <div className="absolute inset-0 [background:var(--gradient-radial)] pointer-events-none" />
+      
+      {/* Ambient Particles */}
+      {dots.map((d, i) => (
+        <div
+          key={i}
+          className="absolute rounded-full bg-blue-500/20 pointer-events-none"
+          style={{
+            left: `${d.x}%`,
+            top: `${d.y}%`,
+            width: d.size,
+            height: d.size,
+            animation: `float ${d.duration}s ${d.delay}s infinite ease-in-out alternate`,
+          }}
+        />
+      ))}
       
       <div className="relative mx-auto max-w-7xl px-6 pt-24 pb-20 md:pt-32 md:pb-28">
         <div className="flex flex-col items-center text-center">
@@ -139,12 +171,15 @@ export function Hero() {
           initial={{ opacity: 0, y: 40, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.4, type: "spring", bounce: 0.4 }}
-          className="relative mt-20 md:mt-24 mx-auto max-w-5xl group/card transition-transform duration-200 ease-out"
+          className="relative mt-20 md:mt-24 mx-auto max-w-5xl group/card"
           style={{ 
+            perspective: 1200,
+            rotateX,
+            rotateY,
+            transformStyle: "preserve-3d",
             ["--mx" as any]: "50%", 
             ["--my" as any]: "0px",
-            transform: `perspective(1200px) rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`
-          } as React.CSSProperties}
+          } as any}
         >
           <div
             aria-hidden

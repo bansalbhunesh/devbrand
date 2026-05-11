@@ -236,6 +236,31 @@ export function Pricing() {
           ))}
         </div>
 
+        {/* Comparison Table */}
+        <div className="mt-40 max-w-4xl mx-auto overflow-x-auto">
+          <h3 className="text-2xl font-bold tracking-tight text-center mb-12">Detailed Comparison</h3>
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="py-6 px-4 text-sm font-bold uppercase tracking-widest text-muted-foreground">Feature</th>
+                <th className="py-6 px-4 text-sm font-bold uppercase tracking-widest text-muted-foreground text-center">Free</th>
+                <th className="py-6 px-4 text-sm font-bold uppercase tracking-widest text-muted-foreground text-center">Pro</th>
+              </tr>
+            </thead>
+            <tbody className="text-sm">
+              <ComparisonRow label="AI PR Analysis" free="3 / month" pro="Unlimited" />
+              <ComparisonRow label="Impact Scoring (7-layer Engine)" free={true} pro={true} />
+              <ComparisonRow label="LinkedIn Post Generation" free={true} pro={true} />
+              <ComparisonRow label="Resume Bullet Generation" free={true} pro={true} />
+              <ComparisonRow label="GitHub Roast Engine" free="Limited" pro="Unlimited + AI Personas" />
+              <ComparisonRow label="Invisible Work Signal Analysis" free={false} pro={true} />
+              <ComparisonRow label="LinkedIn Auto-Drafting" free={false} pro={true} />
+              <ComparisonRow label="Personal AI Career Coach" free={false} pro={true} />
+              <ComparisonRow label="Priority Support" free={false} pro={true} />
+            </tbody>
+          </table>
+        </div>
+
         <div className="mt-24 text-center">
           <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-muted-foreground/60 mb-6">
             Trusted by engineers at
@@ -248,5 +273,27 @@ export function Pricing() {
         </div>
       </div>
     </section>
+  );
+}
+
+function ComparisonRow({ label, free, pro }: { label: string; free: boolean | string; pro: boolean | string }) {
+  return (
+    <tr className="border-b border-border/50 group hover:bg-muted/10 transition-colors">
+      <td className="py-5 px-4 font-medium text-foreground/80">{label}</td>
+      <td className="py-5 px-4 text-center">
+        {typeof free === "boolean" ? (
+          free ? <Check className="h-4 w-4 text-blue-500 mx-auto" /> : <span className="text-muted-foreground/30">—</span>
+        ) : (
+          <span className="text-xs font-semibold">{free}</span>
+        )}
+      </td>
+      <td className="py-5 px-4 text-center font-bold text-blue-500">
+        {typeof pro === "boolean" ? (
+          pro ? <Check className="h-4 w-4 text-blue-500 mx-auto" /> : <span className="text-muted-foreground/30">—</span>
+        ) : (
+          <span className="text-xs font-black">{pro}</span>
+        )}
+      </td>
+    </tr>
   );
 }
