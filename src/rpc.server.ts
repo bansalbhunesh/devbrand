@@ -217,6 +217,16 @@ export const signInWithGithub = createServerFn({ method: "GET" }).handler(async 
   return s();
 });
 
+export const logoutAllDevices = createServerFn({ method: "POST" }).handler(async () => {
+  const { logoutAllDevices: l } = await import("@/server/auth");
+  return l();
+});
+
+export const getSecurityEvents = createServerFn({ method: "GET" }).handler(async () => {
+  const { getSecurityEvents: g } = await import("@/server/auth");
+  return g();
+});
+
 export const updateUserSettings = createServerFn({ method: "POST" })
   .inputValidator((data: any) => data)
   .handler(async ({ data }) => {
