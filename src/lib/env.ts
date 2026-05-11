@@ -62,8 +62,9 @@ export function invalidateEnvCache(): void {
 
 /**
  * Validates and returns the environment variables.
- * In Cloudflare Workers, merge the `env` object into `process.env` first, then call `getEnv()`.
+ * Ensure environment variables are merged into `process.env` before calling `getEnv()`.
  */
+
 export function getEnv(overrides?: Record<string, unknown>): Env {
   const mergedOverrides =
     overrides && typeof overrides === "object"
