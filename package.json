@@ -11,7 +11,7 @@
     "lint:watch": "eslint . --fix",
     "test": "vitest run",
     "llm:ping": "tsx scratch/llm_ping.ts",
-    "build": "VITE_TANSTACK_START_PRESET=vercel vite build",
+    "build": "vite build",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "db:push": "drizzle-kit push",
