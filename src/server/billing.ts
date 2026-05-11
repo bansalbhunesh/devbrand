@@ -6,7 +6,7 @@ import { db } from "./db";
 import { users, userEvents } from "./schema";
 import { eq } from "drizzle-orm";
 import { getSession } from "./auth";
-import { getRequest } from "vinxi/http";
+import { getRequest } from "@tanstack/react-start/server";
 
 let razorpay: Razorpay | null = null;
 
