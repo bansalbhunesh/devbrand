@@ -34,6 +34,8 @@ export const users = pgTable("users", {
   referralCode: text("referral_code").unique(),
   referredBy: uuid("referred_by").references((): any => users.id),
 
+  sessionNonce: text("session_nonce").notNull().default(sql`gen_random_uuid()`),
+
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });

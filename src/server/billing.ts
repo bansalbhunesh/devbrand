@@ -33,8 +33,22 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
     const user = await db.query.users.findFirst({ where: eq(users.id, userId) });
     if (!user) throw new Error("USER_NOT_FOUND");
 
-    // Amount in paise (1 INR = 100 paise). 999 INR = 99900 paise.
-    const amount = 99900; 
+const PRO_PLAN_AMOUNT_PAISE = 99900; 
+
+/**
+ * Creates a Razorpay Order for the subscription.
+ */
+export const createCheckoutSession = createServerFn({ method: "POST" })
+  .handler(async () => {
+    const sessionUser = await getSession();
+    if (!sessionUser) throw new Error("UNAUTHORIZED");
+
+    const userId = sessionUser.id;
+    const instance = getRazorpay();
+    const user = await db.query.users.findFirst({ where: eq(users.id, userId) });
+    if (!user) throw new Error("USER_NOT_FOUND");
+
+    const amount = PRO_PLAN_AMOUNT_PAISE; 
     const options = {
       amount,
       currency: "INR",
@@ -47,7 +61,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
     await db.insert(userEvents).values({
       userId,
       eventType: "checkout_started",
-      payload: { orderId: order.id },
+      payload: { orderId: order.id, amount, currency: "INR" },
     });
 
     return { 
@@ -80,19 +94,39 @@ export const verifyPayment = createServerFn({ method: "POST" })
       .update(body.toString())
       .digest("hex");
 
-    if (expectedSignature !== data.razorpay_signature) {
+    // Timing-safe comparison
+    const sigBuffer = Buffer.from(data.razorpay_signature);
+    const expectedBuffer = Buffer.from(expectedSignature);
+    if (sigBuffer.length !== expectedBuffer.length || !crypto.timingSafeEqual(sigBuffer, expectedBuffer)) {
+      const request = getRequest();
+      const ip = request?.headers.get("x-forwarded-for")?.split(",")[0] || "127.0.0.1";
+      const { logSecurityEvent } = await import("./redis");
+      await logSecurityEvent("payment_failed", sessionUser.id, ip, { reason: "invalid_signature", orderId: data.razorpay_order_id });
       throw new Error("INVALID_SIGNATURE");
     }
 
-    // Update user to Pro
-    await Promise.all([
-      db.update(users).set({ plan: "pro", updatedAt: new Date() }).where(eq(users.id, sessionUser.id)),
-      db.insert(userEvents).values({
+    // Idempotency: Check if already upgraded for this payment
+    const existing = await db.query.userEvents.findFirst({
+      where: (fields, operators) => operators.and(
+        operators.eq(fields.userId, sessionUser.id),
+        operators.eq(fields.eventType, "upgraded_to_pro")
+      ),
+    });
+    
+    // Check if this specific payment ID was already processed
+    if (existing && (existing.payload as any)?.paymentId === data.razorpay_payment_id) {
+      return { success: true, alreadyProcessed: true };
+    }
+
+    // Update user to Pro in a transaction
+    await db.transaction(async (tx) => {
+      await tx.update(users).set({ plan: "pro", updatedAt: new Date() }).where(eq(users.id, sessionUser.id));
+      await tx.insert(userEvents).values({
         userId: sessionUser.id,
         eventType: "upgraded_to_pro",
         payload: { paymentId: data.razorpay_payment_id, orderId: data.razorpay_order_id },
-      }),
-    ]);
+      });
+    });
 
     return { success: true };
   });
@@ -111,17 +145,49 @@ export const handleRazorpayWebhook = createServerFn({ method: "POST" })
       .update(JSON.stringify(body))
       .digest("hex");
 
-    if (expectedSignature !== signature) {
+    // Timing-safe comparison
+    const sigBuffer = Buffer.from(signature);
+    const expectedBuffer = Buffer.from(expectedSignature);
+    if (sigBuffer.length !== expectedBuffer.length || !crypto.timingSafeEqual(sigBuffer, expectedBuffer)) {
       throw new Error("Webhook signature verification failed");
     }
 
     const event = body.event;
     if (event === "payment.captured") {
       const payload = body.payload.payment.entity;
+      const paymentId = payload.id;
+      const amount = payload.amount;
       const userId = payload.notes?.userId;
-      if (userId) {
-        await db.update(users).set({ plan: "pro", updatedAt: new Date() }).where(eq(users.id, userId));
+
+      if (!userId) return { received: true, error: "no_user_id" };
+
+      // Verify amount matches server constant
+      if (amount !== PRO_PLAN_AMOUNT_PAISE) {
+        const { logSecurityEvent } = await import("./redis");
+        await logSecurityEvent("payment_failed", userId, "0.0.0.0", { reason: "amount_mismatch", paymentId });
+        return { received: true, error: "amount_mismatch" };
       }
+
+      // Idempotency: Check if this payment ID was already processed
+      const existing = await db.query.userEvents.findFirst({
+        where: (fields, operators) => operators.and(
+          operators.eq(fields.userId, userId),
+          operators.eq(fields.eventType, "upgraded_to_pro")
+        ),
+      });
+
+      if (existing && (existing.payload as any)?.paymentId === paymentId) {
+        return { received: true, status: "already_processed" };
+      }
+
+      await db.transaction(async (tx) => {
+        await tx.update(users).set({ plan: "pro", updatedAt: new Date() }).where(eq(users.id, userId));
+        await tx.insert(userEvents).values({
+          userId,
+          eventType: "upgraded_to_pro",
+          payload: { paymentId, method: "webhook" },
+        });
+      });
     }
 
     return { received: true };

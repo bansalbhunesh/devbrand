@@ -81,6 +81,26 @@ export function SettingsTab({
       </div>
 
       <div className="border-t border-border pt-10">
+        <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-4">Privacy & Security</div>
+        <div className="p-6 rounded-2xl border border-border bg-muted/20 space-y-4">
+           <div>
+             <p className="font-bold text-sm">Active Sessions</p>
+             <p className="text-[11px] text-muted-foreground mt-1 font-medium">You are currently signed in with your GitHub account.</p>
+           </div>
+           <button 
+             onClick={async () => {
+               const { logoutAllDevices } = await import("@/rpc.server");
+               await logoutAllDevices();
+               window.location.href = "/";
+             }}
+             className="px-4 py-2 rounded-lg border border-red-500/20 text-red-500 text-[10px] font-black uppercase tracking-widest hover:bg-red-500/5 transition w-full text-center"
+           >
+             Sign out of all devices
+           </button>
+        </div>
+      </div>
+
+      <div className="border-t border-border pt-10">
         <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-4">Subscription Plan</div>
         <div className="flex items-center justify-between p-6 rounded-2xl border border-border bg-muted/20">
           <div>

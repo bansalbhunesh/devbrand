@@ -8,6 +8,7 @@ import {
   BarChart3,
   Loader2,
   LogOut,
+  Shield,
 } from "lucide-react";
 import { 
   getSession, 
@@ -32,7 +33,7 @@ export const Route = createFileRoute("/dashboard")({
   component: Dashboard,
 });
 
-type Tab = "generate" | "history" | "teams" | "settings";
+type Tab = "generate" | "history" | "teams" | "settings" | "security";
 
 import { Suspense, lazy } from "react";
 
@@ -40,6 +41,7 @@ const GenerateTab = lazy(() => import("@/components/dashboard/GenerateTab").then
 const HistoryTab = lazy(() => import("@/components/dashboard/HistoryTab").then(m => ({ default: m.HistoryTab })));
 const TeamsTab = lazy(() => import("@/components/dashboard/TeamsTab").then(m => ({ default: m.TeamsTab })));
 const SettingsTab = lazy(() => import("@/components/dashboard/SettingsTab").then(m => ({ default: m.SettingsTab })));
+const SecurityTab = lazy(() => import("@/components/dashboard/SecurityTab").then(m => ({ default: m.SecurityTab })));
 
 function Dashboard() {
   const { session: user } = Route.useRouteContext() as { session: any };
@@ -158,7 +160,7 @@ function Dashboard() {
           </Link>
 
           <nav className="space-y-1">
-            {(["generate", "history", "teams", "settings"] as Tab[]).map((t) => (
+            {(["generate", "history", "teams", "settings", "security"] as Tab[]).map((t) => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
@@ -173,6 +175,7 @@ function Dashboard() {
                 {t === "history" && <GitPullRequest className="h-4 w-4" />}
                 {t === "teams" && <Users className="h-4 w-4" />}
                 {t === "settings" && <BarChart3 className="h-4 w-4" />}
+                {t === "security" && <Shield className="h-4 w-4" />}
                 {t}
               </button>
             ))}
@@ -230,7 +233,7 @@ function Dashboard() {
              </div>
            </Link>
            <div className="flex items-center gap-4 overflow-x-auto no-scrollbar py-1">
-             {(["generate", "history", "teams", "settings"] as Tab[]).map((t) => (
+              {(["generate", "history", "teams", "settings", "security"] as Tab[]).map((t) => (
                <button
                  key={t}
                  onClick={() => setTab(t)}
@@ -302,6 +305,10 @@ function Dashboard() {
                 handleUpgrade={handleUpgrade}
                 handlePortal={handlePortal}
               />
+            )}
+
+            {tab === "security" && (
+              <SecurityTab />
             )}
           </Suspense>
         </div>
