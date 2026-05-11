@@ -1,9 +1,12 @@
 import { createStartHandler, defaultStreamHandler } from "@tanstack/react-start/server";
 import { handleRazorpayWebhook } from "./server/billing";
+import { createRouter } from "./router";
 import "./rpc.server";
 import { getBadgeData, getOgRoastData } from "./rpc.server";
 
-const handler = createStartHandler(defaultStreamHandler);
+const startHandler = createStartHandler({
+  createRouter,
+})(defaultStreamHandler);
 
 export default {
   async fetch(request: Request, env: any, ctx: any) {
@@ -87,6 +90,6 @@ export default {
       return new Response(svg, { headers: { "Content-Type": "image/svg+xml", "Cache-Control": "public, max-age=86400" } });
     }
 
-    return (handler as any)(request, env, ctx);
+    return (startHandler as any)(request, env, ctx);
   },
 };
