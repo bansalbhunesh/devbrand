@@ -25,27 +25,15 @@ async function unifiedFetch(request: any, env?: any, ctx?: any) {
       Object.assign(process.env, env);
     }
 
-    // 2. Extract and Normalize URL
-    // We use a very defensive approach here to identify what is causing the "Invalid URL string" error.
-    let url: URL;
-    const rawUrl = request?.url;
-    
-    if (!rawUrl || typeof rawUrl !== 'string') {
-      throw new Error(`Request URL is missing or invalid: ${typeof rawUrl}`);
-    }
-
-    try {
-      url = new URL(rawUrl);
-    } catch (e) {
-      // Fallback for relative URLs (common in some dev environments)
-      const base = process.env.APP_URL || "http://localhost";
-      const origin = base.startsWith("http") ? base : `https://${base}`;
-      url = new URL(rawUrl, origin);
+    // 2. Ensure APP_URL is set (Critical for TanStack Start routing)
+    const url = new URL(request.url);
+    if (!process.env.APP_URL) {
+      process.env.APP_URL = url.origin;
     }
 
     const { pathname } = url;
 
-    // 3. Manual API Routes
+    // 3. Manual API Routes (Handle before framework to avoid double-reading body)
     if (pathname === "/api/webhook/razorpay" && request?.method === "POST") {
       try {
         const signature = (request.headers.get?.("x-razorpay-signature")) || (request.headers?.["x-razorpay-signature"]) || "";
@@ -70,16 +58,14 @@ async function unifiedFetch(request: any, env?: any, ctx?: any) {
     }
 
     // 4. Delegate to TanStack Start
-    // If the URL is already absolute (starts with http), we pass the original request
-    // to avoid any potential cloning issues in the specific environment.
-    const finalRequest = rawUrl.startsWith('http') ? request : new Request(url.toString(), request);
-    
-    return await getHandler()(finalRequest, env, ctx);
+    // We use the original request directly since it's already absolute on Cloudflare.
+    // For environments where it might be relative, we've already parsed it above.
+    return await getHandler()(request, env, ctx);
 
   } catch (error: any) {
-    // Return detailed error info for debugging
+    // Final defensive fallback
     return new Response(
-      `SSR Runtime Error: ${error.message}\nURL: ${request?.url}\nBase: ${process.env.APP_URL}`,
+      `SSR Runtime Error: ${error.message}\nURL: ${request?.url}\nAPP_URL: ${process.env.APP_URL}`,
       { status: 500, headers: { "Content-Type": "text/plain" } }
     );
   }
