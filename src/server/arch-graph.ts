@@ -9,13 +9,19 @@ export interface ArchGraph {
   edges: [string, string][]; // [from, to]
 }
 
-export async function buildImportGraph(owner: string, repo: string): Promise<ArchGraph> {
+export async function buildImportGraph(
+  owner: string,
+  repo: string,
+): Promise<ArchGraph> {
   const existing = await db.query.repoGraphs.findFirst({
     where: (rg, { and, eq }) => and(eq(rg.owner, owner), eq(rg.repo, repo)),
   });
 
   // Cache for 24h
-  if (existing && Date.now() - new Date(existing.computedAt).getTime() < 24 * 60 * 60 * 1000) {
+  if (
+    existing &&
+    Date.now() - new Date(existing.computedAt).getTime() < 24 * 60 * 60 * 1000
+  ) {
     return existing.graphData as ArchGraph;
   }
 
@@ -33,7 +39,10 @@ export async function buildImportGraph(owner: string, repo: string): Promise<Arc
     });
 
     const files = treeRes.tree
-      .filter((n) => n.type === "blob" && /\.(ts|tsx|js|jsx|go|rs|py)$/.test(n.path || ""))
+      .filter(
+        (n) =>
+          n.type === "blob" && /\.(ts|tsx|js|jsx|go|rs|py)$/.test(n.path || ""),
+      )
       .slice(0, 300); // Limit to 300 files for edge performance
 
     const nodes = files.map((f) => f.path!);
@@ -53,10 +62,14 @@ export async function buildImportGraph(owner: string, repo: string): Promise<Arc
             });
 
             if ("content" in data) {
-              const content = Buffer.from(data.content, "base64").toString("utf-8");
+              const content = Buffer.from(data.content, "base64").toString(
+                "utf-8",
+              );
               // Improved regex for TS/JS imports and Go/Rust/Python
-              const importMatches = content.matchAll(/(?:import|from|require|use|include)\s+['"]([^'"]+)['"]/g);
-              
+              const importMatches = content.matchAll(
+                /(?:import|from|require|use|include)\s+['"]([^'"]+)['"]/g,
+              );
+
               for (const match of importMatches) {
                 const target = match[1];
                 // Resolve relative path (simplified)
@@ -69,7 +82,7 @@ export async function buildImportGraph(owner: string, repo: string): Promise<Arc
           } catch (e) {
             // Skip binary or too large files
           }
-        })
+        }),
       );
     }
 
@@ -78,7 +91,10 @@ export async function buildImportGraph(owner: string, repo: string): Promise<Arc
     await db
       .insert(repoGraphs)
       .values({ owner, repo, graphData: graph })
-      .onConflictDoUpdate({ target: [repoGraphs.owner, repoGraphs.repo], set: { graphData: graph, computedAt: new Date() } });
+      .onConflictDoUpdate({
+        target: [repoGraphs.owner, repoGraphs.repo],
+        set: { graphData: graph, computedAt: new Date() },
+      });
 
     return graph;
   } catch (err) {
@@ -87,12 +103,16 @@ export async function buildImportGraph(owner: string, repo: string): Promise<Arc
   }
 }
 
-function resolvePath(current: string, target: string, nodes: string[]): string | null {
+function resolvePath(
+  current: string,
+  target: string,
+  nodes: string[],
+): string | null {
   if (!target.startsWith(".")) return null; // Ignore external libs for arch score
 
   const parts = current.split("/");
   parts.pop(); // remove filename
-  
+
   const targetParts = target.split("/");
   for (const p of targetParts) {
     if (p === "..") parts.pop();
@@ -101,10 +121,12 @@ function resolvePath(current: string, target: string, nodes: string[]): string |
 
   const resolved = parts.join("/");
   // Try exact match or with extensions (ts, tsx, go, etc)
-  return nodes.find(n => {
-    const stem = n.replace(/\.[^/.]+$/, "");
-    return n === resolved || stem === resolved || n === `${resolved}/index`;
-  }) || null;
+  return (
+    nodes.find((n) => {
+      const stem = n.replace(/\.[^/.]+$/, "");
+      return n === resolved || stem === resolved || n === `${resolved}/index`;
+    }) || null
+  );
 }
 
 export function computeArchScores(files: string[], graph: ArchGraph) {
@@ -117,7 +139,7 @@ export function computeArchScores(files: string[], graph: ArchGraph) {
     const score = fanIn[filename] ?? 0;
     // Weight by 8x for core files, cap at 100
     const archScore = Math.min(100, score * 8);
-    
+
     let label: "leaf" | "utility" | "infrastructure" = "leaf";
     if (archScore > 60) label = "infrastructure";
     else if (archScore > 25) label = "utility";

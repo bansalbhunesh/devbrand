@@ -21,46 +21,60 @@ export function Nav() {
     <nav
       className={cn(
         "fixed left-0 right-0 z-50 transition-all duration-500",
-        scrolled 
-          ? "top-4 mx-auto max-w-fit px-4" 
-          : "top-0 w-full"
+        scrolled ? "top-4 mx-auto max-w-fit px-4" : "top-0 w-full",
       )}
     >
-      <div className={cn(
-        "mx-auto transition-all duration-500 flex items-center justify-between gap-12",
-        scrolled 
-          ? "bg-background/80 backdrop-blur-lg border border-border/60 shadow-xl shadow-black/20 py-2 px-6 rounded-2xl" 
-          : "max-w-7xl px-6 py-6 border-b border-transparent"
-      )}>
+      <div
+        className={cn(
+          "mx-auto transition-all duration-500 flex items-center justify-between gap-12",
+          scrolled
+            ? "bg-background/80 backdrop-blur-lg border border-border/60 shadow-xl shadow-black/20 py-2 px-6 rounded-2xl"
+            : "max-w-7xl px-6 py-6 border-b border-transparent",
+        )}
+      >
         <Link to="/" className="flex items-center gap-2.5 group shrink-0">
           <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 grid place-items-center ring-soft group-hover:scale-105 transition">
             <span className="text-[12px] font-bold text-white">DB</span>
           </div>
-          {!scrolled && <span className="font-semibold tracking-tight text-lg">DevBrand</span>}
+          {!scrolled && (
+            <span className="font-semibold tracking-tight text-lg">
+              DevBrand
+            </span>
+          )}
         </Link>
 
         <div className="hidden md:flex items-center gap-8 text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
-          <a href="#demo" className="hover:text-foreground transition">Demo</a>
-          <a href="#roast" className="hover:text-foreground transition">Roast</a>
-          <a href="#pricing" className="hover:text-foreground transition">Pricing</a>
-          <Link to="/explore" className="hover:text-foreground transition">Explore</Link>
-          <Link to="/wrapped" className="hover:text-foreground transition">Wrapped</Link>
+          <a href="#demo" className="hover:text-foreground transition">
+            Demo
+          </a>
+          <a href="#roast" className="hover:text-foreground transition">
+            Roast
+          </a>
+          <a href="#pricing" className="hover:text-foreground transition">
+            Pricing
+          </a>
+          <Link to="/explore" className="hover:text-foreground transition">
+            Explore
+          </Link>
+          <Link to="/wrapped" className="hover:text-foreground transition">
+            Wrapped
+          </Link>
         </div>
 
         <div className="flex items-center gap-3 shrink-0">
           {session ? (
-            <Link 
-              to="/dashboard" 
+            <Link
+              to="/dashboard"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-foreground text-background text-xs font-bold hover:opacity-90 transition shadow-lg shadow-foreground/5"
             >
-              <LayoutDashboard className="h-3.5 w-3.5" /> 
+              <LayoutDashboard className="h-3.5 w-3.5" />
               {!scrolled && "Dashboard"}
             </Link>
           ) : (
             <>
               {!scrolled && (
-                <Link 
-                  to="/dashboard" 
+                <Link
+                  to="/dashboard"
                   className="hidden sm:inline-flex items-center gap-2 text-xs font-bold text-foreground hover:opacity-80 transition uppercase tracking-widest"
                 >
                   Sign in
@@ -70,7 +84,7 @@ export function Nav() {
                 to="/dashboard"
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-foreground text-background text-xs font-bold hover:opacity-90 transition shadow-lg shadow-foreground/10"
               >
-                <Github className="h-3.5 w-3.5" /> 
+                <Github className="h-3.5 w-3.5" />
                 {!scrolled && "Start free"}
               </Link>
             </>
@@ -82,18 +96,53 @@ export function Nav() {
                 <Menu className="h-5 w-5" />
               </button>
             </SheetTrigger>
-            <SheetContent side="right" className="bg-background/95 backdrop-blur-xl border-border">
+            <SheetContent
+              side="right"
+              className="bg-background/95 backdrop-blur-xl border-border"
+            >
               <div className="flex flex-col gap-6 mt-12">
-                <a href="#demo" className="text-lg font-medium hover:text-blue-500 transition">Demo</a>
-                <a href="#roast" className="text-lg font-medium hover:text-blue-500 transition">Roast</a>
-                <a href="#pricing" className="text-lg font-medium hover:text-blue-500 transition">Pricing</a>
-                <Link to="/explore" className="text-lg font-medium hover:text-blue-500 transition">Explore</Link>
-                <Link to="/wrapped" className="text-lg font-medium hover:text-blue-500 transition">Wrapped</Link>
+                <a
+                  href="#demo"
+                  className="text-lg font-medium hover:text-blue-500 transition"
+                >
+                  Demo
+                </a>
+                <a
+                  href="#roast"
+                  className="text-lg font-medium hover:text-blue-500 transition"
+                >
+                  Roast
+                </a>
+                <a
+                  href="#pricing"
+                  className="text-lg font-medium hover:text-blue-500 transition"
+                >
+                  Pricing
+                </a>
+                <Link
+                  to="/explore"
+                  className="text-lg font-medium hover:text-blue-500 transition"
+                >
+                  Explore
+                </Link>
+                <Link
+                  to="/wrapped"
+                  className="text-lg font-medium hover:text-blue-500 transition"
+                >
+                  Wrapped
+                </Link>
                 <hr className="border-border/50" />
                 {session ? (
-                  <Link to="/dashboard" className="text-lg font-medium flex items-center gap-2 text-blue-500"><LayoutDashboard className="h-5 w-5" /> Dashboard</Link>
+                  <Link
+                    to="/dashboard"
+                    className="text-lg font-medium flex items-center gap-2 text-blue-500"
+                  >
+                    <LayoutDashboard className="h-5 w-5" /> Dashboard
+                  </Link>
                 ) : (
-                  <Link to="/dashboard" className="text-lg font-medium">Sign in</Link>
+                  <Link to="/dashboard" className="text-lg font-medium">
+                    Sign in
+                  </Link>
                 )}
               </div>
             </SheetContent>

@@ -1,17 +1,17 @@
 import { completeText, normalizeLlmJsonText } from "../llm/client";
-import type {
-  NarrativeRequest,
-  NarrativeDraft,
-} from "./types";
+import type { NarrativeRequest, NarrativeDraft } from "./types";
 
-async function generateSingleDraft(request: NarrativeRequest, temperature: number) {
+async function generateSingleDraft(
+  request: NarrativeRequest,
+  temperature: number,
+) {
   const systemPrompt = `You are an elite Engineering Branding Specialist. Your job is to transform technical PR data into high-impact narratives for LinkedIn.
 
 CALIBRATION:
 - Engineer Seniority: ${request.userContext.seniority}
 - Core Impact: ArchScore ${request.impactProfile.archScore}/100
 - Tone: ${request.userContext.tone}
-- User Interests: ${request.userPreferences?.frequentKeywords.join(', ') || 'General Engineering'}
+- User Interests: ${request.userPreferences?.frequentKeywords.join(", ") || "General Engineering"}
 
 CONTENT GUIDELINES:
 - linkedinPost1 (THE ARCHITECT): Focus on system design, trade-offs, and "The Big Picture." Use a professional, thought-leadership tone.
@@ -46,16 +46,22 @@ STRICT FORMATTING:
     } catch (e) {
       attempts++;
       if (attempts >= 3) throw e;
-      await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempts) * 1000));
+      await new Promise((resolve) =>
+        setTimeout(resolve, Math.pow(2, attempts) * 1000),
+      );
     }
   }
 }
 
-export async function generateNarrative(request: NarrativeRequest): Promise<NarrativeDraft> {
+export async function generateNarrative(
+  request: NarrativeRequest,
+): Promise<NarrativeDraft> {
   const bestDraft = await generateSingleDraft(request, 0.7);
 
   // Calculate hype score based on impact profile and invisible work
-  const rawHype = (request.impactProfile.archScore * 0.7) + (request.invisibleWorkReport.invisibleWorkScore * 0.3);
+  const rawHype =
+    request.impactProfile.archScore * 0.7 +
+    request.invisibleWorkReport.invisibleWorkScore * 0.3;
   const hypeScore = Math.min(100, Math.round(rawHype));
 
   return {
@@ -67,7 +73,8 @@ export async function generateNarrative(request: NarrativeRequest): Promise<Narr
     interviewHook: bestDraft.interviewHook || "",
     commitMessageSummary: bestDraft.commitMessageSummary || "",
     citations: bestDraft.citations || [],
-    category: request.staticMetrics.changeTypeClassification[0]?.type || "Feature",
+    category:
+      request.staticMetrics.changeTypeClassification[0]?.type || "Feature",
     impactScore: request.impactProfile.archScore,
     complexityLevel: request.userContext.seniority,
     hypeScore,

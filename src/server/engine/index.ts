@@ -10,7 +10,11 @@ import type { NarrativeDraft, UserContext, GraphImpactReport } from "./types";
 
 import { logger } from "@/lib/logger";
 
-export async function runEngine(prUrl: string, userId: string, context: UserContext): Promise<NarrativeDraft> {
+export async function runEngine(
+  prUrl: string,
+  userId: string,
+  context: UserContext,
+): Promise<NarrativeDraft> {
   try {
     logger.info("Engine start", { userId, prUrl });
 
@@ -33,10 +37,17 @@ export async function runEngine(prUrl: string, userId: string, context: UserCont
     };
 
     // Layer 3: Impact Scoring
-    const impactProfile = await computeImpactProfile(enrichedPR, staticMetrics, graphMetrics);
+    const impactProfile = await computeImpactProfile(
+      enrichedPR,
+      staticMetrics,
+      graphMetrics,
+    );
 
     // Layer 4: Invisible Work
-    const invisibleWorkReport = await analyzeInvisibleWork(enrichedPR, staticMetrics);
+    const invisibleWorkReport = await analyzeInvisibleWork(
+      enrichedPR,
+      staticMetrics,
+    );
 
     // NEW: Extract User Preferences (Layer 7 Active Learning)
     const { extractUserPreferences } = await import("./layer7");
@@ -54,17 +65,24 @@ export async function runEngine(prUrl: string, userId: string, context: UserCont
     });
 
     // Layer 6: Verification & Evidence Linking (Semantic Upgrade)
-    const verifiedNarrative = await runLayer6(narrative, enrichedPR, staticMetrics, impactProfile);
-
+    const verifiedNarrative = await runLayer6(
+      narrative,
+      enrichedPR,
+      staticMetrics,
+      impactProfile,
+    );
 
     // Layer 7: Feedback Loop & Continuous Learning
     const finalNarrative = await runLayer7(userId, verifiedNarrative);
 
-    logger.info("Engine success", { userId, prUrl, impactScore: finalNarrative.impactScore });
+    logger.info("Engine success", {
+      userId,
+      prUrl,
+      impactScore: finalNarrative.impactScore,
+    });
     return finalNarrative;
   } catch (err: any) {
     logger.error(err, { userId, prUrl });
     throw err;
   }
 }
-

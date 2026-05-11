@@ -1,13 +1,19 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { getCookie, setCookie, deleteCookie, getRequest } from "@tanstack/react-start/server";
+import {
+  getCookie,
+  setCookie,
+  deleteCookie,
+  getRequest,
+} from "@tanstack/react-start/server";
 import { db } from "./db";
 import { users, userEvents } from "./schema";
 import { eq } from "drizzle-orm";
 import { rateLimit } from "./redis";
 import { env } from "../lib/env";
 
-const SESSION_COOKIE_NAME = env.NODE_ENV === "production" ? "__Secure-devbrand_sid" : "devbrand_sid";
+const SESSION_COOKIE_NAME =
+  env.NODE_ENV === "production" ? "__Secure-devbrand_sid" : "devbrand_sid";
 const STATE_COOKIE_NAME = "devbrand_oauth_state";
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
 
@@ -43,7 +49,7 @@ async function getKey(): Promise<CryptoKey> {
     enc.encode(secret),
     { name: "HMAC", hash: "SHA-256" },
     false,
-    ["sign", "verify"]
+    ["sign", "verify"],
   );
 }
 
@@ -54,12 +60,18 @@ function getOAuthRedirectUri() {
   return `${env.APP_URL}/api/auth/callback/github`;
 }
 
-async function signSession(userId: string, sessionNonce: string, options?: { rotate?: boolean }): Promise<string> {
+async function signSession(
+  userId: string,
+  sessionNonce: string,
+  options?: { rotate?: boolean },
+): Promise<string> {
   const key = await getKey();
   const enc = new TextEncoder();
   const ts = Date.now().toString(36);
   const nonce = options?.rotate ? crypto.randomUUID().slice(0, 8) : "";
-  const payload = nonce ? `${userId}.${ts}.${sessionNonce}.${nonce}` : `${userId}.${ts}.${sessionNonce}`;
+  const payload = nonce
+    ? `${userId}.${ts}.${sessionNonce}.${nonce}`
+    : `${userId}.${ts}.${sessionNonce}`;
   const sig = await crypto.subtle.sign("HMAC", key, enc.encode(payload));
   // URL-safe base64
   const sigB64 = btoa(String.fromCharCode(...new Uint8Array(sig)))
@@ -69,27 +81,34 @@ async function signSession(userId: string, sessionNonce: string, options?: { rot
   return `${payload}.${sigB64}`;
 }
 
-async function verifySession(cookie: string): Promise<{ userId: string; issuedAt: number; sessionNonce: string } | null> {
+async function verifySession(
+  cookie: string,
+): Promise<{ userId: string; issuedAt: number; sessionNonce: string } | null> {
   try {
     const parts = cookie.split(".");
     if (parts.length < 3) return null;
-    
+
     const sigB64 = parts[parts.length - 1];
     const payloadParts = parts.slice(0, parts.length - 1);
     const payload = payloadParts.join(".");
-    
+
     const key = await getKey();
     const enc = new TextEncoder();
-    
+
     const normalizedSig = sigB64.replace(/-/g, "+").replace(/_/g, "/");
     const sig = Uint8Array.from(atob(normalizedSig), (c) => c.charCodeAt(0));
-    
-    const valid = await crypto.subtle.verify("HMAC", key, sig, enc.encode(payload));
+
+    const valid = await crypto.subtle.verify(
+      "HMAC",
+      key,
+      sig,
+      enc.encode(payload),
+    );
     if (!valid) return null;
 
     if (parts.length === 3) {
-       const [userId, ts] = parts;
-       return { userId, issuedAt: parseInt(ts, 36), sessionNonce: "" };
+      const [userId, ts] = parts;
+      return { userId, issuedAt: parseInt(ts, 36), sessionNonce: "" };
     }
 
     const [userId, ts, sessionNonce] = parts;
@@ -104,108 +123,126 @@ async function verifySession(cookie: string): Promise<{ userId: string; issuedAt
 
 // ── Server functions ─────────────────────────────────────────────────────────
 
-export const getSession = createServerFn({ method: "GET" }).handler(async () => {
-  const raw = getCookie(SESSION_COOKIE_NAME);
-  if (!raw) return null;
+export const getSession = createServerFn({ method: "GET" }).handler(
+  async () => {
+    const raw = getCookie(SESSION_COOKIE_NAME);
+    if (!raw) return null;
 
-  const session = await verifySession(raw);
-  if (!session) return null;
+    const session = await verifySession(raw);
+    if (!session) return null;
 
-  const user = await db.query.users.findFirst({
-    where: eq(users.id, session.userId),
-    with: { profile: true },
-  });
-  
-  if (!user) return null;
-
-  if (session.sessionNonce && session.sessionNonce !== user.sessionNonce) {
-    const request = getRequest();
-    const ip = request?.headers.get("x-forwarded-for")?.split(",")[0] || "127.0.0.1";
-    const { logSecurityEvent } = await import("./redis");
-    await logSecurityEvent("session_mismatch", user.id, ip, { reason: "invalid_nonce" });
-    deleteCookie(SESSION_COOKIE_NAME, { path: "/" });
-    return null;
-  }
-
-  const shouldRotate = Date.now() - session.issuedAt > SESSION_ROTATION_INTERVAL_MS;
-  if (shouldRotate) {
-    const newSigned = await signSession(session.userId, user.sessionNonce, { rotate: true });
-    setCookie(SESSION_COOKIE_NAME, newSigned, {
-      httpOnly: true,
-      secure: env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: COOKIE_MAX_AGE,
-      path: "/",
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, session.userId),
+      with: { profile: true },
     });
-  }
 
-  return user;
-});
+    if (!user) return null;
+
+    if (session.sessionNonce && session.sessionNonce !== user.sessionNonce) {
+      const request = getRequest();
+      const ip =
+        request?.headers.get("x-forwarded-for")?.split(",")[0] || "127.0.0.1";
+      const { logSecurityEvent } = await import("./redis");
+      await logSecurityEvent("session_mismatch", user.id, ip, {
+        reason: "invalid_nonce",
+      });
+      deleteCookie(SESSION_COOKIE_NAME, { path: "/" });
+      return null;
+    }
+
+    const shouldRotate =
+      Date.now() - session.issuedAt > SESSION_ROTATION_INTERVAL_MS;
+    if (shouldRotate) {
+      const newSigned = await signSession(session.userId, user.sessionNonce, {
+        rotate: true,
+      });
+      setCookie(SESSION_COOKIE_NAME, newSigned, {
+        httpOnly: true,
+        secure: env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: COOKIE_MAX_AGE,
+        path: "/",
+      });
+    }
+
+    return user;
+  },
+);
 
 export const logout = createServerFn({ method: "POST" }).handler(async () => {
   deleteCookie(SESSION_COOKIE_NAME, { path: "/" });
   return { success: true };
 });
 
-export const signInWithGithub = createServerFn({ method: "GET" }).handler(async () => {
-  const request = getRequest();
-  const ip = request?.headers.get("x-forwarded-for")?.split(",")[0] || "127.0.0.1";
-  const userAgent = request?.headers.get("user-agent") || "unknown";
+export const signInWithGithub = createServerFn({ method: "GET" }).handler(
+  async () => {
+    const request = getRequest();
+    const ip =
+      request?.headers.get("x-forwarded-for")?.split(",")[0] || "127.0.0.1";
+    const userAgent = request?.headers.get("user-agent") || "unknown";
 
-  const { success, remaining, resetAt } = await rateLimit(`auth:signin:${ip}`, 5, 3600);
-  if (!success) {
-    const { logSecurityEvent } = await import("./redis");
-    await logSecurityEvent("rate_limit_exceeded", null, ip, { action: "signin" });
-    return { error: "RATE_LIMIT_REACHED", resetAt };
-  }
+    const { success, remaining, resetAt } = await rateLimit(
+      `auth:signin:${ip}`,
+      5,
+      3600,
+    );
+    if (!success) {
+      const { logSecurityEvent } = await import("./redis");
+      await logSecurityEvent("rate_limit_exceeded", null, ip, {
+        action: "signin",
+      });
+      return { error: "RATE_LIMIT_REACHED", resetAt };
+    }
 
-  const codeVerifier = crypto.randomUUID() + crypto.randomUUID();
-  const codeChallenge = await sha256Base64Url(codeVerifier);
+    const codeVerifier = crypto.randomUUID() + crypto.randomUUID();
+    const codeChallenge = await sha256Base64Url(codeVerifier);
 
-  const stateBase = crypto.randomUUID();
-  const stateData = {
-    value: stateBase,
-    ip,
-    ua: userAgent.slice(0, 100),
-    createdAt: Date.now(),
-  };
-  
-  setCookie(STATE_COOKIE_NAME, JSON.stringify(stateData), {
-    httpOnly: true,
-    secure: env.NODE_ENV === "production",
-    sameSite: "strict",
-    maxAge: 60 * 10,
-    path: "/",
-  });
+    const stateBase = crypto.randomUUID();
+    const stateData = {
+      value: stateBase,
+      ip,
+      ua: userAgent.slice(0, 100),
+      createdAt: Date.now(),
+    };
 
-  setCookie("devbrand_pkce_verifier", codeVerifier, {
-    httpOnly: true,
-    secure: env.NODE_ENV === "production",
-    sameSite: "strict",
-    maxAge: 60 * 10,
-    path: "/",
-  });
+    setCookie(STATE_COOKIE_NAME, JSON.stringify(stateData), {
+      httpOnly: true,
+      secure: env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 60 * 10,
+      path: "/",
+    });
 
-  const params = new URLSearchParams({
-    client_id: env.GITHUB_CLIENT_ID,
-    redirect_uri: getOAuthRedirectUri(),
-    scope: "read:user user:email",
-    state: stateBase,
-    code_challenge: codeChallenge,
-    code_challenge_method: "S256",
-  });
-  return { 
-    url: `https://github.com/login/oauth/authorize?${params}`,
-    remaining,
-    resetAt 
-  };
-});
+    setCookie("devbrand_pkce_verifier", codeVerifier, {
+      httpOnly: true,
+      secure: env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 60 * 10,
+      path: "/",
+    });
+
+    const params = new URLSearchParams({
+      client_id: env.GITHUB_CLIENT_ID,
+      redirect_uri: getOAuthRedirectUri(),
+      scope: "read:user user:email",
+      state: stateBase,
+      code_challenge: codeChallenge,
+      code_challenge_method: "S256",
+    });
+    return {
+      url: `https://github.com/login/oauth/authorize?${params}`,
+      remaining,
+      resetAt,
+    };
+  },
+);
 
 export const handleGithubCallback = createServerFn({ method: "POST" })
   .inputValidator(z.object({ code: z.string(), state: z.string().optional() }))
   .handler(async ({ data: { code, state } }) => {
     const request = getRequest();
-    const ip = request?.headers.get("x-forwarded-for")?.split(",")[0] || "127.0.0.1";
+    const ip =
+      request?.headers.get("x-forwarded-for")?.split(",")[0] || "127.0.0.1";
     const userAgent = request?.headers.get("user-agent") || "unknown";
 
     const { success } = await rateLimit(`auth:callback:${ip}`, 10, 3600);
@@ -213,10 +250,10 @@ export const handleGithubCallback = createServerFn({ method: "POST" })
 
     const savedStateRaw = getCookie(STATE_COOKIE_NAME);
     const codeVerifier = getCookie("devbrand_pkce_verifier");
-    
+
     deleteCookie(STATE_COOKIE_NAME, { path: "/" });
     deleteCookie("devbrand_pkce_verifier", { path: "/" });
-    
+
     if (!state || !savedStateRaw || !codeVerifier) {
       throw new Error("Invalid OAuth session. Please try again.");
     }
@@ -236,26 +273,44 @@ export const handleGithubCallback = createServerFn({ method: "POST" })
       throw new Error("OAuth session expired.");
     }
 
-    const tokenRes = await fetch("https://github.com/login/oauth/access_token", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify({
-        client_id: env.GITHUB_CLIENT_ID,
-        client_secret: env.GITHUB_CLIENT_SECRET,
-        code,
-        code_verifier: codeVerifier,
-        redirect_uri: getOAuthRedirectUri(),
-      }),
-    });
-    const { access_token, error } = (await tokenRes.json()) as any;
+    const tokenRes = await fetch(
+      "https://github.com/login/oauth/access_token",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          client_id: env.GITHUB_CLIENT_ID,
+          client_secret: env.GITHUB_CLIENT_SECRET,
+          code,
+          code_verifier: codeVerifier,
+          redirect_uri: getOAuthRedirectUri(),
+        }),
+      },
+    );
+    const { access_token, error } = (await tokenRes.json()) as {
+      access_token?: string;
+      error?: string;
+    };
     if (!access_token) {
       throw new Error(`GitHub OAuth failed: ${error}`);
     }
 
     const ghRes = await fetch("https://api.github.com/user", {
-      headers: { Authorization: `Bearer ${access_token}`, "User-Agent": "DevBrand/1.0" },
+      headers: {
+        Authorization: `Bearer ${access_token}`,
+        "User-Agent": "DevBrand/1.0",
+      },
     });
-    const ghUser = (await ghRes.json()) as any;
+    const ghUser = (await ghRes.json()) as {
+      id: number;
+      login: string;
+      name: string | null;
+      avatar_url: string;
+      email: string | null;
+    };
 
     const [user] = await db
       .insert(users)

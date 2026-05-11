@@ -26,8 +26,13 @@ export async function checkAndResetLimits(userId: string) {
         monthResetAt: nextReset,
       })
       .where(eq(users.id, userId));
-    
-    return { ...user, generationsThisMonth: 0, roastCountThisMonth: 0, monthResetAt: nextReset };
+
+    return {
+      ...user,
+      generationsThisMonth: 0,
+      roastCountThisMonth: 0,
+      monthResetAt: nextReset,
+    };
   }
 
   return user;

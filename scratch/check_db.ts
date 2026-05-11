@@ -8,7 +8,7 @@ async function check() {
   process.exit(0);
 }
 
-check().catch(err => {
+check().catch((err) => {
   console.error(err);
   process.exit(1);
 });

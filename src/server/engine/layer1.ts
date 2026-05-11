@@ -10,7 +10,7 @@ import type {
 export function calculateChurnScore(
   additions: number,
   deletions: number,
-  daysSinceChange: number = 0
+  daysSinceChange: number = 0,
 ): number {
   const HALF_LIFE_DAYS = 30;
   const decayFactor = Math.pow(0.5, daysSinceChange / HALF_LIFE_DAYS);
@@ -19,7 +19,8 @@ export function calculateChurnScore(
 
 import { parse } from "@babel/parser";
 import _traverse from "@babel/traverse";
-const traverse = typeof _traverse === 'function' ? _traverse : (_traverse as any).default;
+const traverse =
+  typeof _traverse === "function" ? _traverse : (_traverse as any).default;
 
 export function calculateCyclomaticComplexity(code: string): number {
   if (!code || !code.trim()) return 1;
@@ -30,15 +31,29 @@ export function calculateCyclomaticComplexity(code: string): number {
       plugins: ["typescript", "jsx", "decorators-legacy"],
       errorRecovery: true,
     });
-    
+
     traverse(ast, {
-      IfStatement() { complexity++; },
-      WhileStatement() { complexity++; },
-      ForStatement() { complexity++; },
-      ForInStatement() { complexity++; },
-      ForOfStatement() { complexity++; },
-      CatchClause() { complexity++; },
-      ConditionalExpression() { complexity++; },
+      IfStatement() {
+        complexity++;
+      },
+      WhileStatement() {
+        complexity++;
+      },
+      ForStatement() {
+        complexity++;
+      },
+      ForInStatement() {
+        complexity++;
+      },
+      ForOfStatement() {
+        complexity++;
+      },
+      CatchClause() {
+        complexity++;
+      },
+      ConditionalExpression() {
+        complexity++;
+      },
       LogicalExpression(path: any) {
         if (path.node.operator === "&&" || path.node.operator === "||") {
           complexity++;
@@ -46,18 +61,18 @@ export function calculateCyclomaticComplexity(code: string): number {
       },
       SwitchCase(path: any) {
         if (path.node.test) complexity++; // exclude default
-      }
+      },
     });
   } catch (e) {
     // Fallback to basic length approximation if extremely malformed
-    return 1 + Math.floor(code.split('\n').length / 50);
+    return 1 + Math.floor(code.split("\n").length / 50);
   }
   return complexity;
 }
 
 export function calculateHalsteadMetrics(code: string) {
   if (!code || !code.trim()) return { volume: 0, difficulty: 0 };
-  
+
   const operators = new Set<string>();
   const operands = new Set<string>();
   let N1 = 0; // total operators
@@ -71,16 +86,46 @@ export function calculateHalsteadMetrics(code: string) {
     });
 
     traverse(ast, {
-      Identifier(path: any) { operands.add(path.node.name); N2++; },
-      StringLiteral(path: any) { operands.add(path.node.value); N2++; },
-      NumericLiteral(path: any) { operands.add(path.node.value.toString()); N2++; },
-      BinaryExpression(path: any) { operators.add(path.node.operator); N1++; },
-      LogicalExpression(path: any) { operators.add(path.node.operator); N1++; },
-      UnaryExpression(path: any) { operators.add(path.node.operator); N1++; },
-      AssignmentExpression(path: any) { operators.add(path.node.operator); N1++; },
-      UpdateExpression(path: any) { operators.add(path.node.operator); N1++; },
-      CallExpression(_path: any) { operators.add('()'); N1++; },
-      MemberExpression(_path: any) { operators.add('.'); N1++; }
+      Identifier(path: any) {
+        operands.add(path.node.name);
+        N2++;
+      },
+      StringLiteral(path: any) {
+        operands.add(path.node.value);
+        N2++;
+      },
+      NumericLiteral(path: any) {
+        operands.add(path.node.value.toString());
+        N2++;
+      },
+      BinaryExpression(path: any) {
+        operators.add(path.node.operator);
+        N1++;
+      },
+      LogicalExpression(path: any) {
+        operators.add(path.node.operator);
+        N1++;
+      },
+      UnaryExpression(path: any) {
+        operators.add(path.node.operator);
+        N1++;
+      },
+      AssignmentExpression(path: any) {
+        operators.add(path.node.operator);
+        N1++;
+      },
+      UpdateExpression(path: any) {
+        operators.add(path.node.operator);
+        N1++;
+      },
+      CallExpression(_path: any) {
+        operators.add("()");
+        N1++;
+      },
+      MemberExpression(_path: any) {
+        operators.add(".");
+        N1++;
+      },
     });
   } catch (e) {
     return { volume: 0, difficulty: 0 };
@@ -101,32 +146,58 @@ export function classifyChangeType(diff: FileDiff): ChangeType {
   const patch = (diff.patch || "").toLowerCase();
 
   if (filename.endsWith(".md") || filename.endsWith(".json")) {
-    return { type: "documentation", description: "Doc update", files: [diff.filename] };
+    return {
+      type: "documentation",
+      description: "Doc update",
+      files: [diff.filename],
+    };
   }
   if (patch.includes("security") || patch.includes("auth")) {
-    return { type: "security", description: "Security fix", files: [diff.filename], severity: "high" };
+    return {
+      type: "security",
+      description: "Security fix",
+      files: [diff.filename],
+      severity: "high",
+    };
   }
   if (patch.includes("fix") || patch.includes("bug")) {
-    return { type: "bug_fix", description: "Bug fix", files: [diff.filename], severity: "medium" };
+    return {
+      type: "bug_fix",
+      description: "Bug fix",
+      files: [diff.filename],
+      severity: "medium",
+    };
   }
   if (patch.includes("performance") || patch.includes("optimize")) {
-    return { type: "performance", description: "Performance improv", files: [diff.filename] };
+    return {
+      type: "performance",
+      description: "Performance improv",
+      files: [diff.filename],
+    };
   }
-  
-  return { type: "feature", description: "Feature work", files: [diff.filename] };
+
+  return {
+    type: "feature",
+    description: "Feature work",
+    files: [diff.filename],
+  };
 }
 
 export function analyzeStaticMetrics(enrichedPR: EnrichedPR): StaticMetrics {
   const fileMetrics: FileMetrics[] = enrichedPR.diffs.map((diff) => {
     const codeToAnalyze = diff.fullContent || diff.patch;
     const hasContent = !!(codeToAnalyze && codeToAnalyze.trim());
-    const complexity = hasContent ? calculateCyclomaticComplexity(codeToAnalyze) : 0;
-    const halstead = hasContent ? calculateHalsteadMetrics(codeToAnalyze) : { volume: 0, difficulty: 0 };
+    const complexity = hasContent
+      ? calculateCyclomaticComplexity(codeToAnalyze)
+      : 0;
+    const halstead = hasContent
+      ? calculateHalsteadMetrics(codeToAnalyze)
+      : { volume: 0, difficulty: 0 };
 
     return {
       filename: diff.filename,
       churnScore: calculateChurnScore(diff.additions, diff.deletions),
-      churnRatio: (diff.additions + diff.deletions) / 100, 
+      churnRatio: (diff.additions + diff.deletions) / 100,
       cyclomaticComplexity: complexity || (hasContent ? 1 : 0),
       halsteadVolume: halstead.volume,
       halsteadDifficulty: halstead.difficulty,
@@ -138,9 +209,12 @@ export function analyzeStaticMetrics(enrichedPR: EnrichedPR): StaticMetrics {
 
   const overallMetrics: OverallMetrics = {
     totalChurn: fileMetrics.reduce((s, m) => s + m.churnScore, 0),
-    avgChurnRatio: fileMetrics.reduce((s, m) => s + m.churnRatio, 0) / fileMetrics.length,
-    maxChurnScore: Math.max(...fileMetrics.map(m => m.churnScore)),
-    avgComplexity: fileMetrics.reduce((s, m) => s + m.cyclomaticComplexity, 0) / fileMetrics.length,
+    avgChurnRatio:
+      fileMetrics.reduce((s, m) => s + m.churnRatio, 0) / fileMetrics.length,
+    maxChurnScore: Math.max(...fileMetrics.map((m) => m.churnScore)),
+    avgComplexity:
+      fileMetrics.reduce((s, m) => s + m.cyclomaticComplexity, 0) /
+      fileMetrics.length,
     totalComplexityDelta: 0,
   };
 

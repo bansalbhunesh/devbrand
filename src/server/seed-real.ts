@@ -31,23 +31,29 @@ const REAL_PRS = [
   "https://github.com/bansalbhunesh/digital-shagun-app/pull/3",
   "https://github.com/bansalbhunesh/digital-shagun-app/pull/2",
   "https://github.com/bansalbhunesh/digital-shagun-app/pull/1",
-  "https://github.com/webfuse-com/awesome-claude/pull/214"
+  "https://github.com/webfuse-com/awesome-claude/pull/214",
 ];
 
 async function seedRealData() {
   logger.info("Starting Real Data Seeding...");
 
   // 1. Get or Create the Real User
-  let [user] = await db.select().from(users).where(eq(users.githubLogin, "bansalbhunesh"));
-  
+  let [user] = await db
+    .select()
+    .from(users)
+    .where(eq(users.githubLogin, "bansalbhunesh"));
+
   if (!user) {
-    [user] = await db.insert(users).values({
-      githubId: "123456", // Mock ID if not known
-      githubLogin: "bansalbhunesh",
-      name: "Bhunesh Bansal",
-      seniority: "staff",
-      tone: "technical",
-    }).returning();
+    [user] = await db
+      .insert(users)
+      .values({
+        githubId: "123456", // Mock ID if not known
+        githubLogin: "bansalbhunesh",
+        name: "Bhunesh Bansal",
+        seniority: "staff",
+        tone: "technical",
+      })
+      .returning();
   }
 
   const userId = user.id;
@@ -64,23 +70,28 @@ async function seedRealData() {
 
       // 3. Save to Outputs
       const slug = prUrl.split("/").slice(-3).join("-"); // e.g. repo-name-pull-11
-      
-      await db.insert(outputs).values({
-        userId,
-        slug,
-        prTitle: draft.commitMessageSummary.split("\n")[0] || "Real Engineering Work",
-        prUrl,
-        linkedinPost1: draft.linkedinPost1,
-        linkedinPost2: draft.linkedinPost2,
-        linkedinPost3: draft.linkedinPost3,
-        resumeBullet: draft.resumeBullet,
-        interviewHook: draft.interviewHook,
-        citations: draft.citations,
-        impactScore: Math.round(Number(draft.impactScore) || 0),
-        category: draft.category,
-        complexityLevel: draft.complexityLevel,
-        isPublic: true,
-      }).onConflictDoNothing();
+
+      await db
+        .insert(outputs)
+        .values({
+          userId,
+          slug,
+          prTitle:
+            draft.commitMessageSummary.split("\n")[0] ||
+            "Real Engineering Work",
+          prUrl,
+          linkedinPost1: draft.linkedinPost1,
+          linkedinPost2: draft.linkedinPost2,
+          linkedinPost3: draft.linkedinPost3,
+          resumeBullet: draft.resumeBullet,
+          interviewHook: draft.interviewHook,
+          citations: draft.citations,
+          impactScore: Math.round(Number(draft.impactScore) || 0),
+          category: draft.category,
+          complexityLevel: draft.complexityLevel,
+          isPublic: true,
+        })
+        .onConflictDoNothing();
 
       logger.info(`Successfully ingested: ${slug}`);
     } catch (err) {
@@ -91,7 +102,7 @@ async function seedRealData() {
   logger.info("Real Data Seeding Complete.");
 }
 
-seedRealData().catch(err => {
+seedRealData().catch((err) => {
   console.error("Fatal Seeding Error:", err);
   process.exit(1);
 });

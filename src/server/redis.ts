@@ -13,7 +13,9 @@ function getRedis(): Redis | null {
   const token = env.UPSTASH_REDIS_REST_TOKEN;
 
   if (!url || !token) {
-    console.warn("⚠️ Redis credentials missing. Rate limiting is disabled (Safe Mode).");
+    console.warn(
+      "⚠️ Redis credentials missing. Rate limiting is disabled (Safe Mode).",
+    );
     return null;
   }
 
@@ -32,13 +34,17 @@ function getRedis(): Redis | null {
 export async function rateLimit(
   key: string,
   limit: number,
-  windowSeconds: number
+  windowSeconds: number,
 ): Promise<{ success: boolean; remaining: number; resetAt: number }> {
   const redis = getRedis();
-  
+
   if (!redis) {
     // Graceful fallback: Allow the request but log the missing infrastructure
-    return { success: true, remaining: limit, resetAt: Date.now() + windowSeconds * 1000 };
+    return {
+      success: true,
+      remaining: limit,
+      resetAt: Date.now() + windowSeconds * 1000,
+    };
   }
 
   try {
@@ -69,7 +75,7 @@ export async function logSecurityEvent(
   type: string,
   userId: string | null,
   ip: string,
-  metadata: any = {}
+  metadata: any = {},
 ) {
   const redis = getRedis();
   if (!redis) return;

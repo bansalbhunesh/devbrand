@@ -2,10 +2,10 @@ import { describe, it, expect } from "vitest";
 
 /**
  * Auth Session Tests
- * 
+ *
  * Tests the HMAC-SHA256 session signing/verification round-trip
  * and the 30-day TTL enforcement.
- * 
+ *
  * NOTE: These test the core crypto logic directly.
  * The actual `signSession` and `verifySession` functions use Web Crypto API
  * and are tightly coupled to the server context. We test the logic patterns here.
@@ -22,17 +22,17 @@ describe("Auth: Session Security", () => {
   it("should reject sessions older than 30 days", () => {
     const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
     const now = Date.now();
-    
+
     // Fresh session: should be valid
     const freshTs = now;
     expect(now - freshTs <= SESSION_TTL_MS).toBe(true);
 
     // 29-day old session: should still be valid
-    const oldButValid = now - (29 * 24 * 60 * 60 * 1000);
+    const oldButValid = now - 29 * 24 * 60 * 60 * 1000;
     expect(now - oldButValid <= SESSION_TTL_MS).toBe(true);
 
     // 31-day old session: should be rejected
-    const expired = now - (31 * 24 * 60 * 60 * 1000);
+    const expired = now - 31 * 24 * 60 * 60 * 1000;
     expect(now - expired <= SESSION_TTL_MS).toBe(false);
   });
 
@@ -41,7 +41,9 @@ describe("Auth: Session Security", () => {
     const malformed = ["", "single", "two.parts", "a.b.c.d.too.many"];
     for (const token of malformed) {
       const parts = token.split(".");
-      expect(parts.length === 3).toBe(token === "a.b.c.d.too.many" ? false : parts.length === 3);
+      expect(parts.length === 3).toBe(
+        token === "a.b.c.d.too.many" ? false : parts.length === 3,
+      );
     }
   });
 

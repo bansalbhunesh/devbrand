@@ -3,7 +3,8 @@ import { parse } from "@babel/parser";
 import _traverse from "@babel/traverse";
 
 // @babel/traverse handles default exports differently depending on the environment
-const traverse = typeof _traverse === 'function' ? _traverse : (_traverse as any).default;
+const traverse =
+  typeof _traverse === "function" ? _traverse : (_traverse as any).default;
 import type {
   PRMetadata,
   FileDiff,
@@ -17,7 +18,9 @@ import type {
 
 const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
-export async function parsePRUrl(prUrl: string): Promise<{ owner: string; repo: string; prNumber: number }> {
+export async function parsePRUrl(
+  prUrl: string,
+): Promise<{ owner: string; repo: string; prNumber: number }> {
   const match = prUrl.match(/github\.com\/([^/]+)\/([^/]+)\/pull\/(\d+)/);
   if (!match) throw new Error("INVALID_PR_URL");
   return {
@@ -30,7 +33,11 @@ export async function parsePRUrl(prUrl: string): Promise<{ owner: string; repo: 
 export async function fetchPRMetadata(prUrl: string): Promise<PRMetadata> {
   const { owner, repo, prNumber } = await parsePRUrl(prUrl);
 
-  const { data: pr } = await octokit.rest.pulls.get({ owner, repo, pull_number: prNumber });
+  const { data: pr } = await octokit.rest.pulls.get({
+    owner,
+    repo,
+    pull_number: prNumber,
+  });
 
   return {
     owner,
@@ -57,20 +64,36 @@ export async function fetchPRDiff(prUrl: string): Promise<{
   const metadata = await fetchPRMetadata(prUrl);
 
   const { data: files } = await octokit.rest.pulls.listFiles({
-    owner, repo, pull_number: prNumber, per_page: 300
+    owner,
+    repo,
+    pull_number: prNumber,
+    per_page: 300,
   });
 
-  const BINARY_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.gif', '.pdf', '.exe', '.bin', '.zip', '.tar', '.gz'];
+  const BINARY_EXTENSIONS = [
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".gif",
+    ".pdf",
+    ".exe",
+    ".bin",
+    ".zip",
+    ".tar",
+    ".gz",
+  ];
 
   const diffs: FileDiff[] = files
-    .filter(file => {
-      const isBinary = BINARY_EXTENSIONS.some(ext => file.filename.toLowerCase().endsWith(ext));
+    .filter((file) => {
+      const isBinary = BINARY_EXTENSIONS.some((ext) =>
+        file.filename.toLowerCase().endsWith(ext),
+      );
       const hasPatch = !!file.patch;
       return !isBinary && hasPatch;
     })
     .map((file) => ({
       filename: file.filename,
-      status: file.status as FileDiff['status'],
+      status: file.status as FileDiff["status"],
       additions: file.additions,
       deletions: file.deletions,
       patch: file.patch || "",
@@ -81,7 +104,7 @@ export async function fetchPRDiff(prUrl: string): Promise<{
     // If we filtered out everything (e.g. only images), provide a minimal stub to avoid crashing
     diffs.push({
       filename: files[0].filename,
-      status: files[0].status as FileDiff['status'],
+      status: files[0].status as FileDiff["status"],
       additions: files[0].additions,
       deletions: files[0].deletions,
       patch: "// [BINARY OR NON-TEXTUAL CHANGE]",
@@ -90,7 +113,6 @@ export async function fetchPRDiff(prUrl: string): Promise<{
 
   return { metadata, diffs };
 }
-
 
 export function extractSymbols(code: string, filename: string): ASTSymbol[] {
   const symbols: ASTSymbol[] = [];
@@ -157,16 +179,22 @@ export function extractSymbols(code: string, filename: string): ASTSymbol[] {
       },
       ExportDefaultDeclaration(path: any) {
         let name = "default";
-        let kind: ASTSymbol['kind'] = "function";
-        
-        if (path.node.declaration.type === "FunctionDeclaration" && path.node.declaration.id) {
-            name = path.node.declaration.id.name;
-        } else if (path.node.declaration.type === "ClassDeclaration" && path.node.declaration.id) {
-            name = path.node.declaration.id.name;
-            kind = "class";
+        let kind: ASTSymbol["kind"] = "function";
+
+        if (
+          path.node.declaration.type === "FunctionDeclaration" &&
+          path.node.declaration.id
+        ) {
+          name = path.node.declaration.id.name;
+        } else if (
+          path.node.declaration.type === "ClassDeclaration" &&
+          path.node.declaration.id
+        ) {
+          name = path.node.declaration.id.name;
+          kind = "class";
         } else if (path.node.declaration.type === "Identifier") {
-            name = path.node.declaration.name;
-            kind = "variable";
+          name = path.node.declaration.name;
+          kind = "variable";
         }
 
         symbols.push({
@@ -176,7 +204,7 @@ export function extractSymbols(code: string, filename: string): ASTSymbol[] {
           endLine: path.node.loc?.end.line || 1,
           isExported: true,
         });
-      }
+      },
     });
   } catch (error) {
     console.warn(`[Layer 0] Failed to parse AST for ${filename}`);
@@ -188,7 +216,7 @@ export function extractSymbols(code: string, filename: string): ASTSymbol[] {
 export function generateASTDiff(
   filename: string,
   beforeCode: string,
-  afterCode: string
+  afterCode: string,
 ): ASTDiff {
   const beforeSymbols = extractSymbols(beforeCode, filename);
   const afterSymbols = extractSymbols(afterCode, filename);
@@ -199,7 +227,7 @@ export function generateASTDiff(
   const addedSymbols = afterSymbols.filter((s) => !beforeNames.has(s.name));
   const removedSymbols = beforeSymbols.filter((s) => !afterNames.has(s.name));
   const changedSymbols = afterSymbols.filter(
-    (s) => beforeNames.has(s.name) && !addedSymbols.includes(s)
+    (s) => beforeNames.has(s.name) && !addedSymbols.includes(s),
   );
 
   const importRegex = /(?:import|from)\s+['"]([^'"]+)['"]/g;
@@ -209,17 +237,17 @@ export function generateASTDiff(
   const addedImports = afterImports.filter((i) => !beforeImports.includes(i));
   const removedImports = beforeImports.filter((i) => !afterImports.includes(i));
 
-  let semanticChange: ASTDiff['semanticChange'] = 'none';
+  let semanticChange: ASTDiff["semanticChange"] = "none";
   if (removedSymbols.some((s) => s.isExported)) {
-    semanticChange = 'breaking';
+    semanticChange = "breaking";
   } else if (addedImports.length > 0 || removedImports.length > 0) {
-    semanticChange = 'additive';
+    semanticChange = "additive";
   } else if (
     addedSymbols.length > 0 &&
     removedSymbols.length > 0 &&
     afterSymbols.length === beforeSymbols.length
   ) {
-    semanticChange = 'refactor';
+    semanticChange = "refactor";
   }
 
   return {
@@ -237,7 +265,7 @@ export function generateASTDiff(
 
 export async function extractIssueReferences(
   metadata: PRMetadata,
-  prBody: string
+  prBody: string,
 ): Promise<IssueReference[]> {
   const issues: IssueReference[] = [];
   const issueRegex = /#(\d+)/g;
@@ -263,7 +291,9 @@ export async function extractIssueReferences(
       });
 
       if (!data.pull_request) {
-        const labels = data.labels.map((l) => typeof l === 'string' ? l : l.name || "");
+        const labels = data.labels.map((l) =>
+          typeof l === "string" ? l : l.name || "",
+        );
         issues.push({
           number: issueNumber,
           title: data.title,
@@ -272,7 +302,9 @@ export async function extractIssueReferences(
           url: data.html_url,
         });
       }
-    } catch {}
+    } catch (e) {
+      /* ignore issues for this file */
+    }
   }
 
   return issues;
@@ -280,7 +312,7 @@ export async function extractIssueReferences(
 
 export async function fetchCommitHistory(
   metadata: PRMetadata,
-  filePaths: string[]
+  filePaths: string[],
 ): Promise<CommitHistory[]> {
   const commits: CommitHistory[] = [];
   try {
@@ -297,19 +329,21 @@ export async function fetchCommitHistory(
         author: commit.commit.author?.name || "unknown",
         message: commit.commit.message.split("\n")[0],
         date: new Date(commit.commit.author?.date || Date.now()),
-        additions: 0, 
+        additions: 0,
         deletions: 0,
         filesTouched: [],
       });
     }
-  } catch {}
+  } catch (e) {
+    /* ignore history failures */
+  }
 
   return commits;
 }
 
 export async function computeCodeOwnership(
   metadata: PRMetadata,
-  filePaths: string[]
+  filePaths: string[],
 ): Promise<FileOwnership[]> {
   const ownership: FileOwnership[] = [];
   for (const filename of filePaths.slice(0, 10)) {
@@ -341,10 +375,13 @@ export async function computeCodeOwnership(
       ownership.push({
         filename,
         authorContributions,
-        truckFactor: authorContributions.filter((a) => a.percentage > 10).length,
-        entropy: 0, 
+        truckFactor: authorContributions.filter((a) => a.percentage > 10)
+          .length,
+        entropy: 0,
       });
-    } catch {}
+    } catch (e) {
+      /* ignore issues for this file */
+    }
   }
 
   return ownership;
@@ -352,17 +389,21 @@ export async function computeCodeOwnership(
 
 function truncatePatch(patch: string, budget: number = 15000): string {
   if (patch.length <= budget) return patch;
-  return patch.slice(0, budget) + "\n\n... [TRUNCATED FOR ENGINE PERFORMANCE] ...";
+  return (
+    patch.slice(0, budget) + "\n\n... [TRUNCATED FOR ENGINE PERFORMANCE] ..."
+  );
 }
 
-export async function ingestAndPreprocessPR(prUrl: string): Promise<EnrichedPR> {
+export async function ingestAndPreprocessPR(
+  prUrl: string,
+): Promise<EnrichedPR> {
   const { metadata, diffs: rawDiffs } = await fetchPRDiff(prUrl);
-  
+
   // Apply Token Budgeting: limit each file to 15k chars and total budget to 100k
   let totalUsage = 0;
   const GLOBAL_BUDGET = 100000;
-  
-  const diffs = rawDiffs.map(d => {
+
+  const diffs = rawDiffs.map((d) => {
     const budgetRemaining = GLOBAL_BUDGET - totalUsage;
     const fileBudget = Math.min(15000, budgetRemaining);
     const truncated = truncatePatch(d.patch, fileBudget);
@@ -380,19 +421,70 @@ export async function ingestAndPreprocessPR(prUrl: string): Promise<EnrichedPR> 
 
   // Identify top 10 files by churn for semantic analysis to save API quota
   const topChurnFiles = [...diffs]
-    .sort((a, b) => (b.additions + b.deletions) - (a.additions + a.deletions))
+    .sort((a, b) => b.additions + b.deletions - (a.additions + a.deletions))
     .slice(0, 10)
-    .map(d => d.filename);
+    .map((d) => d.filename);
 
-  const astDiffs: ASTDiff[] = await Promise.all(diffs.map(async (diff) => {
-    try {
-      // Fetch "before" and "after" content for semantic analysis
-      // Note: We only do this for supported file types AND top churn files to save tokens/API calls
-      const isSupported = /\.(ts|tsx|js|jsx)$/.test(diff.filename);
-      const isTopChurn = topChurnFiles.includes(diff.filename);
-      
-      if (!isSupported || !isTopChurn) {
+  const astDiffs: ASTDiff[] = await Promise.all(
+    diffs.map(async (diff) => {
+      try {
+        // Fetch "before" and "after" content for semantic analysis
+        // Note: We only do this for supported file types AND top churn files to save tokens/API calls
+        const isSupported = /\.(ts|tsx|js|jsx)$/.test(diff.filename);
+        const isTopChurn = topChurnFiles.includes(diff.filename);
 
+        if (!isSupported || !isTopChurn) {
+          return {
+            filename: diff.filename,
+            beforeSymbols: [],
+            afterSymbols: [],
+            addedSymbols: [],
+            removedSymbols: [],
+            changedSymbols: [],
+            addedImports: [],
+            removedImports: [],
+            semanticChange:
+              diff.status === "added"
+                ? "additive"
+                : diff.status === "deleted"
+                  ? "breaking"
+                  : "none",
+          };
+        }
+
+        const [{ data: beforeData }, { data: afterData }] = await Promise.all([
+          octokit.rest.repos
+            .getContent({
+              owner: metadata.owner,
+              repo: metadata.repo,
+              path: diff.previousFilename || diff.filename,
+              ref: metadata.baseSha,
+            })
+            .catch(() => ({ data: { content: "" } })),
+          octokit.rest.repos
+            .getContent({
+              owner: metadata.owner,
+              repo: metadata.repo,
+              path: diff.filename,
+              ref: metadata.headSha,
+            })
+            .catch(() => ({ data: { content: "" } })),
+        ]);
+
+        const beforeCode =
+          "content" in beforeData
+            ? Buffer.from(beforeData.content, "base64").toString("utf-8")
+            : "";
+        const afterCode =
+          "content" in afterData
+            ? Buffer.from(afterData.content, "base64").toString("utf-8")
+            : "";
+
+        // Attach full content to the diff for later static analysis (Layer 1)
+        diff.fullContent = afterCode;
+
+        return generateASTDiff(diff.filename, beforeCode, afterCode);
+      } catch (err) {
         return {
           filename: diff.filename,
           beforeSymbols: [],
@@ -402,49 +494,11 @@ export async function ingestAndPreprocessPR(prUrl: string): Promise<EnrichedPR> 
           changedSymbols: [],
           addedImports: [],
           removedImports: [],
-          semanticChange: diff.status === 'added' ? 'additive' :
-                          diff.status === 'deleted' ? 'breaking' : 'none',
+          semanticChange: "none",
         };
       }
-
-      const [{ data: beforeData }, { data: afterData }] = await Promise.all([
-        octokit.rest.repos.getContent({
-          owner: metadata.owner,
-          repo: metadata.repo,
-          path: diff.previousFilename || diff.filename,
-          ref: metadata.baseSha,
-        }).catch(() => ({ data: { content: "" } })),
-        octokit.rest.repos.getContent({
-          owner: metadata.owner,
-          repo: metadata.repo,
-          path: diff.filename,
-          ref: metadata.headSha,
-        }).catch(() => ({ data: { content: "" } })),
-      ]);
-
-      const beforeCode = "content" in beforeData ? Buffer.from(beforeData.content, "base64").toString("utf-8") : "";
-      const afterCode = "content" in afterData ? Buffer.from(afterData.content, "base64").toString("utf-8") : "";
-
-      // Attach full content to the diff for later static analysis (Layer 1)
-      diff.fullContent = afterCode;
-
-      return generateASTDiff(diff.filename, beforeCode, afterCode);
-
-    } catch (err) {
-      return {
-        filename: diff.filename,
-        beforeSymbols: [],
-        afterSymbols: [],
-        addedSymbols: [],
-        removedSymbols: [],
-        changedSymbols: [],
-        addedImports: [],
-        removedImports: [],
-        semanticChange: 'none',
-      };
-    }
-  }));
-
+    }),
+  );
 
   return {
     metadata,
@@ -456,4 +510,3 @@ export async function ingestAndPreprocessPR(prUrl: string): Promise<EnrichedPR> 
     processedAt: new Date(),
   };
 }
-

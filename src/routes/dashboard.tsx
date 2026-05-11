@@ -10,20 +10,19 @@ import {
   LogOut,
   Shield,
 } from "lucide-react";
-import { 
-  getSession, 
-  logout, 
-  updateUserSettings, 
-  transformPR, 
-  getUserOutputs, 
-  createCheckoutSession, 
+import {
+  getSession,
+  logout,
+  updateUserSettings,
+  transformPR,
+  getUserOutputs,
+  createCheckoutSession,
   createBillingPortal,
-  verifyPayment
+  verifyPayment,
 } from "@/rpc.server";
 import { cn } from "@/lib/utils";
 
 import { toast } from "sonner";
-
 
 export const Route = createFileRoute("/dashboard")({
   beforeLoad: async () => {
@@ -37,11 +36,31 @@ type Tab = "generate" | "history" | "teams" | "settings" | "security";
 
 import { Suspense, lazy } from "react";
 
-const GenerateTab = lazy(() => import("@/components/dashboard/GenerateTab").then(m => ({ default: m.GenerateTab })));
-const HistoryTab = lazy(() => import("@/components/dashboard/HistoryTab").then(m => ({ default: m.HistoryTab })));
-const TeamsTab = lazy(() => import("@/components/dashboard/TeamsTab").then(m => ({ default: m.TeamsTab })));
-const SettingsTab = lazy(() => import("@/components/dashboard/SettingsTab").then(m => ({ default: m.SettingsTab })));
-const SecurityTab = lazy(() => import("@/components/dashboard/SecurityTab").then(m => ({ default: m.SecurityTab })));
+const GenerateTab = lazy(() =>
+  import("@/components/dashboard/GenerateTab").then((m) => ({
+    default: m.GenerateTab,
+  })),
+);
+const HistoryTab = lazy(() =>
+  import("@/components/dashboard/HistoryTab").then((m) => ({
+    default: m.HistoryTab,
+  })),
+);
+const TeamsTab = lazy(() =>
+  import("@/components/dashboard/TeamsTab").then((m) => ({
+    default: m.TeamsTab,
+  })),
+);
+const SettingsTab = lazy(() =>
+  import("@/components/dashboard/SettingsTab").then((m) => ({
+    default: m.SettingsTab,
+  })),
+);
+const SecurityTab = lazy(() =>
+  import("@/components/dashboard/SecurityTab").then((m) => ({
+    default: m.SecurityTab,
+  })),
+);
 
 function Dashboard() {
   const { session: user } = Route.useRouteContext() as { session: any };
@@ -67,7 +86,8 @@ function Dashboard() {
     enabled: !!user && tab === "history",
   });
 
-  const isFreeLimitReached = user?.plan === "free" && (user?.generationsThisMonth ?? 0) >= 3;
+  const isFreeLimitReached =
+    user?.plan === "free" && (user?.generationsThisMonth ?? 0) >= 3;
 
   const handleGenerate = async () => {
     if (!prUrl.trim() || !user) return;
@@ -75,7 +95,9 @@ function Dashboard() {
     setResult(null);
     setGenerating(true);
     try {
-      const out = await transformPR({ data: { prUrl: prUrl.trim(), userId: user.id } });
+      const out = await transformPR({
+        data: { prUrl: prUrl.trim(), userId: user.id },
+      });
       setResult(out);
       setSelectedPost(0);
       qc.invalidateQueries({ queryKey: ["outputs", user.id] });
@@ -100,7 +122,7 @@ function Dashboard() {
 
   const handleUpgrade = async () => {
     try {
-      const res = await createCheckoutSession() as any;
+      const res = (await createCheckoutSession()) as any;
       const options = {
         key: res.key,
         amount: res.amount,
@@ -125,7 +147,7 @@ function Dashboard() {
 
   const handlePortal = async () => {
     if (!user) return;
-    const res = await createBillingPortal() as any;
+    const res = (await createBillingPortal()) as any;
     toast.info(res.message);
   };
 
@@ -133,7 +155,13 @@ function Dashboard() {
     if (!user) return;
     setSettingsSaving(true);
     try {
-      await updateUserSettings({ data: { userId: user.id, seniority: seniority as any, tone: tone as any } });
+      await updateUserSettings({
+        data: {
+          userId: user.id,
+          seniority: seniority as any,
+          tone: tone as any,
+        },
+      });
       toast.success("Settings saved");
     } catch (err) {
       toast.error("Failed to save settings");
@@ -160,7 +188,9 @@ function Dashboard() {
           </Link>
 
           <nav className="space-y-1">
-            {(["generate", "history", "teams", "settings", "security"] as Tab[]).map((t) => (
+            {(
+              ["generate", "history", "teams", "settings", "security"] as Tab[]
+            ).map((t) => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
@@ -168,7 +198,7 @@ function Dashboard() {
                   "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all",
                   tab === t
                     ? "bg-foreground text-background shadow-lg shadow-foreground/10"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
                 )}
               >
                 {t === "generate" && <Sparkles className="h-4 w-4" />}
@@ -186,16 +216,25 @@ function Dashboard() {
           <div className="p-4 rounded-2xl bg-blue-500/5 border border-blue-500/10">
             <div className="flex justify-between text-[9px] uppercase font-black tracking-widest text-blue-500/60 mb-2">
               <span>Monthly Quota</span>
-              <span>{user?.plan === "free" ? `${user.generationsThisMonth ?? 0}/3` : "∞"}</span>
+              <span>
+                {user?.plan === "free"
+                  ? `${user.generationsThisMonth ?? 0}/3`
+                  : "∞"}
+              </span>
             </div>
             <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-              <div 
+              <div
                 className="h-full bg-blue-500 transition-all duration-1000"
-                style={{ width: user?.plan === "pro" ? "100%" : `${((user.generationsThisMonth ?? 0) / 3) * 100}%` }}
+                style={{
+                  width:
+                    user?.plan === "pro"
+                      ? "100%"
+                      : `${((user.generationsThisMonth ?? 0) / 3) * 100}%`,
+                }}
               />
             </div>
             {user?.plan === "free" && (
-              <button 
+              <button
                 onClick={handleUpgrade}
                 className="w-full mt-4 py-2 rounded-lg bg-blue-500 text-white text-[10px] font-black uppercase tracking-widest hover:brightness-110 transition shadow-lg shadow-blue-500/20"
               >
@@ -205,20 +244,31 @@ function Dashboard() {
           </div>
 
           <div className="flex items-center gap-3 px-2">
-             {user?.avatarUrl ? (
-               <img src={user.avatarUrl} className="h-8 w-8 rounded-full border border-border" alt="" />
-             ) : (
-               <div className="h-8 w-8 rounded-full bg-muted border border-border grid place-items-center text-[10px] font-bold">
-                 {user?.githubLogin?.slice(0, 1).toUpperCase()}
-               </div>
-             )}
-             <div className="flex-1 min-w-0">
-               <div className="text-[11px] font-bold truncate">@{user?.githubLogin}</div>
-               <div className="text-[9px] text-muted-foreground font-medium uppercase tracking-widest">{user?.plan} plan</div>
-             </div>
-             <button onClick={handleLogout} className="p-2 text-muted-foreground hover:text-foreground transition">
-               <LogOut className="h-4 w-4" />
-             </button>
+            {user?.avatarUrl ? (
+              <img
+                src={user.avatarUrl}
+                className="h-8 w-8 rounded-full border border-border"
+                alt=""
+              />
+            ) : (
+              <div className="h-8 w-8 rounded-full bg-muted border border-border grid place-items-center text-[10px] font-bold">
+                {user?.githubLogin?.slice(0, 1).toUpperCase()}
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <div className="text-[11px] font-bold truncate">
+                @{user?.githubLogin}
+              </div>
+              <div className="text-[9px] text-muted-foreground font-medium uppercase tracking-widest">
+                {user?.plan} plan
+              </div>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="p-2 text-muted-foreground hover:text-foreground transition"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
           </div>
         </div>
       </aside>
@@ -227,38 +277,44 @@ function Dashboard() {
       <main className="flex-1 flex flex-col min-w-0">
         {/* Mobile Header */}
         <header className="md:hidden flex items-center justify-between p-4 border-b border-border bg-background/80 backdrop-blur-md sticky top-0 z-40">
-           <Link to="/" className="flex items-center gap-2">
-             <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 grid place-items-center">
-               <span className="text-[10px] font-bold text-white">DB</span>
-             </div>
-           </Link>
-           <div className="flex items-center gap-4 overflow-x-auto no-scrollbar py-1">
-              {(["generate", "history", "teams", "settings", "security"] as Tab[]).map((t) => (
-               <button
-                 key={t}
-                 onClick={() => setTab(t)}
-                 className={cn(
-                   "text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-md transition",
-                   tab === t ? "bg-muted text-foreground" : "text-muted-foreground"
-                 )}
-               >
-                 {t}
-               </button>
-             ))}
-           </div>
-           <button onClick={handleLogout} className="p-2 text-muted-foreground">
-             <LogOut className="h-4 w-4" />
-           </button>
+          <Link to="/" className="flex items-center gap-2">
+            <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 grid place-items-center">
+              <span className="text-[10px] font-bold text-white">DB</span>
+            </div>
+          </Link>
+          <div className="flex items-center gap-4 overflow-x-auto no-scrollbar py-1">
+            {(
+              ["generate", "history", "teams", "settings", "security"] as Tab[]
+            ).map((t) => (
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                className={cn(
+                  "text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-md transition",
+                  tab === t
+                    ? "bg-muted text-foreground"
+                    : "text-muted-foreground",
+                )}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+          <button onClick={handleLogout} className="p-2 text-muted-foreground">
+            <LogOut className="h-4 w-4" />
+          </button>
         </header>
 
         <div className="flex-1 p-6 lg:p-10 max-w-5xl">
-          <Suspense fallback={
-            <div className="h-[60vh] grid place-items-center">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground/20" />
-            </div>
-          }>
+          <Suspense
+            fallback={
+              <div className="h-[60vh] grid place-items-center">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground/20" />
+              </div>
+            }
+          >
             {tab === "generate" && (
-              <GenerateTab 
+              <GenerateTab
                 user={user}
                 prUrl={prUrl}
                 setPrUrl={setPrUrl}
@@ -277,7 +333,7 @@ function Dashboard() {
             )}
 
             {tab === "history" && (
-              <HistoryTab 
+              <HistoryTab
                 outputsLoading={outputsLoading}
                 outputs={outputs}
                 user={user}
@@ -287,14 +343,11 @@ function Dashboard() {
             )}
 
             {tab === "teams" && (
-              <TeamsTab 
-                user={user}
-                handleUpgrade={handleUpgrade}
-              />
+              <TeamsTab user={user} handleUpgrade={handleUpgrade} />
             )}
 
             {tab === "settings" && (
-              <SettingsTab 
+              <SettingsTab
                 user={user}
                 seniority={seniority}
                 setSeniority={setSeniority}
@@ -307,13 +360,10 @@ function Dashboard() {
               />
             )}
 
-            {tab === "security" && (
-              <SecurityTab />
-            )}
+            {tab === "security" && <SecurityTab />}
           </Suspense>
         </div>
       </main>
     </div>
   );
 }
-

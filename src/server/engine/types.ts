@@ -20,7 +20,7 @@ export interface PRMetadata {
 
 export interface FileDiff {
   filename: string;
-  status: 'added' | 'deleted' | 'modified' | 'renamed';
+  status: "added" | "deleted" | "modified" | "renamed";
   additions: number;
   deletions: number;
   patch: string;
@@ -28,10 +28,9 @@ export interface FileDiff {
   fullContent?: string; // New field for after-state content
 }
 
-
 export interface ASTSymbol {
   name: string;
-  kind: 'function' | 'class' | 'interface' | 'type' | 'const' | 'variable';
+  kind: "function" | "class" | "interface" | "type" | "const" | "variable";
   startLine: number;
   endLine: number;
   isExported: boolean;
@@ -46,7 +45,7 @@ export interface ASTDiff {
   changedSymbols: ASTSymbol[];
   addedImports: string[];
   removedImports: string[];
-  semanticChange: 'breaking' | 'additive' | 'refactor' | 'none';
+  semanticChange: "breaking" | "additive" | "refactor" | "none";
 }
 
 export interface EnrichedPR {
@@ -63,7 +62,7 @@ export interface IssueReference {
   number: number;
   title: string;
   labels: string[];
-  type: 'bug' | 'feature' | 'chore' | 'tech-debt' | 'unknown';
+  type: "bug" | "feature" | "chore" | "tech-debt" | "unknown";
   url: string;
 }
 
@@ -79,7 +78,11 @@ export interface CommitHistory {
 
 export interface FileOwnership {
   filename: string;
-  authorContributions: { author: string; linesAdded: number; percentage: number }[];
+  authorContributions: {
+    author: string;
+    linesAdded: number;
+    percentage: number;
+  }[];
   truckFactor: number;
   entropy: number;
 }
@@ -110,16 +113,26 @@ export interface OverallMetrics {
   totalComplexityDelta: number;
 }
 
-export type ChangeType = 
-  | { type: 'api_change'; description: string; files: string[] }
-  | { type: 'refactor'; description: string; files: string[] }
-  | { type: 'bug_fix'; description: string; files: string[]; severity: 'low' | 'medium' | 'high' | 'critical' }
-  | { type: 'feature'; description: string; files: string[] }
-  | { type: 'performance'; description: string; files: string[] }
-  | { type: 'documentation'; description: string; files: string[] }
-  | { type: 'security'; description: string; files: string[]; severity: 'low' | 'medium' | 'high' | 'critical' }
-  | { type: 'config'; description: string; files: string[] }
-  | { type: 'test'; description: string; files: string[] };
+export type ChangeType =
+  | { type: "api_change"; description: string; files: string[] }
+  | { type: "refactor"; description: string; files: string[] }
+  | {
+      type: "bug_fix";
+      description: string;
+      files: string[];
+      severity: "low" | "medium" | "high" | "critical";
+    }
+  | { type: "feature"; description: string; files: string[] }
+  | { type: "performance"; description: string; files: string[] }
+  | { type: "documentation"; description: string; files: string[] }
+  | {
+      type: "security";
+      description: string;
+      files: string[];
+      severity: "low" | "medium" | "high" | "critical";
+    }
+  | { type: "config"; description: string; files: string[] }
+  | { type: "test"; description: string; files: string[] };
 
 export interface DependencyGraph {
   nodes: GraphNode[];
@@ -130,16 +143,16 @@ export interface DependencyGraph {
 export interface GraphNode {
   id: string;
   label: string;
-  type: 'source' | 'test' | 'config' | 'types' | 'utilities';
+  type: "source" | "test" | "config" | "types" | "utilities";
   moduleId: string;
   isEntryPoint: boolean;
-  language: 'typescript' | 'javascript' | 'python' | 'go' | 'rust';
+  language: "typescript" | "javascript" | "python" | "go" | "rust";
 }
 
 export interface GraphEdge {
   source: string;
   target: string;
-  type: 'import' | 'inheritance' | 'function_call';
+  type: "import" | "inheritance" | "function_call";
   weight: number;
 }
 
@@ -177,11 +190,16 @@ export interface GlobalGraphMetrics {
 }
 
 export interface StructuralChange {
-  changeType: 'added_edge' | 'removed_edge' | 'added_cycle' | 'broken_cycle' | 'community_shift';
+  changeType:
+    | "added_edge"
+    | "removed_edge"
+    | "added_cycle"
+    | "broken_cycle"
+    | "community_shift";
   sourceFile: string;
   targetFile?: string;
   affectedFiles: string[];
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  severity: "low" | "medium" | "high" | "critical";
   description: string;
 }
 
@@ -227,7 +245,7 @@ export interface ScoreBreakdown {
 export interface RawSignal {
   signalType: string;
   value: number;
-  source: 'graph' | 'static' | 'history' | 'user' | 'multi_layer';
+  source: "graph" | "static" | "history" | "user" | "multi_layer";
   weight: number;
 }
 
@@ -235,12 +253,12 @@ export interface FileContribution {
   filename: string;
   archScoreContribution: number;
   primaryReason: string;
-  changeType: ChangeType['type'];
+  changeType: ChangeType["type"];
 }
 
 export interface RiskFactor {
   factor: string;
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  severity: "low" | "medium" | "high" | "critical";
   description: string;
   mitigatable: boolean;
 }
@@ -263,8 +281,15 @@ export interface InvisibleWorkReport {
 }
 
 export interface InvisibleWorkCategory {
-  category: 'refactoring' | 'dependency_upgrade' | 'performance_improvement' | 
-             'code_quality' | 'ci_cd_fix' | 'documentation' | 'security_hardening' | 'tech_debt';
+  category:
+    | "refactoring"
+    | "dependency_upgrade"
+    | "performance_improvement"
+    | "code_quality"
+    | "ci_cd_fix"
+    | "documentation"
+    | "security_hardening"
+    | "tech_debt";
   confidence: number;
   effortEstimate: number;
   files: string[];
@@ -284,13 +309,13 @@ export interface OverlookedIndicator {
   indicator: string;
   evidence: string;
   impact: string;
-  category: InvisibleWorkCategory['category'];
+  category: InvisibleWorkCategory["category"];
 }
 
 export interface UserPreference {
   conciseness: number;
   technicalDepth: number;
-  tone: 'aggressive' | 'professional' | 'humble';
+  tone: "aggressive" | "professional" | "humble";
   frequentKeywords: string[];
 }
 
@@ -305,9 +330,9 @@ export interface NarrativeRequest {
 }
 
 export interface UserContext {
-  seniority: 'junior' | 'mid' | 'senior' | 'staff';
-  tone: 'direct' | 'storytelling' | 'technical';
-  targetAudience: 'recruiter' | 'hiring_manager' | 'peer' | 'executive';
+  seniority: "junior" | "mid" | "senior" | "staff";
+  tone: "direct" | "storytelling" | "technical";
+  targetAudience: "recruiter" | "hiring_manager" | "peer" | "executive";
 }
 
 export interface NarrativeDraft {
@@ -321,7 +346,7 @@ export interface NarrativeDraft {
   citations: Citation[];
   category: string;
   impactScore: number;
-  complexityLevel: 'junior' | 'mid' | 'senior' | 'staff';
+  complexityLevel: "junior" | "mid" | "senior" | "staff";
   hypeScore: number;
   selfConsistencyScore: number;
   evidenceDensityScore: number;
@@ -332,7 +357,7 @@ export interface Citation {
   claim: string;
   ref: string;
   sha: string;
-  evidenceType: 'metric' | 'structural' | 'behavioral';
+  evidenceType: "metric" | "structural" | "behavioral";
   verified: boolean;
   verificationDetails?: string;
   confidenceScore: number;

@@ -2,7 +2,8 @@ import { env } from "@/lib/env";
 
 /** OpenAI-compat base URL (…/…/openai without trailing slash handled by caller) and helpers. */
 
-const DEFAULT_GEMINI_OPENAI_BASE = "https://generativelanguage.googleapis.com/v1beta/openai";
+const DEFAULT_GEMINI_OPENAI_BASE =
+  "https://generativelanguage.googleapis.com/v1beta/openai";
 
 const DEFAULT_OLLAMA_ROOT = "http://localhost:11434";
 
@@ -31,12 +32,13 @@ export function ollamaOpenAiCompatBase(): string {
 }
 
 /**
- * 1. `OPENAI_COMPAT_BASE_URL` if set  
- * 2. Else Gemini (Google AI Studio) when `GEMINI_API_KEY` is set — same host as official OpenAI-compat docs  
+ * 1. `OPENAI_COMPAT_BASE_URL` if set
+ * 2. Else Gemini (Google AI Studio) when `GEMINI_API_KEY` is set — same host as official OpenAI-compat docs
  * 3. Else local Ollama OpenAI-compat base from `OPENHUMAN_OLLAMA_BASE_URL` / `OLLAMA_HOST` / localhost
  */
 export function resolvedCompatChatBaseUrl(): string {
-  const explicit = env.OPENAI_COMPAT_BASE_URL?.trim()?.replace(/\/+$/, "") ?? "";
+  const explicit =
+    env.OPENAI_COMPAT_BASE_URL?.trim()?.replace(/\/+$/, "") ?? "";
   if (explicit.length > 0) return explicit;
 
   if (env.GEMINI_API_KEY?.trim()) {
@@ -47,11 +49,7 @@ export function resolvedCompatChatBaseUrl(): string {
 }
 
 export function resolveOpenAiCompatApiKey(): string {
-  return (
-    env.OPENAI_COMPAT_API_KEY?.trim() ||
-    env.GEMINI_API_KEY?.trim() ||
-    ""
-  );
+  return env.OPENAI_COMPAT_API_KEY?.trim() || env.GEMINI_API_KEY?.trim() || "";
 }
 
 export function resolveOpenAiCompatModel(): string | null {

@@ -15,7 +15,7 @@ export const getWrappedStats = createServerFn({ method: "GET" })
       where: and(
         eq(outputs.userId, userId),
         gte(outputs.createdAt, startOfYear),
-        lte(outputs.createdAt, endOfYear)
+        lte(outputs.createdAt, endOfYear),
       ),
     });
 
@@ -23,9 +23,14 @@ export const getWrappedStats = createServerFn({ method: "GET" })
       return null;
     }
 
-    const user = await db.query.users.findFirst({ where: eq(users.id, userId) });
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, userId),
+    });
 
-    const totalImpact = yearOutputs.reduce((acc, o) => acc + (o.impactScore ?? 0), 0);
+    const totalImpact = yearOutputs.reduce(
+      (acc, o) => acc + (o.impactScore ?? 0),
+      0,
+    );
     const avgImpact = Math.round(totalImpact / yearOutputs.length);
 
     const categoryMap = yearOutputs.reduce<Record<string, number>>((acc, o) => {
@@ -33,22 +38,31 @@ export const getWrappedStats = createServerFn({ method: "GET" })
       acc[cat] = (acc[cat] ?? 0) + 1;
       return acc;
     }, {});
-    const sortedCategories = Object.entries(categoryMap).sort(([, a], [, b]) => b - a);
+    const sortedCategories = Object.entries(categoryMap).sort(
+      ([, a], [, b]) => b - a,
+    );
     const topCategory = sortedCategories[0]?.[0] ?? "Feature";
 
-    const complexityMap = yearOutputs.reduce<Record<string, number>>((acc, o) => {
-      const c = o.complexityLevel ?? "Mid";
-      acc[c] = (acc[c] ?? 0) + 1;
-      return acc;
-    }, {});
-    const topComplexity = Object.entries(complexityMap).sort(([, a], [, b]) => b - a)[0]?.[0] ?? "Mid";
+    const complexityMap = yearOutputs.reduce<Record<string, number>>(
+      (acc, o) => {
+        const c = o.complexityLevel ?? "Mid";
+        acc[c] = (acc[c] ?? 0) + 1;
+        return acc;
+      },
+      {},
+    );
+    const topComplexity =
+      Object.entries(complexityMap).sort(([, a], [, b]) => b - a)[0]?.[0] ??
+      "Mid";
 
-    const invisibleWork = yearOutputs.filter(
-      (o) => o.prSignals?.some((s) => ["structural", "behavioral"].includes(s))
+    const invisibleWork = yearOutputs.filter((o) =>
+      o.prSignals?.some((s) => ["structural", "behavioral"].includes(s)),
     ).length;
     const invisiblePct = Math.round((invisibleWork / yearOutputs.length) * 100);
 
-    const topOutput = [...yearOutputs].sort((a, b) => (b.impactScore ?? 0) - (a.impactScore ?? 0))[0];
+    const topOutput = [...yearOutputs].sort(
+      (a, b) => (b.impactScore ?? 0) - (a.impactScore ?? 0),
+    )[0];
 
     const monthMap: number[] = new Array(12).fill(0);
     for (const o of yearOutputs) {
@@ -61,7 +75,10 @@ export const getWrappedStats = createServerFn({ method: "GET" })
         acc[s] = (acc[s] ?? 0) + 1;
         return acc;
       }, {});
-    const topStack = Object.entries(stackMap).sort(([, a], [, b]) => b - a).slice(0, 5).map(([k]) => k);
+    const topStack = Object.entries(stackMap)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 5)
+      .map(([k]) => k);
 
     return {
       year,
@@ -76,7 +93,12 @@ export const getWrappedStats = createServerFn({ method: "GET" })
       invisibleWorkPct: invisiblePct,
       topStack,
       topOutput: topOutput
-        ? { prTitle: topOutput.prTitle, impactScore: topOutput.impactScore, category: topOutput.category, slug: topOutput.slug }
+        ? {
+            prTitle: topOutput.prTitle,
+            impactScore: topOutput.impactScore,
+            category: topOutput.category,
+            slug: topOutput.slug,
+          }
         : null,
       monthDistribution: monthMap,
     };

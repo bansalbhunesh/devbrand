@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 
 /**
  * Billing Webhook Logic Tests
- * 
+ *
  * Tests the idempotency, plan transition, and metadata extraction patterns
  * used by the Stripe webhook handler. Since the actual handler depends on
  * the database and Stripe SDK, we test the core logic patterns.
@@ -10,8 +10,8 @@ import { describe, it, expect } from "vitest";
 
 describe("Billing: Plan Transitions", () => {
   it("should compute correct plan from subscription status", () => {
-    const computePlan = (status: string) => 
-      (status === "active" || status === "trialing") ? "pro" : "free";
+    const computePlan = (status: string) =>
+      status === "active" || status === "trialing" ? "pro" : "free";
 
     expect(computePlan("active")).toBe("pro");
     expect(computePlan("trialing")).toBe("pro");
@@ -40,7 +40,7 @@ describe("Billing: Idempotency", () => {
 
     // Duplicate
     expect(processedEvents.has(eventId1)).toBe(true);
-    
+
     // New event
     expect(processedEvents.has(eventId2)).toBe(false);
   });
@@ -57,10 +57,13 @@ describe("Billing: Metadata Extraction", () => {
   });
 
   it("should handle missing subscription in checkout.session.completed", () => {
-    const session = { metadata: { devbrand_user_id: "uuid-123" }, subscription: null };
+    const session = {
+      metadata: { devbrand_user_id: "uuid-123" },
+      subscription: null,
+    };
     const userId = session.metadata?.devbrand_user_id;
     const hasSubscription = !!session.subscription;
-    
+
     expect(userId).toBe("uuid-123");
     expect(hasSubscription).toBe(false);
     // Handler should break/skip when subscription is null

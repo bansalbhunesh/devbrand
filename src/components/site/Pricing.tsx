@@ -2,7 +2,12 @@
 
 import { Check, Github, LayoutDashboard, Loader2, Zap } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { getSession, signInWithGithub, createCheckoutSession, verifyPayment } from "@/rpc.server";
+import {
+  getSession,
+  signInWithGithub,
+  createCheckoutSession,
+  verifyPayment,
+} from "@/rpc.server";
 import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
@@ -59,9 +64,14 @@ const tiers = [
 ];
 
 export function Pricing() {
-  const { data: session } = useQuery({ queryKey: ["session"], queryFn: () => getSession() });
+  const { data: session } = useQuery({
+    queryKey: ["session"],
+    queryFn: () => getSession(),
+  });
   const [loading, setLoading] = useState<string | null>(null);
-  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">(
+    "monthly",
+  );
   const navigate = useNavigate();
 
   const handleAction = async (tier: string) => {
@@ -76,7 +86,7 @@ export function Pricing() {
       setLoading("checkout");
       try {
         const order = await createCheckoutSession();
-        
+
         const options = {
           key: order.key,
           amount: order.amount,
@@ -118,12 +128,15 @@ export function Pricing() {
   };
 
   return (
-    <section id="pricing" className="py-32 border-t border-border bg-muted/10 relative overflow-hidden">
+    <section
+      id="pricing"
+      className="py-32 border-t border-border bg-muted/10 relative overflow-hidden"
+    >
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-500/5 blur-[60px] rounded-full pointer-events-none" />
-      
+
       <div className="mx-auto max-w-7xl px-6 relative">
         <div className="text-center mb-12">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -131,7 +144,7 @@ export function Pricing() {
           >
             Pricing
           </motion.div>
-          <motion.h2 
+          <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -140,12 +153,25 @@ export function Pricing() {
           >
             No hype. Just high-signal data.
           </motion.h2>
-          
+
           {/* Billing Toggle */}
           <div className="flex items-center justify-center gap-4 mt-8">
-            <span className={cn("text-sm font-medium transition", billingCycle === "monthly" ? "text-foreground" : "text-muted-foreground")}>Monthly</span>
+            <span
+              className={cn(
+                "text-sm font-medium transition",
+                billingCycle === "monthly"
+                  ? "text-foreground"
+                  : "text-muted-foreground",
+              )}
+            >
+              Monthly
+            </span>
             <button
-              onClick={() => setBillingCycle(prev => prev === "monthly" ? "yearly" : "monthly")}
+              onClick={() =>
+                setBillingCycle((prev) =>
+                  prev === "monthly" ? "yearly" : "monthly",
+                )
+              }
               aria-label="Toggle billing cycle"
               className="relative w-12 h-6 rounded-full bg-muted border border-border p-1 transition-colors hover:border-blue-500/50"
             >
@@ -156,8 +182,19 @@ export function Pricing() {
               />
             </button>
             <div className="flex items-center gap-2">
-              <span className={cn("text-sm font-medium transition", billingCycle === "yearly" ? "text-foreground" : "text-muted-foreground")}>Yearly</span>
-              <span className="text-[10px] font-bold bg-green-500/10 text-green-500 px-2 py-0.5 rounded-full">SAVE 20%</span>
+              <span
+                className={cn(
+                  "text-sm font-medium transition",
+                  billingCycle === "yearly"
+                    ? "text-foreground"
+                    : "text-muted-foreground",
+                )}
+              >
+                Yearly
+              </span>
+              <span className="text-[10px] font-bold bg-green-500/10 text-green-500 px-2 py-0.5 rounded-full">
+                SAVE 20%
+              </span>
             </div>
           </div>
         </div>
@@ -170,12 +207,16 @@ export function Pricing() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-100px" }}
               transition={{ delay: idx * 0.1 }}
-              whileHover={tier.popular ? { scale: 1.05, translateY: -4 } : { translateY: -4 }}
+              whileHover={
+                tier.popular
+                  ? { scale: 1.05, translateY: -4 }
+                  : { translateY: -4 }
+              }
               className={cn(
                 "relative flex flex-col p-10 rounded-3xl border transition-all duration-300",
-                tier.popular 
-                  ? "border-blue-500/40 bg-background/60 backdrop-blur-xl shadow-2xl shadow-blue-500/10 z-10" 
-                  : "border-border bg-muted/20"
+                tier.popular
+                  ? "border-blue-500/40 bg-background/60 backdrop-blur-xl shadow-2xl shadow-blue-500/10 z-10"
+                  : "border-border bg-muted/20",
               )}
             >
               {tier.popular && (
@@ -183,9 +224,11 @@ export function Pricing() {
                   <Zap className="h-3 w-3 fill-current" /> Most Popular
                 </div>
               )}
-              
+
               <div className="mb-8">
-                <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-4">{tier.name}</h3>
+                <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-4">
+                  {tier.name}
+                </h3>
                 <div className="flex items-baseline gap-1 h-[60px] overflow-hidden">
                   <AnimatePresence mode="wait">
                     <motion.span
@@ -196,17 +239,24 @@ export function Pricing() {
                       transition={{ duration: 0.2, ease: "easeOut" }}
                       className="text-5xl font-bold tracking-tighter"
                     >
-                      {billingCycle === "monthly" ? tier.price.monthly : tier.price.yearly}
+                      {billingCycle === "monthly"
+                        ? tier.price.monthly
+                        : tier.price.yearly}
                     </motion.span>
                   </AnimatePresence>
                   <span className="text-muted-foreground font-medium">/mo</span>
                 </div>
-                <p className="mt-4 text-sm text-muted-foreground leading-relaxed">{tier.description}</p>
+                <p className="mt-4 text-sm text-muted-foreground leading-relaxed">
+                  {tier.description}
+                </p>
               </div>
-              
+
               <div className="flex-1 space-y-5">
                 {tier.features.map((feature) => (
-                  <div key={feature} className="flex items-start gap-3 text-sm font-medium">
+                  <div
+                    key={feature}
+                    className="flex items-start gap-3 text-sm font-medium"
+                  >
                     <Check className="h-4 w-4 text-blue-500 mt-0.5 shrink-0" />
                     <span className="text-foreground/80">{feature}</span>
                   </div>
@@ -228,17 +278,22 @@ export function Pricing() {
                     "mt-12 w-full py-4 rounded-2xl font-bold text-sm transition flex items-center justify-center gap-2",
                     tier.popular
                       ? "bg-foreground text-background hover:opacity-90 shadow-xl shadow-foreground/5"
-                      : "bg-background border border-border hover:bg-muted/50"
+                      : "bg-background border border-border hover:bg-muted/50",
                   )}
                 >
                   {loading === "auth" && tier.name !== "Team" ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (loading === "checkout" || loading === "verifying") && tier.name === "Pro" ? (
+                  ) : (loading === "checkout" || loading === "verifying") &&
+                    tier.name === "Pro" ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : tier.name === "Pro" ? (
-                    <><Zap className="h-4 w-4 fill-current" /> {tier.cta}</>
+                    <>
+                      <Zap className="h-4 w-4 fill-current" /> {tier.cta}
+                    </>
                   ) : tier.name === "Free" ? (
-                    <><Github className="h-4 w-4" /> {tier.cta}</>
+                    <>
+                      <Github className="h-4 w-4" /> {tier.cta}
+                    </>
                   ) : (
                     tier.cta
                   )}
@@ -250,24 +305,64 @@ export function Pricing() {
 
         {/* Comparison Table */}
         <div className="mt-40 max-w-4xl mx-auto overflow-x-auto">
-          <h3 className="text-2xl font-bold tracking-tight text-center mb-12">Detailed Comparison</h3>
+          <h3 className="text-2xl font-bold tracking-tight text-center mb-12">
+            Detailed Comparison
+          </h3>
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-border">
-                <th className="py-6 px-4 text-sm font-bold uppercase tracking-widest text-muted-foreground">Feature</th>
-                <th className="py-6 px-4 text-sm font-bold uppercase tracking-widest text-muted-foreground text-center">Free</th>
-                <th className="py-6 px-4 text-sm font-bold uppercase tracking-widest text-muted-foreground text-center">Pro</th>
+                <th className="py-6 px-4 text-sm font-bold uppercase tracking-widest text-muted-foreground">
+                  Feature
+                </th>
+                <th className="py-6 px-4 text-sm font-bold uppercase tracking-widest text-muted-foreground text-center">
+                  Free
+                </th>
+                <th className="py-6 px-4 text-sm font-bold uppercase tracking-widest text-muted-foreground text-center">
+                  Pro
+                </th>
               </tr>
             </thead>
             <tbody className="text-sm">
-              <ComparisonRow label="AI PR Analysis" free="3 / month" pro="Unlimited" />
-              <ComparisonRow label="Impact Scoring (7-layer Engine)" free={true} pro={true} />
-              <ComparisonRow label="LinkedIn Post Generation" free={true} pro={true} />
-              <ComparisonRow label="Resume Bullet Generation" free={true} pro={true} />
-              <ComparisonRow label="GitHub Roast Engine" free="Limited" pro="Unlimited + AI Personas" />
-              <ComparisonRow label="Invisible Work Signal Analysis" free={false} pro={true} />
-              <ComparisonRow label="LinkedIn Auto-Drafting" free={false} pro={true} />
-              <ComparisonRow label="Personal AI Career Coach" free={false} pro={true} />
+              <ComparisonRow
+                label="AI PR Analysis"
+                free="3 / month"
+                pro="Unlimited"
+              />
+              <ComparisonRow
+                label="Impact Scoring (7-layer Engine)"
+                free={true}
+                pro={true}
+              />
+              <ComparisonRow
+                label="LinkedIn Post Generation"
+                free={true}
+                pro={true}
+              />
+              <ComparisonRow
+                label="Resume Bullet Generation"
+                free={true}
+                pro={true}
+              />
+              <ComparisonRow
+                label="GitHub Roast Engine"
+                free="Limited"
+                pro="Unlimited + AI Personas"
+              />
+              <ComparisonRow
+                label="Invisible Work Signal Analysis"
+                free={false}
+                pro={true}
+              />
+              <ComparisonRow
+                label="LinkedIn Auto-Drafting"
+                free={false}
+                pro={true}
+              />
+              <ComparisonRow
+                label="Personal AI Career Coach"
+                free={false}
+                pro={true}
+              />
               <ComparisonRow label="Priority Support" free={false} pro={true} />
             </tbody>
           </table>
@@ -278,9 +373,21 @@ export function Pricing() {
             Trusted by engineers at
           </p>
           <div className="flex flex-wrap items-center justify-center gap-12 grayscale opacity-40">
-             {["VERCEL", "RAZORPAY", "LINEAR", "SUPABASE", "GITHUB", "RAYCAST"].map((b) => (
-                <span key={b} className="font-mono text-xs font-black tracking-[0.3em]">{b}</span>
-              ))}
+            {[
+              "VERCEL",
+              "RAZORPAY",
+              "LINEAR",
+              "SUPABASE",
+              "GITHUB",
+              "RAYCAST",
+            ].map((b) => (
+              <span
+                key={b}
+                className="font-mono text-xs font-black tracking-[0.3em]"
+              >
+                {b}
+              </span>
+            ))}
           </div>
         </div>
       </div>
@@ -288,20 +395,36 @@ export function Pricing() {
   );
 }
 
-function ComparisonRow({ label, free, pro }: { label: string; free: boolean | string; pro: boolean | string }) {
+function ComparisonRow({
+  label,
+  free,
+  pro,
+}: {
+  label: string;
+  free: boolean | string;
+  pro: boolean | string;
+}) {
   return (
     <tr className="border-b border-border/50 group hover:bg-muted/10 transition-colors">
       <td className="py-5 px-4 font-medium text-foreground/80">{label}</td>
       <td className="py-5 px-4 text-center">
         {typeof free === "boolean" ? (
-          free ? <Check className="h-4 w-4 text-blue-500 mx-auto" /> : <span className="text-muted-foreground/30">—</span>
+          free ? (
+            <Check className="h-4 w-4 text-blue-500 mx-auto" />
+          ) : (
+            <span className="text-muted-foreground/30">—</span>
+          )
         ) : (
           <span className="text-xs font-semibold">{free}</span>
         )}
       </td>
       <td className="py-5 px-4 text-center font-bold text-blue-500">
         {typeof pro === "boolean" ? (
-          pro ? <Check className="h-4 w-4 text-blue-500 mx-auto" /> : <span className="text-muted-foreground/30">—</span>
+          pro ? (
+            <Check className="h-4 w-4 text-blue-500 mx-auto" />
+          ) : (
+            <span className="text-muted-foreground/30">—</span>
+          )
         ) : (
           <span className="text-xs font-black">{pro}</span>
         )}
@@ -309,5 +432,3 @@ function ComparisonRow({ label, free, pro }: { label: string; free: boolean | st
     </tr>
   );
 }
-
-

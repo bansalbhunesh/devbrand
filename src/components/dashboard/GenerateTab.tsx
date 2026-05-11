@@ -1,5 +1,16 @@
 import * as React from "react";
-import { Sparkles, GitPullRequest, Loader2, Lock, Zap, BarChart3, ExternalLink, ClipboardCopy, Check, ArrowUpRight } from "lucide-react";
+import {
+  Sparkles,
+  GitPullRequest,
+  Loader2,
+  Lock,
+  Zap,
+  BarChart3,
+  ExternalLink,
+  ClipboardCopy,
+  Check,
+  ArrowUpRight,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Stat } from "./HistoryCard";
 import { motion, AnimatePresence } from "framer-motion";
@@ -35,7 +46,7 @@ export function GenerateTab({
   setSelectedPost,
   handleCopy,
   copied,
-  setTab
+  setTab,
 }: GenerateTabProps) {
   const postLabels = ["Problem / Outcome", "Tradeoff / Decision", "Learnings"];
   const [step, setStep] = React.useState(0);
@@ -43,13 +54,13 @@ export function GenerateTab({
     "Reading diff & extracting metadata...",
     "Analyzing architectural significance...",
     "Scoring complexity & impact...",
-    "Synthesizing persona-aligned narrative..."
+    "Synthesizing persona-aligned narrative...",
   ];
 
   React.useEffect(() => {
     if (generating) {
       const interval = setInterval(() => {
-        setStep(s => (s < 3 ? s + 1 : s));
+        setStep((s) => (s < 3 ? s + 1 : s));
       }, 2000);
       return () => {
         clearInterval(interval);
@@ -60,7 +71,7 @@ export function GenerateTab({
 
   return (
     <div className="grid lg:grid-cols-[1fr_1.3fr] gap-10">
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         className="space-y-6"
@@ -70,7 +81,8 @@ export function GenerateTab({
             Transform a PR
           </h2>
           <p className="text-sm text-muted-foreground">
-            Paste any GitHub pull request URL to generate LinkedIn posts, resume bullets, and interview hooks.
+            Paste any GitHub pull request URL to generate LinkedIn posts, resume
+            bullets, and interview hooks.
           </p>
         </div>
 
@@ -79,9 +91,12 @@ export function GenerateTab({
             <div className="flex items-start gap-3">
               <Lock className="h-5 w-5 text-blue-500 mt-0.5 shrink-0" />
               <div className="flex-1">
-                <p className="text-sm font-medium">You've used all 3 free generations this month.</p>
+                <p className="text-sm font-medium">
+                  You've used all 3 free generations this month.
+                </p>
                 <p className="text-xs text-muted-foreground mt-1 text-pretty">
-                  Upgrade to Pro for unlimited generations + LinkedIn auto-drafting.
+                  Upgrade to Pro for unlimited generations + LinkedIn
+                  auto-drafting.
                 </p>
                 <button
                   onClick={handleUpgrade}
@@ -118,26 +133,35 @@ export function GenerateTab({
           className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-foreground text-background font-bold text-sm hover:opacity-90 disabled:opacity-40 transition shadow-xl shadow-foreground/5"
         >
           {generating ? (
-            <><Loader2 className="h-4 w-4 animate-spin" /> Analyzing diff...</>
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" /> Analyzing diff...
+            </>
           ) : (
-            <><Sparkles className="h-4 w-4 text-blue-500" /> Generate impact story</>
+            <>
+              <Sparkles className="h-4 w-4 text-blue-500" /> Generate impact
+              story
+            </>
           )}
         </button>
 
         {error && (
-          <motion.p 
+          <motion.p
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             className="text-xs text-destructive font-medium"
           >
-            {error === "limit" ? "Monthly limit reached. Upgrade to Pro for more." : 
-             error === "ai" ? "AI returned an unexpected format. Please try again." : 
-             "Something went wrong. Check that the PR URL is public."}
+            {error === "limit"
+              ? "Monthly limit reached. Upgrade to Pro for more."
+              : error === "ai"
+                ? "AI returned an unexpected format. Please try again."
+                : "Something went wrong. Check that the PR URL is public."}
           </motion.p>
         )}
 
         <div className="rounded-xl border border-border bg-muted/30 p-5 space-y-3">
-          <div className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Your calibration</div>
+          <div className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+            Your calibration
+          </div>
           <div className="flex gap-6 text-sm">
             <div>
               <span className="text-muted-foreground">Level: </span>
@@ -160,7 +184,7 @@ export function GenerateTab({
       <div className="space-y-4">
         <AnimatePresence mode="wait">
           {!result && !generating && (
-            <motion.div 
+            <motion.div
               key="empty"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -169,14 +193,18 @@ export function GenerateTab({
             >
               <div>
                 <BarChart3 className="h-8 w-8 text-muted-foreground/40 mx-auto mb-3" />
-                <p className="text-sm text-muted-foreground">Your impact story appears here</p>
-                <p className="text-xs text-muted-foreground/60 mt-1">Paste a PR URL and click generate</p>
+                <p className="text-sm text-muted-foreground">
+                  Your impact story appears here
+                </p>
+                <p className="text-xs text-muted-foreground/60 mt-1">
+                  Paste a PR URL and click generate
+                </p>
               </div>
             </motion.div>
           )}
 
           {generating && (
-            <motion.div 
+            <motion.div
               key="loading"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -186,20 +214,32 @@ export function GenerateTab({
               <div className="space-y-6">
                 {steps.map((s, i) => (
                   <div key={i} className="flex items-center gap-4 group">
-                    <div className={cn(
-                      "h-6 w-6 rounded-full border-2 flex items-center justify-center transition-all duration-500",
-                      i < step ? "bg-blue-500 border-blue-500 text-white" : 
-                      i === step ? "border-blue-500 text-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)] animate-pulse" : 
-                      "border-muted text-muted-foreground opacity-30"
-                    )}>
-                      {i < step ? <Check className="h-3 w-3" /> : <span className="text-[10px] font-bold">{i + 1}</span>}
+                    <div
+                      className={cn(
+                        "h-6 w-6 rounded-full border-2 flex items-center justify-center transition-all duration-500",
+                        i < step
+                          ? "bg-blue-500 border-blue-500 text-white"
+                          : i === step
+                            ? "border-blue-500 text-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)] animate-pulse"
+                            : "border-muted text-muted-foreground opacity-30",
+                      )}
+                    >
+                      {i < step ? (
+                        <Check className="h-3 w-3" />
+                      ) : (
+                        <span className="text-[10px] font-bold">{i + 1}</span>
+                      )}
                     </div>
-                    <div className={cn(
-                      "text-sm font-medium transition-all duration-500",
-                      i === step ? "text-foreground translate-x-1" : 
-                      i < step ? "text-muted-foreground" : 
-                      "text-muted-foreground opacity-30"
-                    )}>
+                    <div
+                      className={cn(
+                        "text-sm font-medium transition-all duration-500",
+                        i === step
+                          ? "text-foreground translate-x-1"
+                          : i < step
+                            ? "text-muted-foreground"
+                            : "text-muted-foreground opacity-30",
+                      )}
+                    >
                       {s}
                     </div>
                   </div>
@@ -209,7 +249,7 @@ export function GenerateTab({
           )}
 
           {result && (
-            <motion.div 
+            <motion.div
               key="result"
               initial={{ opacity: 0, scale: 0.98, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -239,14 +279,20 @@ export function GenerateTab({
                     onClick={() => setSelectedPost(i)}
                     className={cn(
                       "flex-1 py-2 rounded-lg text-xs font-bold transition-all relative z-10",
-                      selectedPost === i ? "text-background" : "text-muted-foreground hover:text-foreground"
+                      selectedPost === i
+                        ? "text-background"
+                        : "text-muted-foreground hover:text-foreground",
                     )}
                   >
                     {selectedPost === i && (
                       <motion.div
                         layoutId="post-tab-indicator"
                         className="absolute inset-0 bg-foreground rounded-lg -z-10 shadow-lg shadow-foreground/5"
-                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                        transition={{
+                          type: "spring",
+                          bounce: 0.2,
+                          duration: 0.6,
+                        }}
                       />
                     )}
                     {label}
@@ -257,40 +303,61 @@ export function GenerateTab({
               <div className="rounded-xl border border-border bg-muted/20 p-5 relative group/card">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">LinkedIn post</span>
+                    <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">
+                      LinkedIn post
+                    </span>
                     <div className="h-1 w-1 rounded-full bg-muted-foreground/30" />
-                    <span className="text-[10px] font-mono text-muted-foreground opacity-60 italic">{postLabels[selectedPost]}</span>
+                    <span className="text-[10px] font-mono text-muted-foreground opacity-60 italic">
+                      {postLabels[selectedPost]}
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => handleCopy(
-                        [result.linkedinPost1, result.linkedinPost2, result.linkedinPost3][selectedPost],
-                        `post-${selectedPost}`
-                      )}
+                      onClick={() =>
+                        handleCopy(
+                          [
+                            result.linkedinPost1,
+                            result.linkedinPost2,
+                            result.linkedinPost3,
+                          ][selectedPost],
+                          `post-${selectedPost}`,
+                        )
+                      }
                       className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition px-2.5 py-1.5 rounded-lg border border-border hover:border-border-strong bg-background/50"
                     >
                       {copied === `post-${selectedPost}` ? (
-                        <><Check className="h-3 w-3 text-green-500" /> Copied</>
+                        <>
+                          <Check className="h-3 w-3 text-green-500" /> Copied
+                        </>
                       ) : (
-                        <><ClipboardCopy className="h-3 w-3" /> Copy Text</>
+                        <>
+                          <ClipboardCopy className="h-3 w-3" /> Copy Text
+                        </>
                       )}
                     </button>
                     <button
                       onClick={() => {
                         if (user?.plan !== "pro") return handleUpgrade();
-                        window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(`${window.location.origin}/t/${result.slug}`)}`, '_blank');
+                        window.open(
+                          `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(`${window.location.origin}/t/${result.slug}`)}`,
+                          "_blank",
+                        );
                       }}
                       className={cn(
                         "inline-flex items-center gap-1.5 text-xs font-bold transition px-3 py-1.5 rounded-lg border",
-                        user?.plan === "pro" 
-                          ? "bg-[#0077b5] text-white border-[#0077b5] hover:brightness-110" 
-                          : "bg-muted text-muted-foreground border-border cursor-not-allowed"
+                        user?.plan === "pro"
+                          ? "bg-[#0077b5] text-white border-[#0077b5] hover:brightness-110"
+                          : "bg-muted text-muted-foreground border-border cursor-not-allowed",
                       )}
                     >
                       {user?.plan === "pro" ? (
-                        <><ExternalLink className="h-3 w-3" /> Post to LinkedIn</>
+                        <>
+                          <ExternalLink className="h-3 w-3" /> Post to LinkedIn
+                        </>
                       ) : (
-                        <><Lock className="h-3 w-3" /> Draft to LinkedIn</>
+                        <>
+                          <Lock className="h-3 w-3" /> Draft to LinkedIn
+                        </>
                       )}
                     </button>
                   </div>
@@ -305,7 +372,13 @@ export function GenerateTab({
                       transition={{ duration: 0.2 }}
                       className="text-sm leading-7 text-pretty whitespace-pre-line font-medium text-foreground/90"
                     >
-                      {[result.linkedinPost1, result.linkedinPost2, result.linkedinPost3][selectedPost]}
+                      {
+                        [
+                          result.linkedinPost1,
+                          result.linkedinPost2,
+                          result.linkedinPost3,
+                        ][selectedPost]
+                      }
                     </motion.p>
                   </AnimatePresence>
                 </div>
@@ -313,28 +386,52 @@ export function GenerateTab({
 
               <div className="rounded-xl border border-border bg-muted/20 p-5">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Resume bullet</span>
+                  <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">
+                    Resume bullet
+                  </span>
                   <button
                     onClick={() => handleCopy(result.resumeBullet, "resume")}
                     className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition px-2 py-1 rounded-md border border-transparent hover:border-border"
                   >
-                    {copied === "resume" ? <><Check className="h-3 w-3 text-green-500" /> Copied</> : <><ClipboardCopy className="h-3 w-3" /> Copy</>}
+                    {copied === "resume" ? (
+                      <>
+                        <Check className="h-3 w-3 text-green-500" /> Copied
+                      </>
+                    ) : (
+                      <>
+                        <ClipboardCopy className="h-3 w-3" /> Copy
+                      </>
+                    )}
                   </button>
                 </div>
-                <p className="text-sm font-mono leading-6 text-foreground/80">{result.resumeBullet}</p>
+                <p className="text-sm font-mono leading-6 text-foreground/80">
+                  {result.resumeBullet}
+                </p>
               </div>
 
               <div className="rounded-xl border border-border bg-muted/20 p-5">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Interview hook</span>
+                  <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">
+                    Interview hook
+                  </span>
                   <button
                     onClick={() => handleCopy(result.interviewHook, "hook")}
                     className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition px-2 py-1 rounded-md border border-transparent hover:border-border"
                   >
-                    {copied === "hook" ? <><Check className="h-3 w-3 text-green-500" /> Copied</> : <><ClipboardCopy className="h-3 w-3" /> Copy</>}
+                    {copied === "hook" ? (
+                      <>
+                        <Check className="h-3 w-3 text-green-500" /> Copied
+                      </>
+                    ) : (
+                      <>
+                        <ClipboardCopy className="h-3 w-3" /> Copy
+                      </>
+                    )}
                   </button>
                 </div>
-                <p className="text-sm leading-6 italic text-muted-foreground/80">{result.interviewHook}</p>
+                <p className="text-sm leading-6 italic text-muted-foreground/80">
+                  {result.interviewHook}
+                </p>
               </div>
             </motion.div>
           )}

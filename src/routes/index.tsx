@@ -8,7 +8,6 @@ import { Pricing } from "@/components/site/Pricing";
 import { InvisibleWork } from "@/components/site/InvisibleWork";
 import { Footer } from "@/components/site/Footer";
 
-
 export const Route = createFileRoute("/")({
   component: LandingPage,
 });
@@ -19,7 +18,7 @@ function LandingPage() {
       <Nav />
       <main>
         <Hero />
-        
+
         <section id="demo" className="scroll-mt-20">
           <DemoTransform />
         </section>

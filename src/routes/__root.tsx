@@ -1,4 +1,10 @@
-import { createRootRoute, Outlet, ScrollRestoration, HeadContent, Scripts } from "@tanstack/react-router";
+import {
+  createRootRoute,
+  Outlet,
+  ScrollRestoration,
+  HeadContent,
+  Scripts,
+} from "@tanstack/react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "@/styles.css";
 import * as React from "react";
@@ -16,22 +22,34 @@ export const Route = createRootRoute({
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "DevBrand — Make invisible engineering work visible" },
-      { name: "description", content: "GitHub → LinkedIn posts + resume bullets. No hype. No emoji." },
+      {
+        name: "description",
+        content: "GitHub → LinkedIn posts + resume bullets. No hype. No emoji.",
+      },
       { property: "og:type", content: "website" },
       { property: "og:site_name", content: "DevBrand" },
-      { property: "og:title", content: "DevBrand — Evidence-Backed Engineering Reputation" },
-      { property: "og:description", content: "Turn your PRs into verifiable career leverage. Evidence citations included." },
+      {
+        property: "og:title",
+        content: "DevBrand — Evidence-Backed Engineering Reputation",
+      },
+      {
+        property: "og:description",
+        content:
+          "Turn your PRs into verifiable career leverage. Evidence citations included.",
+      },
       { property: "og:image", content: "https://devbrand.ai/og-main.png" },
       { property: "og:url", content: "https://devbrand.ai" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@devbrand_ai" },
       { name: "twitter:image", content: "https://devbrand.ai/og-main.png" },
-
     ],
     links: [
       { rel: "canonical", href: "https://devbrand.ai" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" }
-    ]
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap",
+      },
+    ],
   }),
   errorComponent: (props) => {
     return (
@@ -41,12 +59,14 @@ export const Route = createRootRoute({
             <div className="h-16 w-16 bg-red-500/10 rounded-2xl grid place-items-center mx-auto mb-8">
               <span className="text-2xl">💀</span>
             </div>
-            <h1 className="text-3xl font-bold tracking-tight mb-4">Internal System Collapse.</h1>
+            <h1 className="text-3xl font-bold tracking-tight mb-4">
+              Internal System Collapse.
+            </h1>
             <p className="text-muted-foreground mb-8 leading-relaxed">
-              Our AI either found a bug it couldn't roast, or the server decided to retire early. 
-              Either way, it's not looking good for your PR.
+              Our AI either found a bug it couldn't roast, or the server decided
+              to retire early. Either way, it's not looking good for your PR.
             </p>
-            <button 
+            <button
               onClick={() => window.location.reload()}
               className="px-6 py-3 rounded-xl bg-foreground text-background font-bold hover:opacity-90 transition"
             >
@@ -68,12 +88,14 @@ export const Route = createRootRoute({
             <div className="h-16 w-16 bg-blue-500/10 rounded-2xl grid place-items-center mx-auto mb-8">
               <span className="text-2xl">🔍</span>
             </div>
-            <h1 className="text-3xl font-bold tracking-tight mb-4">Impact Not Found.</h1>
+            <h1 className="text-3xl font-bold tracking-tight mb-4">
+              Impact Not Found.
+            </h1>
             <p className="text-muted-foreground mb-8 leading-relaxed">
-              We looked through the git logs and found nothing here. Just like that refactoring
-              ticket you said you finished last week.
+              We looked through the git logs and found nothing here. Just like
+              that refactoring ticket you said you finished last week.
             </p>
-            <a 
+            <a
               href="/"
               className="px-6 py-3 rounded-xl bg-blue-500 text-white font-bold hover:opacity-90 transition inline-block"
             >
@@ -87,21 +109,20 @@ export const Route = createRootRoute({
   component: RootComponent,
 });
 
-
 const STRUCTURED_DATA = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  "name": "DevBrand",
-  "operatingSystem": "Web",
-  "applicationCategory": "BusinessApplication",
-  "description": "Turn invisible engineering work into verifiable career leverage with AI-powered PR analysis and evidence-backed reputation scoring.",
-  "offers": {
+  name: "DevBrand",
+  operatingSystem: "Web",
+  applicationCategory: "BusinessApplication",
+  description:
+    "Turn invisible engineering work into verifiable career leverage with AI-powered PR analysis and evidence-backed reputation scoring.",
+  offers: {
     "@type": "Offer",
-    "price": "0",
-    "priceCurrency": "USD"
-  }
+    price: "0",
+    priceCurrency: "USD",
+  },
 };
-
 
 function RootComponent() {
   return (
@@ -133,4 +154,3 @@ function RootDocument({ children }: { children: React.ReactNode }) {
     </html>
   );
 }
-

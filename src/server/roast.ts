@@ -12,7 +12,10 @@ import { env } from "../lib/env";
 let octokit: Octokit | null = null;
 
 function getOctokit() {
-  if (!octokit) octokit = new Octokit({ auth: env.GITHUB_TOKEN || env.GITHUB_CLIENT_SECRET });
+  if (!octokit)
+    octokit = new Octokit({
+      auth: env.GITHUB_TOKEN || env.GITHUB_CLIENT_SECRET,
+    });
   return octokit;
 }
 
@@ -30,33 +33,49 @@ const RoastOutputSchema = z.object({
   share_summary: z.string().max(280),
 });
 
-
 const PERSONA_MAP = {
-  salty: "You are a Salty Senior Staff Engineer. You hate over-engineering, boilerplate, and low-effort PRs. Your tone is cynical and sharp.",
-  helpful: "You are a Constructive Lead Architect. You see the flaws but explain WHY they are bad and how to fix them. Your tone is firm but educational.",
-  nuclear: "You are a Chaos Engineering Auditor. You are looking for reasons to delete the entire codebase. You are extremely aggressive and unimpressed by anything.",
-  technical: "You are a Deep Systems Specialist. You care about memory allocation, Big O, and concurrency bugs. You judge code based on efficiency and correctness."
+  salty:
+    "You are a Salty Senior Staff Engineer. You hate over-engineering, boilerplate, and low-effort PRs. Your tone is cynical and sharp.",
+  helpful:
+    "You are a Constructive Lead Architect. You see the flaws but explain WHY they are bad and how to fix them. Your tone is firm but educational.",
+  nuclear:
+    "You are a Chaos Engineering Auditor. You are looking for reasons to delete the entire codebase. You are extremely aggressive and unimpressed by anything.",
+  technical:
+    "You are a Deep Systems Specialist. You care about memory allocation, Big O, and concurrency bugs. You judge code based on efficiency and correctness.",
 };
 
 export const generateRoast = createServerFn({ method: "POST" })
-  .inputValidator(z.object({ 
-    username: z.string().min(1).max(39), 
-    userId: z.string().uuid().optional(),
-    tone: z.enum(["salty", "helpful", "nuclear", "technical"]).default("salty")
-  }))
+  .inputValidator(
+    z.object({
+      username: z.string().min(1).max(39),
+      userId: z.string().uuid().optional(),
+      tone: z
+        .enum(["salty", "helpful", "nuclear", "technical"])
+        .default("salty"),
+    }),
+  )
   .handler(async ({ data: { username, userId, tone } }) => {
     // 1. Rate limiting & Limit Reset
     if (userId) {
       const { checkAndResetLimits } = await import("./limits");
       const user = await checkAndResetLimits(userId);
-      if (user && user.plan === "free" && (user.roastCountThisMonth ?? 0) >= FREE_ROAST_LIMIT) {
+      if (
+        user &&
+        user.plan === "free" &&
+        (user.roastCountThisMonth ?? 0) >= FREE_ROAST_LIMIT
+      ) {
         throw new Error("ROAST_LIMIT_REACHED");
       }
     } else {
       // IP-based rate limit for anonymous users
       const request = getRequest();
-      const ip = request?.headers.get("x-forwarded-for")?.split(",")[0] || "127.0.0.1";
-      const { success } = await rateLimit(`roast:anon:${ip}`, PUBLIC_ANON_LIMIT, 3600);
+      const ip =
+        request?.headers.get("x-forwarded-for")?.split(",")[0] || "127.0.0.1";
+      const { success } = await rateLimit(
+        `roast:anon:${ip}`,
+        PUBLIC_ANON_LIMIT,
+        3600,
+      );
       if (!success) throw new Error("PUBLIC_RATE_LIMIT_REACHED");
     }
 
@@ -64,8 +83,15 @@ export const generateRoast = createServerFn({ method: "POST" })
 
     const [userRes, eventsRes, reposRes] = await Promise.all([
       octokitInstance.rest.users.getByUsername({ username }),
-      octokitInstance.rest.activity.listPublicEventsForUser({ username, per_page: 50 }),
-      octokitInstance.rest.repos.listForUser({ username, sort: "updated", per_page: 10 }),
+      octokitInstance.rest.activity.listPublicEventsForUser({
+        username,
+        per_page: 50,
+      }),
+      octokitInstance.rest.repos.listForUser({
+        username,
+        sort: "updated",
+        per_page: 10,
+      }),
     ]);
 
     const ghUser = userRes.data;
@@ -74,7 +100,11 @@ export const generateRoast = createServerFn({ method: "POST" })
 
     const pushEvents = events.filter((e) => e.type === "PushEvent");
     const commitMessages = pushEvents
-      .flatMap((e) => (e.payload as any).commits?.map((c: any) => c.message) ?? [])
+      .flatMap(
+        (e) =>
+          ((e.payload as any).commits as any[])?.map((c: any) => c.message) ??
+          [],
+      )
       .filter(Boolean)
       .slice(0, 20);
 
@@ -86,8 +116,10 @@ export const generateRoast = createServerFn({ method: "POST" })
         return acc;
       }, {});
 
-    const lowEffortCommits = commitMessages.filter(m => 
-      /^(fix|update|test|chore|merge|tmp|save|.)(\s|$|:)/i.test(m) || m.length < 5
+    const lowEffortCommits = commitMessages.filter(
+      (m) =>
+        /^(fix|update|test|chore|merge|tmp|save|.)(\s|$|:)/i.test(m) ||
+        m.length < 5,
     ).length;
 
     const profileSummary = {
@@ -97,7 +129,8 @@ export const generateRoast = createServerFn({ method: "POST" })
       followers: ghUser.followers,
       following: ghUser.following,
       account_age_years: Math.floor(
-        (Date.now() - new Date(ghUser.created_at).getTime()) / (365 * 24 * 60 * 60 * 1000)
+        (Date.now() - new Date(ghUser.created_at).getTime()) /
+          (365 * 24 * 60 * 60 * 1000),
       ),
       top_repos: repos.map((r) => ({
         name: r.name,
@@ -141,11 +174,14 @@ Return ONLY valid JSON. No preamble.`;
     const cleaned = normalizeLlmJsonText(rawContent);
     const output = RoastOutputSchema.parse(JSON.parse(cleaned));
 
-    const [inserted] = await db.insert(roasts).values({
-      userId: userId || null,
-      githubUsername: username,
-      roastData: output,
-    }).returning();
+    const [inserted] = await db
+      .insert(roasts)
+      .values({
+        userId: userId || null,
+        githubUsername: username,
+        roastData: output,
+      })
+      .returning();
 
     if (userId) {
       await Promise.all([
@@ -156,7 +192,11 @@ Return ONLY valid JSON. No preamble.`;
         db.insert(userEvents).values({
           userId,
           eventType: "roast",
-          payload: { username, criticality: output.criticality, roastId: inserted.id },
+          payload: {
+            username,
+            criticality: output.criticality,
+            roastId: inserted.id,
+          },
         }),
       ]);
     }

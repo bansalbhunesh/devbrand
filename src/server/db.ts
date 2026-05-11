@@ -13,14 +13,16 @@ neonConfig.fetchConnectionCache = true;
  */
 function createDb() {
   const databaseUrl = env.DATABASE_URL;
-  
+
   if (!databaseUrl) {
     console.warn("⚠️ DATABASE_URL is not set. Database operations will fail.");
     // We return a proxy that throws on any access to provide clear error messages
     return new Proxy({} as any, {
       get() {
-        throw new Error("Database client accessed before DATABASE_URL was initialized.");
-      }
+        throw new Error(
+          "Database client accessed before DATABASE_URL was initialized.",
+        );
+      },
     });
   }
 

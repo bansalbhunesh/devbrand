@@ -40,9 +40,14 @@
   --surface-2: oklch(20% 0.01 286);
 
   /* Gradients */
-  --gradient-radial: radial-gradient(circle at 50% -20%, oklch(25% 0.1 250 / 0.15), transparent 80%);
-  --gradient-mesh: radial-gradient(at 100% 100%, oklch(30% 0.1 300 / 0.1), transparent 50%),
-                   radial-gradient(at 0% 0%, oklch(20% 0.1 200 / 0.1), transparent 50%);
+  --gradient-radial: radial-gradient(
+    circle at 50% -20%,
+    oklch(25% 0.1 250 / 0.15),
+    transparent 80%
+  );
+  --gradient-mesh:
+    radial-gradient(at 100% 100%, oklch(30% 0.1 300 / 0.1), transparent 50%),
+    radial-gradient(at 0% 0%, oklch(20% 0.1 200 / 0.1), transparent 50%);
 }
 
 @theme {
@@ -94,7 +99,7 @@
 
 @layer utilities {
   .bg-grid {
-    background-image: 
+    background-image:
       linear-gradient(to right, oklch(100% 0 0 / 0.03) 1px, transparent 1px),
       linear-gradient(to bottom, oklch(100% 0 0 / 0.03) 1px, transparent 1px);
     background-size: 40px 40px;
@@ -102,7 +107,7 @@
   }
 
   .bg-grid-small {
-    background-image: 
+    background-image:
       linear-gradient(to right, oklch(100% 0 0 / 0.02) 1px, transparent 1px),
       linear-gradient(to bottom, oklch(100% 0 0 / 0.02) 1px, transparent 1px);
     background-size: 20px 20px;
@@ -113,19 +118,39 @@
   }
 
   .divider-soft {
-    background: linear-gradient(to right, transparent, var(--border-strong), transparent);
+    background: linear-gradient(
+      to right,
+      transparent,
+      var(--border-strong),
+      transparent
+    );
   }
 
-  main > section { contain: layout style; }
-  nav { will-change: transform; }
+  main > section {
+    contain: layout style;
+  }
+  nav {
+    will-change: transform;
+  }
 }
 
 @keyframes float {
-  from { transform: translateY(0px) translateX(0px); opacity: 0.3; }
-  to { transform: translateY(-20px) translateX(8px); opacity: 0.7; }
+  from {
+    transform: translateY(0px) translateX(0px);
+    opacity: 0.3;
+  }
+  to {
+    transform: translateY(-20px) translateX(8px);
+    opacity: 0.7;
+  }
 }
 
 @keyframes pulse-glow {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 0.8; }
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.8;
+  }
 }

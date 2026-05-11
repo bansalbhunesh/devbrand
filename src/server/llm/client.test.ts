@@ -10,7 +10,7 @@ describe("completeText llm routing", () => {
       vi.fn().mockResolvedValue({
         ok: true,
         json: async () => ({
-          choices: [{ message: { content: "{\"ok\": true}" } }],
+          choices: [{ message: { content: '{"ok": true}' } }],
         }),
       }),
     );
@@ -63,7 +63,9 @@ describe("completeText llm routing", () => {
     await completeText({ system: "a", user: "b", maxTokens: 5 });
 
     const fetchMock = fetch as unknown as ReturnType<typeof vi.fn>;
-    expect(fetchMock.mock.calls[0][1].headers.Authorization).toBe("Bearer sekret");
+    expect(fetchMock.mock.calls[0][1].headers.Authorization).toBe(
+      "Bearer sekret",
+    );
   });
 
   it("infers Gemini OpenAI-compat base when GEMINI_API_KEY is set and URL omitted", async () => {
@@ -85,6 +87,8 @@ describe("completeText llm routing", () => {
     );
     const body = JSON.parse(fetchMock.mock.calls[0][1].body);
     expect(body.model).toBe("gemini-2.0-flash");
-    expect(fetchMock.mock.calls[0][1].headers.Authorization).toBe("Bearer g-test");
+    expect(fetchMock.mock.calls[0][1].headers.Authorization).toBe(
+      "Bearer g-test",
+    );
   });
 });

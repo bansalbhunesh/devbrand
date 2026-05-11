@@ -23,17 +23,17 @@ export const transformPR = createServerFn({ method: "POST" })
 
     const { checkAndResetLimits } = await import("./limits");
     const freshUser = await checkAndResetLimits(userId);
-    
-    const isFreeLimitReached = freshUser?.plan === "free" && (freshUser?.generationsThisMonth ?? 0) >= 3;
+
+    const isFreeLimitReached =
+      freshUser?.plan === "free" && (freshUser?.generationsThisMonth ?? 0) >= 3;
     if (isFreeLimitReached) throw new Error("LIMIT_REACHED");
 
     // Run the 7-Layer Core Engine
     const context: UserContext = {
       seniority: user.seniority as any,
       tone: user.tone as any,
-      targetAudience: (user as any).targetAudience || "recruiter", 
+      targetAudience: (user as any).targetAudience || "recruiter",
     };
-
 
     const output = await runEngine(prUrl, userId, context);
 
@@ -53,11 +53,11 @@ export const transformPR = createServerFn({ method: "POST" })
         linkedinPost3: output.linkedinPost3,
         resumeBullet: output.resumeBullet,
         interviewHook: output.interviewHook,
-        citations: output.citations.map(c => ({
+        citations: output.citations.map((c) => ({
           claim: c.claim,
           ref: c.ref,
           sha: c.sha,
-          evidenceType: c.evidenceType
+          evidenceType: c.evidenceType,
         })),
         impactScore: output.impactScore,
         category: output.category,
@@ -87,9 +87,8 @@ export const transformPR = createServerFn({ method: "POST" })
     return inserted;
   });
 
-
-export const getUserOutputs = createServerFn({ method: "GET" })
-  .handler(async () => {
+export const getUserOutputs = createServerFn({ method: "GET" }).handler(
+  async () => {
     const user = await getSession();
     if (!user) throw new Error("UNAUTHORIZED");
     const userId = user.id;
@@ -99,10 +98,13 @@ export const getUserOutputs = createServerFn({ method: "GET" })
       orderBy: (o, { desc }) => [desc(o.createdAt)],
       limit: 50,
     });
-  });
+  },
+);
 
 export const toggleOutputVisibility = createServerFn({ method: "POST" })
-  .inputValidator(z.object({ outputId: z.string().uuid(), isPublic: z.boolean() }))
+  .inputValidator(
+    z.object({ outputId: z.string().uuid(), isPublic: z.boolean() }),
+  )
   .handler(async ({ data: { outputId, isPublic } }) => {
     const user = await getSession();
     if (!user) throw new Error("UNAUTHORIZED");
@@ -113,4 +115,4 @@ export const toggleOutputVisibility = createServerFn({ method: "POST" })
       .set({ isPublic })
       .where(and(eq(outputs.id, outputId), eq(outputs.userId, userId)));
     return { success: true };
-});
+  });

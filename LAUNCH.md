@@ -3,19 +3,23 @@
 Follow these simple, detailed steps to get DevBrand live for your users.
 
 ## 1. Infrastructure Preparation
+
 You will need accounts on these 4 platforms (all have free tiers):
+
 1. **GitHub**: For OAuth and PR scanning.
 2. **Neon.tech**: For your Postgres database.
 3. **Upstash.com**: For Redis (Rate limiting).
 4. **Stripe.com**: For processing payments.
 
 ## 2. GitHub OAuth Setup
+
 1. Go to **Settings > Developer Settings > OAuth Apps > New OAuth App**.
 2. **Homepage URL**: `http://localhost:3000` (Local) or `https://your-domain.com` (Prod).
 3. **Authorization Callback URL**: `http://localhost:3000/api/auth/callback/github`.
 4. Copy your **Client ID** and **Client Secret**.
 
 ## 3. Stripe Configuration
+
 1. Go to the **Stripe Dashboard**.
 2. Create a new **Product** called "DevBrand Pro" ($12/month).
 3. Copy the **Price ID** (starts with `price_...`).
@@ -25,7 +29,9 @@ You will need accounts on these 4 platforms (all have free tiers):
    - Copy the **Webhook Signing Secret** (starts with `whsec_...`).
 
 ## 4. Environment Secrets
+
 Create a `.env` file and fill in these values:
+
 ```env
 # Infrastructure
 DATABASE_URL="postgres://..."
@@ -50,18 +56,22 @@ STRIPE_WEBHOOK_SECRET="whsec_..."
 ```
 
 ## 5. Deployment Steps
+
 ### Local
+
 1. `npm install`
 2. `npm run db:push` (Syncs schema to Neon)
 3. `npm run dev`
 
 ### Production (Cloudflare Pages/Workers)
+
 1. Link your GitHub repo to **Cloudflare Pages**.
 2. Select **TanStack Start** (Nitro) as the framework.
 3. Add all variables from your `.env` to the **Cloudflare Dashboard > Settings > Variables**.
 4. Deploy!
 
 ## 6. Verification Checklist
+
 - [ ] **Login**: Sign in with GitHub works.
 - [ ] **Transform**: Pasting a public PR URL generates 3 LinkedIn posts.
 - [ ] **Sharing**: The `/t/:slug` page displays the impact story with citations.

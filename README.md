@@ -15,6 +15,7 @@
 ---
 
 ## ⚡ The Problem
+
 Engineering impact is often locked inside cryptic PR descriptions and massive diffs. Most developers struggle to communicate the **strategic value** of their technical work to recruiters and managers. DevBrand solves this by extracting the "signal" from your "noise."
 
 ## 🧠 The 7-Layer Intelligence Engine
@@ -35,13 +36,13 @@ DevBrand doesn't just "summarize" code; it performs deep architectural analysis:
 
 ## 🚀 Production Scorecard
 
-| Pillar | Status | Metric | Description |
-| :--- | :--- | :--- | :--- |
-| **Intelligence** | 🟢 | **9.5/10** | AST-based analysis + NLI verification engine. |
-| **Performance** | 🟢 | **< 100ms** | Edge-native runtime with TanStack Start + Cloudflare. |
-| **Infrastructure**| 🟢 | **Serverless** | Zero-cold-start architecture with Neon & Upstash. |
-| **Security** | 🟢 | **Hardened** | HMAC-Signed sessions, CSRF protection, and AES encryption. |
-| **Test Coverage** | 🟡 | **78%** | Robust integration tests for the 7-layer engine. |
+| Pillar             | Status | Metric         | Description                                                |
+| :----------------- | :----- | :------------- | :--------------------------------------------------------- |
+| **Intelligence**   | 🟢     | **9.5/10**     | AST-based analysis + NLI verification engine.              |
+| **Performance**    | 🟢     | **< 100ms**    | Edge-native runtime with TanStack Start + Cloudflare.      |
+| **Infrastructure** | 🟢     | **Serverless** | Zero-cold-start architecture with Neon & Upstash.          |
+| **Security**       | 🟢     | **Hardened**   | HMAC-Signed sessions, CSRF protection, and AES encryption. |
+| **Test Coverage**  | 🟡     | **78%**        | Robust integration tests for the 7-layer engine.           |
 
 > [!IMPORTANT]
 > **Every generated claim is anchored.** DevBrand provides file-level and commit-SHA citations for every bullet point it generates. Your reputation is backed by immutable git history.
@@ -57,20 +58,21 @@ DevBrand doesn't just "summarize" code; it performs deep architectural analysis:
 
 ## 🏗️ The Modern Stack
 
-| Layer | Technology | Why? |
-| :--- | :--- | :--- |
-| **Engine** | **TypeScript** | End-to-end type safety for complex AST traversals. |
-| **Framework** | **TanStack Start** | Full-stack React with the performance of Vite. |
-| **Compute** | **Cloudflare Workers** | Global low-latency execution at the edge. |
-| **Storage** | **Neon Postgres** | Autoscaling storage for high-throughput analysis. |
-| **Consistency** | **Drizzle ORM** | Schema-first development with zero runtime overhead. |
-| **Orchestration** | **Upstash Redis** | Atomic rate limiting and distributed caching. |
+| Layer             | Technology             | Why?                                                 |
+| :---------------- | :--------------------- | :--------------------------------------------------- |
+| **Engine**        | **TypeScript**         | End-to-end type safety for complex AST traversals.   |
+| **Framework**     | **TanStack Start**     | Full-stack React with the performance of Vite.       |
+| **Compute**       | **Cloudflare Workers** | Global low-latency execution at the edge.            |
+| **Storage**       | **Neon Postgres**      | Autoscaling storage for high-throughput analysis.    |
+| **Consistency**   | **Drizzle ORM**        | Schema-first development with zero runtime overhead. |
+| **Orchestration** | **Upstash Redis**      | Atomic rate limiting and distributed caching.        |
 
 ---
 
 ## 🛠️ Getting Started
 
 ### 1. Clone & Configure
+
 ```bash
 git clone https://github.com/bansalbhunesh/devbrand.git
 cd devbrand
@@ -78,12 +80,14 @@ cp .env.example .env
 ```
 
 ### 2. Install & Sync
+
 ```bash
 npm install
 npm run db:push
 ```
 
 ### 3. Launch
+
 ```bash
 npm run dev
 ```
@@ -91,6 +95,7 @@ npm run dev
 ---
 
 ## 🛡️ Hardened for the Enterprise
+
 - **CSRF Protection**: Verified OAuth state tokens.
 - **Secure Cookies**: `__Secure-` prefixed, `HttpOnly`, `SameSite=Strict`.
 - **Idempotent Webhooks**: Secure Stripe integration with event tracking.
@@ -99,4 +104,5 @@ npm run dev
 ---
 
 ## 📜 License
+
 MIT © [DevBrand](https://devbrand.ai) — Built by Engineers, for Engineers.
