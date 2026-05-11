@@ -4,13 +4,21 @@ import { createRouter } from "./router";
 import "./rpc.server";
 import { getBadgeData, getOgRoastData } from "./rpc.server";
 
-const startHandler = createStartHandler({
-  createRouter,
-})(defaultStreamHandler);
+// Lazy-initialized handler to ensure process.env is polyfilled before the framework starts
+let cachedHandler: any = null;
+
+function getHandler() {
+  if (cachedHandler) return cachedHandler;
+  cachedHandler = createStartHandler({
+    createRouter,
+  })(defaultStreamHandler);
+  return cachedHandler;
+}
 
 export default {
   async fetch(request: Request, env: any, ctx: any) {
-    // 1. Polyfill process.env immediately
+    // 1. Polyfill process.env IMMEDIATELY
+    // In Cloudflare Workers, env is only available here.
     if (env) {
       Object.keys(env).forEach((key) => {
         if (typeof env[key] === "string") {
@@ -19,27 +27,29 @@ export default {
       });
     }
 
-    // 2. Robust URL parsing for the incoming request
+    // 2. Robust URL parsing
     let url: URL;
+    const requestUrl = request.url || "http://localhost/";
     try {
-      // Use a dummy base to handle relative URLs during Cloudflare validation
-      const rawUrl = request.url || "/";
-      const base = (env?.APP_URL || process.env.APP_URL || "http://localhost");
-      url = new URL(rawUrl, base.startsWith("http") ? base : `https://${base}`);
+      // Use the actual request URL, or fallback to localhost if it's relative/empty
+      url = new URL(requestUrl);
     } catch (e) {
-      // Absolute fallback if everything fails
-      url = new URL("http://localhost/");
+      const base = env?.APP_URL || process.env.APP_URL || "http://localhost";
+      url = new URL(requestUrl, base.startsWith("http") ? base : `https://${base}`);
     }
 
-    // 3. Ensure APP_URL is set for later use in the code
+    // 3. Set APP_URL if missing
     if (!process.env.APP_URL) {
       process.env.APP_URL = url.origin;
     }
 
-    // 4. Handle Razorpay Webhook
+    // 4. Handle manual API routes (Webhooks, Badges, OG)
+    // These are handled BEFORE the framework to avoid H3Event issues during validation
+
+    // Razorpay Webhook
     if (url.pathname === "/api/webhook/razorpay" && request.method === "POST") {
-      const signature = request.headers.get("x-razorpay-signature") || "";
       try {
+        const signature = request.headers.get("x-razorpay-signature") || "";
         const body = await request.json();
         await handleRazorpayWebhook({ data: { body, signature } });
         return new Response(JSON.stringify({ received: true }), {
@@ -51,66 +61,75 @@ export default {
       }
     }
 
-    // 5. Handle Badge API (/api/badge/$login)
+    // Badge API
     const badgeMatch = url.pathname.match(/^\/api\/badge\/(.+)$/);
     if (badgeMatch) {
-      const login = badgeMatch[1];
-      const data = await getBadgeData({ data: login });
-      if (!data) return new Response("User not found", { status: 404 });
+      try {
+        const login = badgeMatch[1];
+        const data = await getBadgeData({ data: login });
+        if (!data) return new Response("User not found", { status: 404 });
 
-      const { score } = data;
-      const level = score > 80 ? "Elite" : score > 50 ? "High" : "Verified";
-      const color = score > 80 ? "#3b82f6" : "#6366f1";
-      const svg = `
-        <svg width="200" height="40" viewBox="0 0 200 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="200" height="40" rx="8" fill="#09090b" stroke="#27272a" stroke-width="1"/>
-          <text x="12" y="24" fill="#a1a1aa" font-family="Inter, system-ui, sans-serif" font-size="10" font-weight="bold" letter-spacing="0.05em">DEVBRAND</text>
-          <line x1="85" y1="12" x2="85" y2="28" stroke="#27272a" stroke-width="1"/>
-          <text x="96" y="24" fill="#f4f4f5" font-family="Inter, system-ui, sans-serif" font-size="11" font-weight="bold">${level} · ${score}%</text>
-          <circle cx="184" cy="20" r="4" fill="${color}">
-            <animate attributeName="opacity" values="1;0.4;1" dur="2s" repeatCount="indefinite" />
-          </circle>
-        </svg>
-      `;
-      return new Response(svg, { headers: { "Content-Type": "image/svg+xml", "Cache-Control": "public, max-age=3600" } });
+        const { score } = data;
+        const level = score > 80 ? "Elite" : score > 50 ? "High" : "Verified";
+        const color = score > 80 ? "#3b82f6" : "#6366f1";
+        const svg = `
+          <svg width="200" height="40" viewBox="0 0 200 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="200" height="40" rx="8" fill="#09090b" stroke="#27272a" stroke-width="1"/>
+            <text x="12" y="24" fill="#a1a1aa" font-family="Inter, system-ui, sans-serif" font-size="10" font-weight="bold" letter-spacing="0.05em">DEVBRAND</text>
+            <line x1="85" y1="12" x2="85" y2="28" stroke="#27272a" stroke-width="1"/>
+            <text x="96" y="24" fill="#f4f4f5" font-family="Inter, system-ui, sans-serif" font-size="11" font-weight="bold">${level} · ${score}%</text>
+            <circle cx="184" cy="20" r="4" fill="${color}">
+              <animate attributeName="opacity" values="1;0.4;1" dur="2s" repeatCount="indefinite" />
+            </circle>
+          </svg>
+        `;
+        return new Response(svg, { headers: { "Content-Type": "image/svg+xml", "Cache-Control": "public, max-age=3600" } });
+      } catch (e) {
+         return new Response("Error generating badge", { status: 500 });
+      }
     }
 
-    // 6. Handle OG Roast API (/api/og/roast/$id)
+    // OG Roast API
     const ogMatch = url.pathname.match(/^\/api\/og\/roast\/(.+)$/);
     if (ogMatch) {
-      const id = ogMatch[1];
-      const roast = await getOgRoastData({ data: id });
-      if (!roast) return new Response("Not Found", { status: 404 });
+      try {
+        const id = ogMatch[1];
+        const roast = await getOgRoastData({ data: id });
+        if (!roast) return new Response("Not Found", { status: 404 });
 
-      const data = roast.roastData as any;
-      const score = data.roast_score || 0;
-      const criticality = data.criticality || "MEDIUM";
-      const color = criticality === "NUCLEAR" ? "#ef4444" : "#f97316";
-      const svg = `
-        <svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="1200" height="630" fill="#09090b"/>
-          <rect width="1200" height="630" fill="url(#grad1)"/>
-          <defs>
-            <radialGradient id="grad1" cx="50%" cy="50%" r="50%" fx="80%" fy="20%">
-              <stop offset="0%" style="stop-color:${color};stop-opacity:0.15" />
-              <stop offset="100%" style="stop-color:#09090b;stop-opacity:0" />
-            </radialGradient>
-          </defs>
-          <rect x="40" y="40" width="1120" height="550" rx="40" stroke="#27272a" stroke-width="2"/>
-          <text x="80" y="110" fill="#a1a1aa" font-family="Inter, sans-serif" font-size="20" font-weight="bold">DEVBRAND // CRITIC.AI</text>
-          <text x="240" y="360" fill="white" font-family="Inter, sans-serif" font-size="80" font-weight="black" text-anchor="middle">${score}%</text>
-          <text x="440" y="240" fill="${color}" font-family="Inter, sans-serif" font-size="48" font-weight="black">${data.card_title || 'Sacrifice Detected'}</text>
-        </svg>
-      `;
-      return new Response(svg, { headers: { "Content-Type": "image/svg+xml", "Cache-Control": "public, max-age=86400" } });
+        const data = roast.roastData as any;
+        const score = data.roast_score || 0;
+        const criticality = data.criticality || "MEDIUM";
+        const color = criticality === "NUCLEAR" ? "#ef4444" : "#f97316";
+        const svg = `
+          <svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="1200" height="630" fill="#09090b"/>
+            <rect width="1200" height="630" fill="url(#grad1)"/>
+            <defs>
+              <radialGradient id="grad1" cx="50%" cy="50%" r="50%" fx="80%" fy="20%">
+                <stop offset="0%" style="stop-color:${color};stop-opacity:0.15" />
+                <stop offset="100%" style="stop-color:#09090b;stop-opacity:0" />
+              </radialGradient>
+            </defs>
+            <rect x="40" y="40" width="1120" height="550" rx="40" stroke="#27272a" stroke-width="2"/>
+            <text x="80" y="110" fill="#a1a1aa" font-family="Inter, sans-serif" font-size="20" font-weight="bold">DEVBRAND // CRITIC.AI</text>
+            <text x="240" y="360" fill="white" font-family="Inter, sans-serif" font-size="80" font-weight="black" text-anchor="middle">${score}%</text>
+            <text x="440" y="240" fill="${color}" font-family="Inter, sans-serif" font-size="48" font-weight="black">${data.card_title || 'Sacrifice Detected'}</text>
+          </svg>
+        `;
+        return new Response(svg, { headers: { "Content-Type": "image/svg+xml", "Cache-Control": "public, max-age=86400" } });
+      } catch (e) {
+        return new Response("Error generating OG image", { status: 500 });
+      }
     }
 
-    // 7. Pass to the main TanStack Start handler
+    // 5. Final fallback: Pass to the main TanStack Start handler
     try {
-      return await (startHandler as any)(request, env, ctx);
+      const handler = getHandler();
+      return await (handler as any)(request, env, ctx);
     } catch (error: any) {
-      // Final safety net for framework-level errors
-      return new Response(`Server error: ${error.message}`, { status: 500 });
+      console.error("Framework error:", error);
+      return new Response(`Internal Server Error: ${error.message}`, { status: 500 });
     }
   },
 };
