@@ -6,6 +6,15 @@ const handler = createStartHandler(defaultStreamHandler);
 
 export default {
   async fetch(request: Request, env: any, ctx: any) {
+    // Polyfill process.env for Cloudflare Workers
+    if (env) {
+      Object.keys(env).forEach((key) => {
+        if (typeof env[key] === "string") {
+          process.env[key] = env[key];
+        }
+      });
+    }
+
     const url = new URL(request.url);
 
     // 1. Handle Razorpay Webhook
