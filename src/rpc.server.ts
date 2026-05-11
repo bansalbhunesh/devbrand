@@ -259,6 +259,13 @@ export const createBillingPortal = createServerFn({ method: "POST" })
     return c({ data });
   });
 
+export const verifyPayment = createServerFn({ method: "POST" })
+  .inputValidator((data: any) => data)
+  .handler(async ({ data }) => {
+    const { verifyPayment: v } = await import("@/server/billing");
+    return v({ data });
+  });
+
 export const getWrappedStats = createServerFn({ method: "GET" })
   .handler(async () => {
     const { getWrappedStats: g } = await import("@/server/wrapped");

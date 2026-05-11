@@ -118,6 +118,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(STRUCTURED_DATA) }}
         />
+        <script src="https://checkout.razorpay.com/v1/checkout.js" async />
       </head>
 
       <body className="antialiased selection:bg-blue-500/30 selection:text-blue-200">

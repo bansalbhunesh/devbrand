@@ -2,16 +2,22 @@
 
 import { Check, Github, LayoutDashboard, Loader2, Zap } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { getSession, signInWithGithub } from "@/rpc.server";
-import { createCheckoutSession } from "@/rpc.server";
+import { getSession, signInWithGithub, createCheckoutSession, verifyPayment } from "@/rpc.server";
 import { useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
 
 const tiers = [
   {
     name: "Free",
-    price: "$0",
+    price: "₹0",
     description: "Perfect for students and early-career devs.",
     features: [
       "Monthly Wrapped reports",
@@ -24,7 +30,7 @@ const tiers = [
   },
   {
     name: "Pro",
-    price: "$12",
+    price: "₹999",
     description: "For active engineers building their reputation.",
     features: [
       "Unlimited AI transformations",
@@ -38,7 +44,7 @@ const tiers = [
   },
   {
     name: "Team",
-    price: "$49",
+    price: "₹3999",
     description: "Help your team showcase their impact.",
     features: [
       "Team-wide impact dashboard",
@@ -54,6 +60,7 @@ const tiers = [
 export function Pricing() {
   const { data: session } = useQuery({ queryKey: ["session"], queryFn: () => getSession() });
   const [loading, setLoading] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const handleAction = async (tier: string) => {
     if (!session) {
@@ -65,8 +72,46 @@ export function Pricing() {
 
     if (tier === "Pro") {
       setLoading("checkout");
-      const { url } = await createCheckoutSession({ data: { userId: session.id } });
-      window.location.href = url;
+      try {
+        const order = await createCheckoutSession();
+        
+        const options = {
+          key: order.key,
+          amount: order.amount,
+          currency: order.currency,
+          name: "DevBrand",
+          description: "Pro Subscription",
+          order_id: order.orderId,
+          handler: async function (response: any) {
+            setLoading("verifying");
+            try {
+              const res = await verifyPayment({ data: response });
+              if (res.success) {
+                toast.success("Welcome to Pro!");
+                navigate({ to: "/dashboard" });
+              }
+            } catch (err) {
+              toast.error("Payment verification failed. Contact support.");
+            } finally {
+              setLoading(null);
+            }
+          },
+          prefill: {
+            name: order.userName,
+            email: order.userEmail,
+          },
+          theme: {
+            color: "#3b82f6",
+          },
+        };
+
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+      } catch (err) {
+        toast.error("Could not start checkout. Try again.");
+      } finally {
+        setLoading(null);
+      }
     }
   };
 
@@ -140,7 +185,7 @@ export function Pricing() {
                 >
                   {loading === "auth" && tier.name !== "Team" ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : loading === "checkout" && tier.name === "Pro" ? (
+                  ) : (loading === "checkout" || loading === "verifying") && tier.name === "Pro" ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : tier.name === "Pro" ? (
                     <><Zap className="h-4 w-4 fill-current" /> {tier.cta}</>
@@ -160,7 +205,7 @@ export function Pricing() {
             Trusted by engineers at
           </p>
           <div className="flex flex-wrap items-center justify-center gap-12 grayscale opacity-40">
-             {["VERCEL", "STRIPE", "LINEAR", "SUPABASE", "GITHUB", "RAYCAST"].map((b) => (
+             {["VERCEL", "RAZORPAY", "LINEAR", "SUPABASE", "GITHUB", "RAYCAST"].map((b) => (
                 <span key={b} className="font-mono text-xs font-black tracking-[0.3em]">{b}</span>
               ))}
           </div>
