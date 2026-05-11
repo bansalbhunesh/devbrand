@@ -6,6 +6,7 @@ import { db } from "./db";
 import { users, userEvents } from "./schema";
 import { eq } from "drizzle-orm";
 import { getSession } from "./auth";
+import { getRequest } from "vinxi/http";
 
 let razorpay: Razorpay | null = null;
 
@@ -17,21 +18,6 @@ function getRazorpay(): Razorpay {
   razorpay = new Razorpay({ key_id: keyId, key_secret: keySecret });
   return razorpay;
 }
-
-/**
- * Creates a Razorpay Order for the subscription.
- * In a real-world scenario, you might use Razorpay Subscriptions (Plan-based),
- * but for simplicity, we'll use an Order for a one-time "Lifetime" or "Monthly" payment.
- */
-export const createCheckoutSession = createServerFn({ method: "POST" })
-  .handler(async () => {
-    const sessionUser = await getSession();
-    if (!sessionUser) throw new Error("UNAUTHORIZED");
-
-    const userId = sessionUser.id;
-    const instance = getRazorpay();
-    const user = await db.query.users.findFirst({ where: eq(users.id, userId) });
-    if (!user) throw new Error("USER_NOT_FOUND");
 
 const PRO_PLAN_AMOUNT_PAISE = 99900; 
 
