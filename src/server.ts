@@ -19,7 +19,18 @@ export default {
       });
     }
 
-    const url = new URL(request.url);
+    // Ensure APP_URL has a fallback to prevent "Invalid URL string" during validation or runtime
+    if (!process.env.APP_URL) {
+      process.env.APP_URL = new URL(request.url).origin;
+    }
+
+    let url: URL;
+    try {
+      url = new URL(request.url);
+    } catch (e) {
+      // Fallback for invalid/relative URLs during Cloudflare validation
+      url = new URL(request.url, process.env.APP_URL || "http://localhost");
+    }
 
     // 1. Handle Razorpay Webhook
     if (url.pathname === "/api/webhook/razorpay" && request.method === "POST") {
