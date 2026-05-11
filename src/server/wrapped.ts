@@ -1,17 +1,23 @@
 import { createServerFn } from "@tanstack/react-start";
-import { z } from "zod";
+import type { InferSelectModel } from "drizzle-orm";
 import { db } from "./db";
 import { outputs, users } from "./schema";
 import { eq, and, gte, lte } from "drizzle-orm";
+import { loadSessionUser } from "./auth";
 
-export const getWrappedStats = createServerFn({ method: "GET" })
-  .inputValidator(z.string().uuid())
-  .handler(async ({ data: userId }) => {
+type OutputRow = InferSelectModel<typeof outputs>;
+
+export const getWrappedStats = createServerFn({ method: "GET" }).handler(
+  async () => {
+    const sessionUser = await loadSessionUser();
+    if (!sessionUser) throw new Error("UNAUTHORIZED");
+
+    const userId = sessionUser.id;
     const year = new Date().getFullYear() - 1;
     const startOfYear = new Date(`${year}-01-01T00:00:00Z`);
     const endOfYear = new Date(`${year}-12-31T23:59:59Z`);
 
-    const yearOutputs = await db.query.outputs.findMany({
+    const yearOutputs: OutputRow[] = await db.query.outputs.findMany({
       where: and(
         eq(outputs.userId, userId),
         gte(outputs.createdAt, startOfYear),
@@ -38,9 +44,9 @@ export const getWrappedStats = createServerFn({ method: "GET" })
       acc[cat] = (acc[cat] ?? 0) + 1;
       return acc;
     }, {});
-    const sortedCategories = Object.entries(categoryMap).sort(
-      ([, a], [, b]) => b - a,
-    );
+    const sortedCategories = (
+      Object.entries(categoryMap) as [string, number][]
+    ).sort(([, a], [, b]) => b - a);
     const topCategory = sortedCategories[0]?.[0] ?? "Feature";
 
     const complexityMap = yearOutputs.reduce<Record<string, number>>(
@@ -102,4 +108,5 @@ export const getWrappedStats = createServerFn({ method: "GET" })
         : null,
       monthDistribution: monthMap,
     };
-  });
+  },
+);

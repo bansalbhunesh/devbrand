@@ -3,10 +3,10 @@ import { z } from "zod";
 /**
  * Normalizes a URL by removing trailing slashes and ensuring a protocol.
  */
-function normalizeUrl(url: string | undefined): string {
+export function normalizeAppUrl(url: string | undefined): string {
   if (!url) return "";
   let normalized = url.trim().replace(/\/+$/, "");
-  if (normalized && !normalized.startsWith("http")) {
+  if (normalized && !/^https?:\/\//i.test(normalized)) {
     normalized = `https://${normalized}`;
   }
   return normalized;
@@ -17,7 +17,7 @@ const envSchema = z.object({
   NODE_ENV: z
     .enum(["development", "production", "test"])
     .default("development"),
-  APP_URL: z.string().transform(normalizeUrl).pipe(z.string().url()),
+  APP_URL: z.string().transform(normalizeAppUrl).pipe(z.string().url()),
 
   // Database
   DATABASE_URL: z.string().url(),
@@ -29,7 +29,7 @@ const envSchema = z.object({
   // Auth
   GITHUB_CLIENT_ID: z.string().min(1),
   GITHUB_CLIENT_SECRET: z.string().min(1),
-  GITHUB_TOKEN: z.string().optional(), // Fallback for some internal scripts
+  GITHUB_TOKEN: z.string().optional(),
   SESSION_SECRET: z
     .string()
     .min(32, "SESSION_SECRET must be at least 32 characters"),
@@ -53,15 +53,31 @@ const envSchema = z.object({
 
 export type Env = z.infer<typeof envSchema>;
 
+let _envCache: Env | null = null;
+
+/** Call at the start of each edge/worker request after merging bindings into `process.env`. */
+export function invalidateEnvCache(): void {
+  _envCache = null;
+}
+
 /**
  * Validates and returns the environment variables.
- * In Cloudflare Workers, we pass the 'env' object from the fetch handler.
+ * In Cloudflare Workers, merge the `env` object into `process.env` first, then call `getEnv()`.
  */
-export function getEnv(overrides?: any): Env {
+export function getEnv(overrides?: Record<string, unknown>): Env {
+  const mergedOverrides =
+    overrides && typeof overrides === "object"
+      ? (overrides as Record<string, unknown>)
+      : undefined;
+
   const source = {
     ...process.env,
-    ...overrides,
-  };
+    ...mergedOverrides,
+  } as Record<string, string | undefined>;
+
+  if (!mergedOverrides && _envCache) {
+    return _envCache;
+  }
 
   const result = envSchema.safeParse(source);
 
@@ -71,30 +87,32 @@ export function getEnv(overrides?: any): Env {
       .map(([key, val]) => `${key}: ${val?.join(", ")}`)
       .join("\n");
 
-    console.error("❌ Invalid Environment Variables:\n", errorMsg);
+    console.error("Invalid environment variables:\n", errorMsg);
 
-    // In production, we throw to prevent running with an unstable config.
-    // In dev, we might want to be more lenient or provide defaults.
     if (source.NODE_ENV === "production") {
       throw new Error(
         `Invalid environment variables in production:\n${errorMsg}`,
       );
     }
 
+    console.warn(
+      "Continuing with invalid/missing env in non-production — set .env from .env.example.",
+    );
     return source as unknown as Env;
   }
 
+  if (!mergedOverrides) {
+    _envCache = result.data;
+  }
   return result.data;
 }
 
 /**
- * A singleton-like proxy for environment variables.
- * Note: In Cloudflare Workers, process.env is often empty,
- * so we must populate it at the start of the request.
+ * Typed read-through to validated env. Prefer `getEnv()` inside hot paths after
+ * `invalidateEnvCache()` + binding merge on each Worker request.
  */
 export const env = new Proxy({} as Env, {
   get(_, prop: string) {
-    // If process.env.APP_URL is already set (e.g. by our polyfill), use it
     return getEnv()[prop as keyof Env];
   },
 });

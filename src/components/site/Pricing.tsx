@@ -77,8 +77,16 @@ export function Pricing() {
   const handleAction = async (tier: string) => {
     if (!session) {
       setLoading("auth");
-      const { url } = await signInWithGithub();
-      window.location.href = url;
+      const res = await signInWithGithub();
+      if ("error" in res && res.error) {
+        setLoading(null);
+        return;
+      }
+      if (!("url" in res) || !res.url) {
+        setLoading(null);
+        return;
+      }
+      window.location.href = res.url;
       return;
     }
 

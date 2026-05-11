@@ -4,8 +4,8 @@ import Razorpay from "razorpay";
 import crypto from "crypto";
 import { db } from "./db";
 import { users, userEvents } from "./schema";
-import { eq } from "drizzle-orm";
-import { getSession } from "./auth";
+import { and, eq, sql } from "drizzle-orm";
+import { loadSessionUser } from "./auth";
 import { getRequest } from "@tanstack/react-start/server";
 import { env } from "../lib/env";
 
@@ -23,11 +23,83 @@ function getRazorpay(): Razorpay {
 const PRO_PLAN_AMOUNT_PAISE = 99900;
 
 /**
+ * Razorpay signs the exact request body bytes — always verify using the raw string.
+ */
+export async function processRazorpayWebhookRaw(
+  rawBody: string,
+  signature: string,
+): Promise<{ received: boolean; status?: string; error?: string }> {
+  const secret = env.RAZORPAY_WEBHOOK_SECRET;
+
+  const expectedSignature = crypto
+    .createHmac("sha256", secret)
+    .update(rawBody)
+    .digest("hex");
+
+  const sigBuffer = Buffer.from(signature);
+  const expectedBuffer = Buffer.from(expectedSignature);
+  if (
+    sigBuffer.length !== expectedBuffer.length ||
+    !crypto.timingSafeEqual(sigBuffer, expectedBuffer)
+  ) {
+    throw new Error("Webhook signature verification failed");
+  }
+
+  let body: { event?: string; payload?: { payment?: { entity?: Record<string, unknown> } } };
+  try {
+    body = JSON.parse(rawBody) as typeof body;
+  } catch {
+    throw new Error("Invalid webhook JSON");
+  }
+
+  const event = body.event;
+  if (event === "payment.captured") {
+    const entity = body.payload?.payment?.entity as
+      | {
+          id?: string;
+          notes?: { userId?: string };
+        }
+      | undefined;
+    const paymentId = entity?.id;
+    const userId = entity?.notes?.userId;
+
+    if (!paymentId) return { received: true, error: "no_payment_id" };
+    if (!userId) return { received: true, error: "no_user_id" };
+
+    const existing = await db.query.userEvents.findFirst({
+      where: and(
+        eq(userEvents.userId, userId),
+        eq(userEvents.eventType, "upgraded_to_pro"),
+        sql`${userEvents.payload}->>'paymentId' = ${paymentId}`,
+      ),
+    });
+
+    if (existing) {
+      return { received: true, status: "already_processed" };
+    }
+
+    await db.transaction(async (tx: typeof db) => {
+      await tx
+        .update(users)
+        .set({ plan: "pro", updatedAt: new Date() })
+        .where(eq(users.id, userId));
+      await tx.insert(userEvents).values({
+        userId,
+        eventType: "upgraded_to_pro",
+        payload: { paymentId, method: "webhook" },
+      });
+    });
+  }
+
+  return { received: true };
+}
+
+/**
  * Creates a Razorpay Order for the subscription.
  */
 export const createCheckoutSession = createServerFn({ method: "POST" }).handler(
   async () => {
-    const sessionUser = await getSession();
+    const sessionUser = await loadSessionUser();
     if (!sessionUser) throw new Error("UNAUTHORIZED");
 
     const userId = sessionUser.id;
@@ -76,7 +148,7 @@ export const verifyPayment = createServerFn({ method: "POST" })
     }),
   )
   .handler(async ({ data }) => {
-    const sessionUser = await getSession();
+    const sessionUser = await loadSessionUser();
     if (!sessionUser) throw new Error("UNAUTHORIZED");
 
     const secret = env.RAZORPAY_KEY_SECRET;
@@ -86,7 +158,6 @@ export const verifyPayment = createServerFn({ method: "POST" })
       .update(body.toString())
       .digest("hex");
 
-    // Timing-safe comparison
     const sigBuffer = Buffer.from(data.razorpay_signature);
     const expectedBuffer = Buffer.from(expectedSignature);
     if (
@@ -104,23 +175,19 @@ export const verifyPayment = createServerFn({ method: "POST" })
       throw new Error("INVALID_SIGNATURE");
     }
 
-    // Idempotency: Check if already upgraded for this payment
     const existing = await db.query.userEvents.findFirst({
-      where: (fields, operators) =>
-        operators.and(
-          operators.eq(fields.userId, sessionUser.id),
-          operators.eq(fields.eventType, "upgraded_to_pro"),
-        ),
+      where: and(
+        eq(userEvents.userId, sessionUser.id),
+        eq(userEvents.eventType, "upgraded_to_pro"),
+        sql`${userEvents.payload}->>'paymentId' = ${data.razorpay_payment_id}`,
+      ),
     });
 
-    if (
-      existing &&
-      (existing.payload as any)?.paymentId === data.razorpay_payment_id
-    ) {
+    if (existing) {
       return { success: true, alreadyProcessed: true };
     }
 
-    await db.transaction(async (tx) => {
+    await db.transaction(async (tx: typeof db) => {
       await tx
         .update(users)
         .set({ plan: "pro", updatedAt: new Date() })
@@ -139,59 +206,10 @@ export const verifyPayment = createServerFn({ method: "POST" })
   });
 
 /**
- * Razorpay Webhook Handler
+ * RPC entry for webhook replay / tooling. Prefer `processRazorpayWebhookRaw` from the edge worker.
  */
 export const handleRazorpayWebhook = createServerFn({ method: "POST" })
-  .inputValidator(z.object({ body: z.unknown(), signature: z.string() }))
-  .handler(async ({ data: { body, signature } }) => {
-    const secret = env.RAZORPAY_WEBHOOK_SECRET;
-
-    const expectedSignature = crypto
-      .createHmac("sha256", secret)
-      .update(JSON.stringify(body))
-      .digest("hex");
-
-    const sigBuffer = Buffer.from(signature);
-    const expectedBuffer = Buffer.from(expectedSignature);
-    if (
-      sigBuffer.length !== expectedBuffer.length ||
-      !crypto.timingSafeEqual(sigBuffer, expectedBuffer)
-    ) {
-      throw new Error("Webhook signature verification failed");
-    }
-
-    const event = body.event;
-    if (event === "payment.captured") {
-      const payload = body.payload.payment.entity;
-      const paymentId = payload.id;
-      const userId = payload.notes?.userId;
-
-      if (!userId) return { received: true, error: "no_user_id" };
-
-      const existing = await db.query.userEvents.findFirst({
-        where: (fields, operators) =>
-          operators.and(
-            operators.eq(fields.userId, userId),
-            operators.eq(fields.eventType, "upgraded_to_pro"),
-          ),
-      });
-
-      if (existing && (existing.payload as any)?.paymentId === paymentId) {
-        return { received: true, status: "already_processed" };
-      }
-
-      await db.transaction(async (tx) => {
-        await tx
-          .update(users)
-          .set({ plan: "pro", updatedAt: new Date() })
-          .where(eq(users.id, userId));
-        await tx.insert(userEvents).values({
-          userId,
-          eventType: "upgraded_to_pro",
-          payload: { paymentId, method: "webhook" },
-        });
-      });
-    }
-
-    return { received: true };
-  });
+  .inputValidator(z.object({ rawBody: z.string(), signature: z.string() }))
+  .handler(async ({ data: { rawBody, signature } }) =>
+    processRazorpayWebhookRaw(rawBody, signature),
+  );

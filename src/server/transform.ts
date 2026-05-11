@@ -2,10 +2,10 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { db } from "./db";
 import { outputs, users, userEvents } from "./schema";
-import { eq, sql, and } from "drizzle-orm";
+import { eq, sql, and, desc } from "drizzle-orm";
 import { runEngine } from "./engine";
 import type { UserContext } from "./engine/types";
-import { getSession } from "./auth";
+import { loadSessionUser } from "./auth";
 
 function generateSlug(prUrl: string, userId: string): string {
   const ts = Date.now().toString(36);
@@ -15,9 +15,14 @@ function generateSlug(prUrl: string, userId: string): string {
 }
 
 export const transformPR = createServerFn({ method: "POST" })
-  .inputValidator(z.object({ prUrl: z.string().url() }))
+  .inputValidator(
+    z.object({
+      prUrl: z.string().url(),
+      userId: z.string().uuid().optional(),
+    }),
+  )
   .handler(async ({ data: { prUrl } }) => {
-    const user = await getSession();
+    const user = await loadSessionUser();
     if (!user) throw new Error("UNAUTHORIZED");
     const userId = user.id;
 
@@ -89,13 +94,13 @@ export const transformPR = createServerFn({ method: "POST" })
 
 export const getUserOutputs = createServerFn({ method: "GET" }).handler(
   async () => {
-    const user = await getSession();
+    const user = await loadSessionUser();
     if (!user) throw new Error("UNAUTHORIZED");
     const userId = user.id;
 
     return db.query.outputs.findMany({
       where: eq(outputs.userId, userId),
-      orderBy: (o, { desc }) => [desc(o.createdAt)],
+      orderBy: [desc(outputs.createdAt)],
       limit: 50,
     });
   },
@@ -106,7 +111,7 @@ export const toggleOutputVisibility = createServerFn({ method: "POST" })
     z.object({ outputId: z.string().uuid(), isPublic: z.boolean() }),
   )
   .handler(async ({ data: { outputId, isPublic } }) => {
-    const user = await getSession();
+    const user = await loadSessionUser();
     if (!user) throw new Error("UNAUTHORIZED");
     const userId = user.id;
 

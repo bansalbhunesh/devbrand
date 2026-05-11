@@ -10,12 +10,25 @@ import "@/styles.css";
 import * as React from "react";
 import { getSession } from "@/rpc.server";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+      staleTime: 30_000,
+    },
+  },
+});
 
 export const Route = createRootRoute({
   loader: async () => {
-    const session = await getSession();
-    return { session };
+    try {
+      const session = await getSession();
+      return { session };
+    } catch (e) {
+      console.error("root_loader_session_failed", e);
+      return { session: null };
+    }
   },
   head: () => ({
     meta: [

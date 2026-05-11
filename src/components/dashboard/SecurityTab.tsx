@@ -104,7 +104,7 @@ export function SecurityTab() {
                     </span>
                     <span className="text-[10px] font-medium text-muted-foreground flex items-center gap-1">
                       <Clock className="h-3 w-3" />
-                      {formatDistanceToNow(event.timestamp)} ago
+                      {formatDistanceToNow(new Date(event.timestamp))} ago
                     </span>
                   </div>
 

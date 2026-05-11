@@ -20,6 +20,7 @@ import { Route as ULoginRouteImport } from './routes/u.$login'
 import { Route as TeamIdRouteImport } from './routes/team.$id'
 import { Route as TSlugRouteImport } from './routes/t.$slug'
 import { Route as RIdRouteImport } from './routes/r.$id'
+import { Route as ApiAuthCallbackGithubRouteImport } from './routes/api.auth.callback.github'
 
 const WrappedRoute = WrappedRouteImport.update({
   id: '/wrapped',
@@ -76,6 +77,11 @@ const RIdRoute = RIdRouteImport.update({
   path: '/r/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAuthCallbackGithubRoute = ApiAuthCallbackGithubRouteImport.update({
+  id: '/api/auth/callback/github',
+  path: '/api/auth/callback/github',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -89,6 +95,7 @@ export interface FileRoutesByFullPath {
   '/t/$slug': typeof TSlugRoute
   '/team/$id': typeof TeamIdRoute
   '/u/$login': typeof ULoginRoute
+  '/api/auth/callback/github': typeof ApiAuthCallbackGithubRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -102,6 +109,7 @@ export interface FileRoutesByTo {
   '/t/$slug': typeof TSlugRoute
   '/team/$id': typeof TeamIdRoute
   '/u/$login': typeof ULoginRoute
+  '/api/auth/callback/github': typeof ApiAuthCallbackGithubRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -116,6 +124,7 @@ export interface FileRoutesById {
   '/t/$slug': typeof TSlugRoute
   '/team/$id': typeof TeamIdRoute
   '/u/$login': typeof ULoginRoute
+  '/api/auth/callback/github': typeof ApiAuthCallbackGithubRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -131,6 +140,7 @@ export interface FileRouteTypes {
     | '/t/$slug'
     | '/team/$id'
     | '/u/$login'
+    | '/api/auth/callback/github'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -144,6 +154,7 @@ export interface FileRouteTypes {
     | '/t/$slug'
     | '/team/$id'
     | '/u/$login'
+    | '/api/auth/callback/github'
   id:
     | '__root__'
     | '/'
@@ -157,6 +168,7 @@ export interface FileRouteTypes {
     | '/t/$slug'
     | '/team/$id'
     | '/u/$login'
+    | '/api/auth/callback/github'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -171,6 +183,7 @@ export interface RootRouteChildren {
   TSlugRoute: typeof TSlugRoute
   TeamIdRoute: typeof TeamIdRoute
   ULoginRoute: typeof ULoginRoute
+  ApiAuthCallbackGithubRoute: typeof ApiAuthCallbackGithubRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -252,6 +265,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/auth/callback/github': {
+      id: '/api/auth/callback/github'
+      path: '/api/auth/callback/github'
+      fullPath: '/api/auth/callback/github'
+      preLoaderRoute: typeof ApiAuthCallbackGithubRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -267,6 +287,7 @@ const rootRouteChildren: RootRouteChildren = {
   TSlugRoute: TSlugRoute,
   TeamIdRoute: TeamIdRoute,
   ULoginRoute: ULoginRoute,
+  ApiAuthCallbackGithubRoute: ApiAuthCallbackGithubRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

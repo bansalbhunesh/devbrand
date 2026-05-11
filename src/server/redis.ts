@@ -14,7 +14,7 @@ function getRedis(): Redis | null {
 
   if (!url || !token) {
     console.warn(
-      "⚠️ Redis credentials missing. Rate limiting is disabled (Safe Mode).",
+      "Redis credentials missing. Rate limiting and security logs are degraded.",
     );
     return null;
   }
@@ -23,7 +23,7 @@ function getRedis(): Redis | null {
     _redis = new Redis({ url, token });
     return _redis;
   } catch (e) {
-    console.error("❌ Failed to initialize Redis:", e);
+    console.error("Failed to initialize Redis:", e);
     return null;
   }
 }
@@ -39,7 +39,6 @@ export async function rateLimit(
   const redis = getRedis();
 
   if (!redis) {
-    // Graceful fallback: Allow the request but log the missing infrastructure
     return {
       success: true,
       remaining: limit,
@@ -63,7 +62,7 @@ export async function rateLimit(
       resetAt,
     };
   } catch (e) {
-    console.error("❌ Rate limiting error (Failing Open):", e);
+    console.error("Rate limiting error (failing open):", e);
     return { success: true, remaining: 1, resetAt: Date.now() };
   }
 }
@@ -75,7 +74,7 @@ export async function logSecurityEvent(
   type: string,
   userId: string | null,
   ip: string,
-  metadata: any = {},
+  metadata: Record<string, unknown> = {},
 ) {
   const redis = getRedis();
   if (!redis) return;
@@ -93,9 +92,60 @@ export async function logSecurityEvent(
       score: Date.now(),
       member: JSON.stringify(event),
     });
-    // Keep only last 1000 events
     await redis.zremrangebyrank("security:events", 0, -1001);
   } catch (e) {
-    console.error("❌ Failed to log security event:", e);
+    console.error("Failed to log security event:", e);
+  }
+}
+
+export type SecurityEventRow = {
+  type: string;
+  ip: string;
+  timestamp: Date;
+  details?: Record<string, string>;
+};
+
+/**
+ * Recent security events (newest first). Empty when Redis is unavailable.
+ */
+export async function readSecurityEvents(
+  limit = 50,
+): Promise<SecurityEventRow[]> {
+  const redis = getRedis();
+  if (!redis) return [];
+
+  try {
+    const end = Math.max(0, limit - 1);
+    const raw = await redis.zrange("security:events", 0, end, {
+      rev: true,
+    });
+    const rows: SecurityEventRow[] = [];
+    for (const str of raw as string[]) {
+      try {
+        const e = JSON.parse(String(str)) as {
+          type: string;
+          ip: string;
+          metadata?: Record<string, unknown>;
+          timestamp: string;
+        };
+        const meta = e.metadata as Record<string, unknown> | undefined;
+        rows.push({
+          type: e.type,
+          ip: e.ip ?? "unknown",
+          timestamp: new Date(e.timestamp || Date.now()),
+          details: meta
+            ? Object.fromEntries(
+                Object.entries(meta).map(([k, v]) => [k, String(v)]),
+              )
+            : undefined,
+        });
+      } catch {
+        /* skip malformed */
+      }
+    }
+    return rows;
+  } catch (e) {
+    console.error("readSecurityEvents failed:", e);
+    return [];
   }
 }

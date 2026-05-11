@@ -201,8 +201,8 @@ export const getOutputBySlug = createServerFn({ method: "GET" })
 
 export const getReferralData = createServerFn({ method: "GET" }).handler(
   async () => {
-    const { getSession } = await import("@/server/auth");
-    const session = await getSession();
+    const { loadSessionUser } = await import("@/server/auth");
+    const session = await loadSessionUser();
     if (!session) throw new Error("Unauthorized");
 
     const [user] = await db.query.users.findMany({
@@ -224,25 +224,25 @@ export const getReferralData = createServerFn({ method: "GET" }).handler(
   },
 );
 
-// ── Auth Consolidation ────────────────────────────────────────────────────────
-export const getSession = createServerFn({ method: "GET" }).handler(
+export const createBillingPortal = createServerFn({ method: "POST" }).handler(
   async () => {
-    const { getSession: getS } = await import("@/server/auth");
-    return getS();
+    return {
+      success: false,
+      message:
+        "Razorpay does not support customer billing portals. Manage subscriptions via your dashboard.",
+    };
   },
 );
+
+export const getSession = createServerFn({ method: "GET" }).handler(async () => {
+  const { getSession: gs } = await import("@/server/auth");
+  return gs();
+});
 
 export const logout = createServerFn({ method: "POST" }).handler(async () => {
   const { logout: l } = await import("@/server/auth");
   return l();
 });
-
-export const signInWithGithub = createServerFn({ method: "GET" }).handler(
-  async () => {
-    const { signInWithGithub: s } = await import("@/server/auth");
-    return s();
-  },
-);
 
 export const logoutAllDevices = createServerFn({ method: "POST" }).handler(
   async () => {
@@ -265,7 +265,20 @@ export const updateUserSettings = createServerFn({ method: "POST" })
     return u({ data });
   });
 
-// ── Transform Consolidation ─────────────────────────────────────────────────────
+export const signInWithGithub = createServerFn({ method: "GET" }).handler(
+  async () => {
+    const { signInWithGithub: s } = await import("@/server/auth");
+    return s();
+  },
+);
+
+export const handleGithubCallback = createServerFn({ method: "POST" })
+  .inputValidator((data: any) => data)
+  .handler(async ({ data }) => {
+    const { handleGithubCallback: h } = await import("@/server/auth");
+    return h({ data });
+  });
+
 export const transformPR = createServerFn({ method: "POST" })
   .inputValidator((data: any) => data)
   .handler(async ({ data }) => {
@@ -287,23 +300,12 @@ export const toggleOutputVisibility = createServerFn({ method: "POST" })
     return t({ data });
   });
 
-// ── Billing Consolidation ──────────────────────────────────────────────────────
-export const createCheckoutSession = createServerFn({ method: "POST" })
-  .inputValidator((data: any) => data)
-  .handler(async ({ data }) => {
+export const createCheckoutSession = createServerFn({ method: "POST" }).handler(
+  async () => {
     const { createCheckoutSession: c } = await import("@/server/billing");
-    return c({ data });
-  });
-
-export const createBillingPortal = createServerFn({ method: "POST" })
-  .inputValidator((data: any) => data)
-  .handler(async () => {
-    return {
-      success: false,
-      message:
-        "Razorpay does not support customer billing portals. Manage subscriptions via your dashboard.",
-    };
-  });
+    return c();
+  },
+);
 
 export const verifyPayment = createServerFn({ method: "POST" })
   .inputValidator((data: any) => data)
@@ -312,15 +314,12 @@ export const verifyPayment = createServerFn({ method: "POST" })
     return v({ data });
   });
 
-export const getWrappedStats = createServerFn({ method: "GET" }).handler(
-  async () => {
-    const { getSession } = await import("./server/auth");
-    const user = await getSession();
-    if (!user) throw new Error("UNAUTHORIZED");
-    const { getWrappedStats: g } = await import("./server/wrapped");
-    return g({ data: user.id });
-  },
-);
+export const handleRazorpayWebhook = createServerFn({ method: "POST" })
+  .inputValidator((data: any) => data)
+  .handler(async ({ data }) => {
+    const { handleRazorpayWebhook: h } = await import("@/server/billing");
+    return h({ data });
+  });
 
 export const generateRoast = createServerFn({ method: "POST" })
   .inputValidator((data: any) => data)
@@ -328,3 +327,10 @@ export const generateRoast = createServerFn({ method: "POST" })
     const { generateRoast: g } = await import("@/server/roast");
     return g({ data });
   });
+
+export const getWrappedStats = createServerFn({ method: "GET" }).handler(
+  async () => {
+    const { getWrappedStats: g } = await import("@/server/wrapped");
+    return g();
+  },
+);

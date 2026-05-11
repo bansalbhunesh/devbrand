@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-import { env } from "@/lib/env";
+import { getPublicSiteUrl } from "@/lib/public-site";
 
 export const Route = createFileRoute("/r/$id")({
   component: RoastPage,
@@ -31,14 +31,20 @@ export const Route = createFileRoute("/r/$id")({
           property: "og:description",
           content: "A verifiable judgment of technical reputation.",
         },
-        { property: "og:image", content: `${env.APP_URL}/api/og/roast/${id}` },
+        {
+          property: "og:image",
+          content: `${getPublicSiteUrl()}/api/og/roast/${id}`,
+        },
         { name: "twitter:card", content: "summary_large_image" },
         { name: "twitter:title", content: "DevBrand Roast // Impact Verified" },
         {
           name: "twitter:description",
           content: "Click to see the full technical roast.",
         },
-        { name: "twitter:image", content: `${env.APP_URL}/api/og/roast/${id}` },
+        {
+          name: "twitter:image",
+          content: `${getPublicSiteUrl()}/api/og/roast/${id}`,
+        },
       ],
     };
   },

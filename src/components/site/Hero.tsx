@@ -75,8 +75,16 @@ export function Hero() {
   const handleAuth = async () => {
     setLoggingIn(true);
     try {
-      const { url } = await signInWithGithub();
-      window.location.href = url;
+      const res = await signInWithGithub();
+      if ("error" in res && res.error) {
+        setLoggingIn(false);
+        return;
+      }
+      if (!("url" in res) || !res.url) {
+        setLoggingIn(false);
+        return;
+      }
+      window.location.href = res.url;
     } catch (err) {
       console.error(err);
       setLoggingIn(false);

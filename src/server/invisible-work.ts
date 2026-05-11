@@ -31,7 +31,7 @@ export function classifyWork(
   // Basic heuristic-based classifier for V1
   let workType: z.infer<typeof WorkTypeSchema> = "feature";
   let isInvisibleWork = false;
-  let invisibleStory = null;
+  let invisibleStory: string | null = null;
   let impactCategory = "Feature";
 
   if (title.includes("fix") || title.includes("bug")) {

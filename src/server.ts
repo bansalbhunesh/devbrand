@@ -1,85 +1,87 @@
-import { handleRazorpayWebhook } from "./server/billing";
-import { getEnv } from "./lib/env";
+import { getEnv, invalidateEnvCache } from "./lib/env";
+import { processRazorpayWebhookRaw } from "./server/billing";
 
 /**
- * PRODUCTION-READY SERVER ENTRY
- * Handles lazy initialization, environment polyfilling, and defensive request normalization.
+ * Server entry: env merge, webhook handling, then TanStack Start.
  */
 
 let _handler: unknown;
-async function getHandler(env: unknown) {
+async function getHandler() {
   if (!_handler) {
-    // 1. Validate environment before any framework logic evaluates
-    getEnv(env);
+    getEnv();
 
-    // 2. Defer framework evaluation until env is ready
     const { createStartHandler, defaultStreamHandler } =
       await import("@tanstack/react-start/server");
-    const { createRouter } = await import("./router");
-    await import("./rpc.server"); // Register RPCs
 
-    _handler = createStartHandler({
-      createRouter,
-    })(defaultStreamHandler);
+    _handler = createStartHandler(defaultStreamHandler);
   }
   return _handler;
 }
 
-/**
- * Unified fetch handler with explicit error boundaries.
- */
 async function unifiedFetch(request: Request, env?: unknown, ctx?: unknown) {
   try {
-    // 1. Populate process.env for compatibility with legacy libraries
+    invalidateEnvCache();
+
     if (env && typeof env === "object") {
-      Object.assign(process.env, env);
+      Object.assign(process.env, env as object);
     }
 
-    // 2. Normalize and Validate Configuration
-    const validatedEnv = getEnv(env);
+    const validatedEnv = getEnv();
 
-    // Ensure the framework has the correct base URL
-    const url = new URL(request.url);
+    let url: URL;
+    try {
+      url = new URL(request.url);
+    } catch (e) {
+      console.warn("BAD_REQUEST_URL:", request.url, e);
+      return new Response("Bad Request", {
+        status: 400,
+        headers: { "Content-Type": "text/plain" },
+      });
+    }
+
     if (!process.env.APP_URL) {
       process.env.APP_URL = validatedEnv.APP_URL;
     }
 
     const { pathname } = url;
 
-    // 3. Resilient API Route Handling
-    if (pathname === "/api/webhook/razorpay" && request?.method === "POST") {
+    if (pathname === "/api/webhook/razorpay" && request.method === "POST") {
       try {
         const signature =
-          request.headers.get?.("x-razorpay-signature") ||
-          request.headers?.["x-razorpay-signature"] ||
-          "";
-        const body =
-          typeof request.json === "function"
-            ? await request.json()
-            : request.body;
-        await handleRazorpayWebhook({ data: { body, signature } });
+          request.headers.get("x-razorpay-signature")?.trim() ?? "";
+        const rawBody = await request.text();
+        await processRazorpayWebhookRaw(rawBody, signature);
         return new Response(JSON.stringify({ received: true }), {
           status: 200,
+          headers: { "Content-Type": "application/json" },
         });
-      } catch (error: any) {
-        console.error("Webhook Failure:", error);
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error("Webhook failure:", message);
         return new Response(
           JSON.stringify({ error: "WEBHOOK_VERIFICATION_FAILED" }),
-          { status: 400 },
+          {
+            status: 400,
+            headers: { "Content-Type": "application/json" },
+          },
         );
       }
     }
 
-    // 4. Delegate to Framework
-    const handler = await getHandler(env);
-    return await handler(request, env, ctx);
-  } catch (error: any) {
-    // PRODUCTION ERROR BOUNDARY
-    console.error("CRITICAL_SSR_CRASH:", error);
+    const handler = await getHandler();
+    return await (handler as (r: Request, e: unknown, c: unknown) => Promise<Response>)(
+      request,
+      env,
+      ctx,
+    );
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("CRITICAL_SSR_CRASH:", message, error);
 
-    // In production, we provide a clean, secure error message.
     return new Response(
-      `SSR_UNSTABLE: ${process.env.NODE_ENV === "production" ? "Internal Server Error" : error.message}`,
+      process.env.NODE_ENV === "production"
+        ? "Internal Server Error"
+        : `SSR_UNSTABLE: ${message}`,
       {
         status: 500,
         headers: {
@@ -96,4 +98,4 @@ export default {
     return unifiedFetch(request, env, ctx);
   },
 };
-export const fetch = unifiedFetch; // Keep hybrid export for maximum compatibility
+export const fetch = unifiedFetch;
