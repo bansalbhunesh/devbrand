@@ -1,21 +1,13 @@
 import { createFileRoute, redirect, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  LayoutDashboard,
   Sparkles,
   GitPullRequest,
-  Zap,
-  TrendingUp,
-  ExternalLink,
-  ClipboardCopy,
-  Check,
-  LogOut,
-  Loader2,
-  ArrowUpRight,
   Users,
-  Lock,
   BarChart3,
+  Loader2,
+  LogOut,
 } from "lucide-react";
 import { 
   getSession, 
@@ -28,9 +20,9 @@ import {
   verifyPayment
 } from "@/rpc.server";
 import { cn } from "@/lib/utils";
-import * as React from "react";
+
 import { toast } from "sonner";
-import { HistoryCard, Stat } from "@/components/dashboard/HistoryCard";
+
 
 export const Route = createFileRoute("/dashboard")({
   beforeLoad: async () => {

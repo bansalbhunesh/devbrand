@@ -1,8 +1,8 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { Flame, Terminal, Loader2, ShieldAlert, Share2, ArrowRight, UserPlus } from "lucide-react";
+import { Flame, Terminal, Loader2, ShieldAlert, Share2, UserPlus } from "lucide-react";
 import { getSession } from "@/rpc.server";
 import { generateRoast } from "@/rpc.server";
 import { cn } from "@/lib/utils";
@@ -18,7 +18,6 @@ export const Route = createFileRoute("/roast-friend")({
 
 function RoastFriendPage() {
   const { target } = Route.useSearch();
-  const navigate = useNavigate();
   const { data: session } = useQuery({ queryKey: ["session"], queryFn: () => getSession() });
   
   const [loading, setLoading] = useState(false);

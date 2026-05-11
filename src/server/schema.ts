@@ -22,7 +22,7 @@ export const users = pgTable("users", {
   tone: text("tone").notNull().default("direct"),         // direct | storytelling | technical
   targetAudience: text("target_audience").notNull().default("recruiter"), // recruiter | manager | peer | founder
 
-  stripeCustomerId: text("stripe_customer_id"),
+  externalCustomerId: text("external_customer_id"),
   plan: text("plan").notNull().default("free"),            // free | pro
   planExpiresAt: timestamp("plan_expires_at", { withTimezone: true }),
   generationsThisMonth: integer("generations_this_month").notNull().default(0),
@@ -149,7 +149,7 @@ export const teams = pgTable("teams", {
   name: text("name").notNull(),
   logoUrl: text("logo_url"),
   adminId: uuid("admin_id").references(() => users.id),
-  stripeSubscriptionId: text("stripe_subscription_id"),
+  externalSubscriptionId: text("external_subscription_id"),
   plan: text("plan").notNull().default("team_free"), // team_free | team_pro
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
@@ -188,8 +188,8 @@ export const subscriptions = pgTable("subscriptions", {
     .references(() => users.id, { onDelete: "cascade" }),
   teamId: uuid("team_id")
     .references(() => teams.id, { onDelete: "cascade" }),
-  stripeSubscriptionId: text("stripe_subscription_id").unique().notNull(),
-  stripeCustomerId: text("stripe_customer_id").notNull(),
+  externalSubscriptionId: text("external_subscription_id").unique().notNull(),
+  externalCustomerId: text("external_customer_id").notNull(),
   status: text("status").notNull(), // active | canceled | past_due | trialing
   priceId: text("price_id").notNull(),
   currentPeriodEnd: timestamp("current_period_end", { withTimezone: true }).notNull(),

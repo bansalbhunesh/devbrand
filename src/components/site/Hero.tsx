@@ -5,8 +5,9 @@ import { ArrowRight, Github, Sparkles, GitPullRequest, Check, Link2, LayoutDashb
 import { Link } from "@tanstack/react-router";
 import { signInWithGithub } from "@/rpc.server";
 import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from "framer-motion";
-import { useMemo } from "react";
 import { Route } from "@/routes/__root";
+
+const springConfig = { damping: 20, stiffness: 150, mass: 0.5 };
 
 export function Hero() {
   const cardRef = useRef<HTMLDivElement>(null);
@@ -15,20 +16,10 @@ export function Hero() {
 
   const { session } = Route.useRouteContext() as { session: any };
 
-  // Phase 2.3: Ambient particles
-  const dots = useMemo(() => Array.from({ length: 14 }, (_, i) => ({
-    x: Math.random() * 100,
-    y: Math.random() * 100,
-    size: Math.random() * 2 + 1,
-    delay: Math.random() * 4,
-    duration: Math.random() * 8 + 6,
-  })), []);
-
   // Parallax using Motion Values for performance (no re-renders)
   const x = useMotionValue(0);
   const y = useMotionValue(0);
 
-  const springConfig = { damping: 20, stiffness: 150, mass: 0.5 };
   const rotateX = useSpring(useTransform(y, [-300, 300], [10, -10]), springConfig);
   const rotateY = useSpring(useTransform(x, [-300, 300], [-10, 10]), springConfig);
 
@@ -76,20 +67,39 @@ export function Hero() {
       <div className="absolute inset-0 bg-grid pointer-events-none opacity-20" />
       <div className="absolute inset-0 [background:var(--gradient-radial)] pointer-events-none" />
       
-      {/* Ambient Particles */}
-      {dots.map((d, i) => (
-        <div
-          key={i}
-          className="absolute rounded-full bg-blue-500/20 pointer-events-none"
-          style={{
-            left: `${d.x}%`,
-            top: `${d.y}%`,
-            width: d.size,
-            height: d.size,
-            animation: `float ${d.duration}s ${d.delay}s infinite ease-in-out alternate`,
-          }}
-        />
-      ))}
+      {/* Ambient Particles - Framer Motion orchestrated */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {Array.from({ length: 14 }).map((_, i) => (
+          <motion.div
+            key={i}
+            initial={{ 
+              x: `${Math.random() * 100}%`, 
+              y: `${Math.random() * 100}%`,
+              opacity: 0.1 
+            }}
+            animate={{ 
+              y: ["-5%", "5%"],
+              opacity: [0.1, 0.3, 0.1]
+            }}
+            transition={{
+              y: {
+                duration: 4 + Math.random() * 6,
+                repeat: Infinity,
+                repeatType: "alternate",
+                ease: "easeInOut"
+              },
+              opacity: {
+                duration: 3 + Math.random() * 4,
+                repeat: Infinity,
+                repeatType: "alternate",
+                ease: "easeInOut"
+              }
+            }}
+            className="absolute h-1 w-1 rounded-full bg-blue-500/20"
+            style={{ left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%` }}
+          />
+        ))}
+      </div>
       
       <div className="relative mx-auto max-w-7xl px-6 pt-24 pb-20 md:pt-32 md:pb-28">
         <div className="flex flex-col items-center text-center">
@@ -128,25 +138,38 @@ export function Hero() {
             transition={{ duration: 0.5, delay: 0.3 }}
             className="mt-10 flex flex-wrap items-center justify-center gap-4"
           >
-            {session ? (
-              <Link
-                to="/dashboard"
-                className="group inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-foreground text-background font-bold hover:opacity-90 transition shadow-xl shadow-foreground/10"
-              >
-                <LayoutDashboard className="h-4 w-4" /> Go to Dashboard
-                <ArrowRight className="h-4 w-4 transition -mr-0.5 group-hover:translate-x-0.5" />
-              </Link>
-            ) : (
-              <button
-                onClick={handleAuth}
-                disabled={loggingIn}
-                className="group inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-foreground text-background font-bold hover:opacity-90 transition shadow-xl shadow-foreground/10 disabled:opacity-50"
-              >
-                {loggingIn ? <Loader2 className="h-4 w-4 animate-spin" /> : <Github className="h-4 w-4" />}
-                Connect GitHub
-                <ArrowRight className="h-4 w-4 transition -mr-0.5 group-hover:translate-x-0.5" />
-              </button>
-            )}
+            <AnimatePresence mode="wait">
+              {session ? (
+                <motion.div
+                  key="dashboard"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                >
+                  <Link
+                    to="/dashboard"
+                    className="group inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-foreground text-background font-bold hover:opacity-90 transition shadow-xl shadow-foreground/10"
+                  >
+                    <LayoutDashboard className="h-4 w-4" /> Go to Dashboard
+                    <ArrowRight className="h-4 w-4 transition -mr-0.5 group-hover:translate-x-0.5" />
+                  </Link>
+                </motion.div>
+              ) : (
+                <motion.button
+                  key="auth"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  onClick={handleAuth}
+                  disabled={loggingIn}
+                  className="group inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-foreground text-background font-bold hover:opacity-90 transition shadow-xl shadow-foreground/10 disabled:opacity-50"
+                >
+                  {loggingIn ? <Loader2 className="h-4 w-4 animate-spin" /> : <Github className="h-4 w-4" />}
+                  Connect GitHub
+                  <ArrowRight className="h-4 w-4 transition -mr-0.5 group-hover:translate-x-0.5" />
+                </motion.button>
+              )}
+            </AnimatePresence>
             <a
               href="#demo"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-border bg-muted/30 hover:bg-muted text-foreground transition font-semibold"
@@ -259,21 +282,22 @@ export function Hero() {
               </div>
             </div>
           </div>
+        </motion.div>
 
-          {/* trust strip */}
-          <motion.div 
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            className="mt-12 flex flex-col items-center gap-6"
-          >
-            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground opacity-50">Built for engineers shipping at</p>
-            <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-6 grayscale opacity-40 hover:grayscale-0 hover:opacity-100 transition-all duration-500">
-              {["VERCEL", "STRIPE", "LINEAR", "SUPABASE", "GITHUB", "RAYCAST"].map((b) => (
-                <span key={b} className="font-mono text-[11px] font-black tracking-[0.3em]">{b}</span>
-              ))}
-            </div>
-          </motion.div>
+        {/* trust strip - Moved outside the 3D transform context for accurate whileInView tracking */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-50px" }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          className="mt-12 flex flex-col items-center gap-6"
+        >
+          <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground opacity-50">Built for engineers shipping at</p>
+          <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-6 grayscale opacity-40 hover:grayscale-0 hover:opacity-100 transition-all duration-500">
+            {["VERCEL", "STRIPE", "LINEAR", "SUPABASE", "GITHUB", "RAYCAST"].map((b) => (
+              <span key={b} className="font-mono text-[11px] font-black tracking-[0.3em]">{b}</span>
+            ))}
+          </div>
         </motion.div>
       </div>
     </section>
@@ -301,3 +325,5 @@ function CiteRow({ n, ref_, sha }: { n: number; ref_: string; sha: string }) {
     </li>
   );
 }
+
+

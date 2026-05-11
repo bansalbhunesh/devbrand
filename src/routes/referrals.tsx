@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { getReferralData } from "@/rpc.server";
 import { Users, Copy, CheckCircle2, Gift } from "lucide-react";
 import { useState } from "react";
-import * as React from "react";
 
 export const Route = createFileRoute("/referrals")({
   component: ReferralsPage,

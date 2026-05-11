@@ -4,15 +4,11 @@ import {
   ClipboardCopy, 
   Eye, 
   EyeOff, 
-  ExternalLink,
   Link2,
   ShieldCheck,
   FileSearch,
-  Sparkles,
-  ArrowRight,
-  Code
+  Sparkles
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { toggleOutputVisibility } from "@/rpc.server";
 import { toast } from "sonner";
 import {
@@ -33,7 +29,7 @@ export function Stat({ label, value }: { label: string; value: string | number }
   );
 }
 
-export function HistoryCard({ output, userId, onQueryInvalidate }: { output: any; userId: string; onQueryInvalidate: () => void }) {
+export function HistoryCard({ output, _userId, onQueryInvalidate }: { output: any; _userId: string; onQueryInvalidate: () => void }) {
   const [copied, setCopied] = useState<string | null>(null);
   const [toggling, setToggling] = useState(false);
 

@@ -1,6 +1,6 @@
 import { db } from "./db";
 import { users } from "./schema";
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 export async function checkAndResetLimits(userId: string) {
   const user = await db.query.users.findFirst({
@@ -15,7 +15,8 @@ export async function checkAndResetLimits(userId: string) {
   // If never reset or reset date is in the past month
   if (!resetAt || now.getTime() > resetAt.getTime()) {
     const nextReset = new Date();
-    nextReset.setMonth(nextReset.getMonth() + 1);
+    nextReset.setMonth(nextReset.getMonth() + 1, 1); // Set to 1st of next month
+    nextReset.setHours(0, 0, 0, 0); // At midnight
 
     await db
       .update(users)

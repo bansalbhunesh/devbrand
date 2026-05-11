@@ -12,7 +12,7 @@ if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) 
 export async function rateLimit(key: string, limit: number, windowSeconds: number): Promise<{ success: boolean; remaining: number }> {
   if (!redis) {
     if (process.env.NODE_ENV === "production") {
-      console.warn("CRITICAL: Redis not configured in production. Rate limiting is DISABLED.");
+      throw new Error("CRITICAL: Redis not configured in production. Rate limiting is required for security.");
     }
     return { success: true, remaining: limit };
   }

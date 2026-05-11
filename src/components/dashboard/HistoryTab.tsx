@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Loader2, ClipboardCopy, Filter, Search } from "lucide-react";
+import { Loader2, ClipboardCopy, Filter } from "lucide-react";
 import { HistoryCard } from "./HistoryCard";
 import { cn } from "@/lib/utils";
 
@@ -65,7 +65,7 @@ export function HistoryTab({ outputsLoading, outputs, user, setTab, qc }: Histor
             <HistoryCard 
               key={o.id} 
               output={o} 
-              userId={user.id} 
+              _userId={user.id} 
               onQueryInvalidate={() => qc.invalidateQueries({ queryKey: ["outputs", user.id] })} 
             />
           ))}

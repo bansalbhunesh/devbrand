@@ -1,9 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { getOutputBySlug } from "@/rpc.server";
-import { GitCommit, Sparkles, ArrowRight, Link2, Check, ShieldCheck, Github, ExternalLink, Quote, FileCode, ClipboardCopy } from "lucide-react";
-import * as React from "react";
+import { Sparkles, ArrowRight, Link2, Check, ShieldCheck, Quote, BarChart3, FileCode } from "lucide-react";
 import { useState } from "react";
-import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/t/$slug")({

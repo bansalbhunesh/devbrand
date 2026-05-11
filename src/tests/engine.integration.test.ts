@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 
 // Mock database before any engine import triggers db.ts
 vi.mock("../server/db", () => ({
@@ -15,7 +15,7 @@ import { analyzeStaticMetrics, calculateCyclomaticComplexity, calculateChurnScor
 import { computeGraphMetrics, resolvePath } from "../server/engine/layer2";
 import { computeImpactProfile } from "../server/engine/layer3";
 import { analyzeInvisibleWork } from "../server/engine/layer4";
-import type { DependencyGraph, EnrichedPR, NarrativeDraft, StaticMetrics, ImpactProfile } from "../server/engine/types";
+import type { DependencyGraph, EnrichedPR, NarrativeDraft, StaticMetrics } from "../server/engine/types";
 
 // Mock the Anthropic SDK globally for Layer 6 semantic verification
 vi.mock("@anthropic-ai/sdk", () => ({
@@ -147,7 +147,7 @@ describe("Layer 2: Graph Metrics", () => {
 
 // ─── Layer 3: Impact Scoring ─────────────────────────────────────────────
 describe("Layer 3: Impact Scoring", () => {
-  it("should weight high-PageRank files higher", () => {
+  it("should weight high-PageRank files higher", async () => {
     const mockPR: Partial<EnrichedPR> = {
       diffs: [
         { filename: "core/db.ts", status: "modified", additions: 10, deletions: 5, patch: "" },
@@ -175,7 +175,7 @@ describe("Layer 3: Impact Scoring", () => {
       structuralChanges: [],
     };
 
-    const profile = computeImpactProfile(mockPR as EnrichedPR, staticMetrics, graphMetrics);
+    const profile = await computeImpactProfile(mockPR as EnrichedPR, staticMetrics, graphMetrics);
     const dbContrib = profile.perFileContributions.find(c => c.filename === "core/db.ts");
     const leafContrib = profile.perFileContributions.find(c => c.filename === "leaf.ts");
 
@@ -253,7 +253,7 @@ describe("Layer 6: Semantic Verification", () => {
         { claim: "C", ref: "c.ts", sha: "", evidenceType: "structural", verified: true, confidenceScore: 0.8 },
       ],
     };
-    expect(computeSelfConsistency(draft as NarrativeDraft)).toBeCloseTo(0.667, 2);
+    expect(computeSelfConsistency(draft as NarrativeDraft)).toBeCloseTo(0.567, 3);
   });
 
   it("should fall back to file presence when LLM and metrics both fail", async () => {

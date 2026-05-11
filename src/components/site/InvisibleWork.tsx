@@ -1,6 +1,6 @@
 "use client";
 
-import { ShieldCheck, Activity, Search, Code2, Zap, ArrowUpRight } from "lucide-react";
+import { ShieldCheck, Code2, Zap, ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
@@ -72,9 +72,9 @@ export function InvisibleWork() {
 
                   <div className="flex-1 grid grid-cols-2 gap-8 items-center">
                     <div className="space-y-6">
-                      <GraphNode active title="auth/middleware.ts" score={84} type="infra" mounted={mounted} />
-                      <GraphNode title="api/routes.ts" score={42} type="utility" mounted={mounted} />
-                      <GraphNode title="ui/button.tsx" score={12} type="leaf" mounted={mounted} />
+                      <GraphNode active title="auth/middleware.ts" score={84} mounted={mounted} />
+                      <GraphNode title="api/routes.ts" score={42} mounted={mounted} />
+                      <GraphNode title="ui/button.tsx" score={12} mounted={mounted} />
                     </div>
                     <div className="relative h-full">
                       {/* Decorative SVG connections */}
@@ -122,7 +122,7 @@ function FeatureRow({ icon, title, desc }: { icon: React.ReactNode, title: strin
   );
 }
 
-function GraphNode({ title, score, type, active, mounted }: { title: string, score: number, type: string, active?: boolean, mounted: boolean }) {
+function GraphNode({ title, score, active, mounted }: { title: string, score: number, active?: boolean, mounted: boolean }) {
   return (
     <div className={cn(
       "p-4 rounded-xl border transition-all duration-300",

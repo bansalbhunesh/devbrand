@@ -7,7 +7,7 @@ import { Roast } from "@/components/site/Roast";
 import { Pricing } from "@/components/site/Pricing";
 import { InvisibleWork } from "@/components/site/InvisibleWork";
 import { Footer } from "@/components/site/Footer";
-import { motion } from "framer-motion";
+
 
 export const Route = createFileRoute("/")({
   component: LandingPage,

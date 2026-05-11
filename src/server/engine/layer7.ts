@@ -2,7 +2,7 @@ import { db } from "../db";
 import { userEvents, reputationHistory } from "../schema";
 
 import { eq, desc } from "drizzle-orm";
-import type { NarrativeDraft, ImpactProfile } from "./types";
+import type { NarrativeDraft } from "./types";
 
 export interface GlobalFeedback {
   avgImpactScore: number;
@@ -122,7 +122,7 @@ export async function extractUserPreferences(userId: string): Promise<UserPrefer
 
 export async function runLayer7(userId: string, draft: NarrativeDraft): Promise<NarrativeDraft> {
   const feedback = await getGlobalFeedback(userId);
-  const velocity = await computeCareerVelocity(userId);
+
   const preferences = await extractUserPreferences(userId);
   
   const finalDraft = applyFeedbackLoop(draft, feedback);
@@ -130,11 +130,6 @@ export async function runLayer7(userId: string, draft: NarrativeDraft): Promise<
   // Inject learned preferences into the draft for the next iteration (or final polish)
   finalDraft.userPreferences = preferences;
   
-  // Modulate narrative based on career velocity
-  if (velocity.consistency > 0.8) {
-    finalDraft.linkedinPost1 += "\n\n(Consistent contributor status verified by DevBrand)";
-  }
-
   // Final Self-Consistency adjustment
   finalDraft.selfConsistencyScore = finalDraft.selfConsistencyScore * (1 - feedback.userCorrectionRate * 0.5);
 

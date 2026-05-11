@@ -1,7 +1,6 @@
 "use client";
 
-import { Sparkles, Cpu, Shield, Zap, GitBranch, Terminal } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Cpu, Shield, GitBranch, Terminal } from "lucide-react";
 import { motion } from "framer-motion";
 
 const capabilities = [

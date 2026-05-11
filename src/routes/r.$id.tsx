@@ -2,9 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getRoast, postToX } from "@/rpc.server";
-import { Github, Share2, Twitter, Flame, ArrowRight, ShieldCheck, Check, Link2 } from "lucide-react";
-import * as React from "react";
-import { cn } from "@/lib/utils";
+import { Share2, Twitter, Flame, ArrowRight, ShieldCheck, Check, Link2 } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/r/$id")({

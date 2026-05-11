@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { getPublicFeed } from "@/rpc.server";
-import { Compass, Sparkles, TrendingUp, ArrowUpRight, Zap, ExternalLink, Flame, ShieldCheck, Trophy, Rocket } from "lucide-react";
+import { Compass, Sparkles, TrendingUp, ArrowUpRight, Flame, Trophy, Rocket, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";

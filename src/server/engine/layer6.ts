@@ -76,7 +76,7 @@ export async function verifyCitations(
   draft: NarrativeDraft,
   enrichedPR: EnrichedPR,
   staticMetrics: StaticMetrics,
-  impactProfile: ImpactProfile
+  _impactProfile: ImpactProfile
 ): Promise<Citation[]> {
   const verifiedCitations = await Promise.all(draft.citations.map(async (citation) => {
     let verified = false;
@@ -139,9 +139,9 @@ export async function runLayer6(
   draft: NarrativeDraft,
   enrichedPR: EnrichedPR,
   staticMetrics: StaticMetrics,
-  impactProfile: ImpactProfile
+  _impactProfile: ImpactProfile
 ): Promise<NarrativeDraft> {
-  const verifiedCitations = await verifyCitations(draft, enrichedPR, staticMetrics, impactProfile);
+  const verifiedCitations = await verifyCitations(draft, enrichedPR, staticMetrics, _impactProfile);
   const consistencyScore = computeSelfConsistency({ ...draft, citations: verifiedCitations });
   
   const metricVerified = verifiedCitations.filter(c => c.evidenceType === 'metric' && c.verified).length;

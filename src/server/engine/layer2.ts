@@ -8,7 +8,6 @@ import type {
   GraphMetrics,
   NodeGraphMetrics,
   GlobalGraphMetrics,
-  StructuralChange,
   GraphNode,
   GraphEdge,
 } from "./types";
@@ -339,12 +338,6 @@ export function computeGraphMetrics(graph: DependencyGraph): GraphMetrics {
     const inDegree = edges.filter((e) => e.target === node.id).length;
     const outDegree = edges.filter((e) => e.source === node.id).length;
     
-    // PageRank normalized (0-1 range usually, but we want a readable score component)
-    const prScore = Math.min(100, pr[i] * n * 20); 
-    const hubAuthScore = (hub[i] + auth[i]) * 50;
-    // We keep Force Multiplier logic for ArchScore integration but now expose true betweenness
-    const forceMultiplier = Math.min(100, (prScore * 0.6) + (hubAuthScore * 0.4));
-
     return {
       filename: node.id,
       pageRank: pr[i],

@@ -1,7 +1,6 @@
 import { Octokit } from "octokit";
 import { db } from "./db";
 import { repoGraphs } from "./schema";
-import { eq } from "drizzle-orm";
 
 const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 

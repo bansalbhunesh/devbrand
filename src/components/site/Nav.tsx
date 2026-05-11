@@ -1,12 +1,10 @@
 "use client";
 
 import { Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
 import { Github, Menu, LayoutDashboard } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { getSession } from "@/rpc.server";
 import { Route } from "@/routes/__root";
 
 export function Nav() {

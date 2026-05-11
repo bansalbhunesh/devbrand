@@ -1,9 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { getProfileData } from "@/rpc.server";
-import { Github, Globe, Star, ShieldCheck, Zap, Activity, ExternalLink, ArrowRight, BarChart3, Link2, Check } from "lucide-react";
+import { Github, ShieldCheck, Zap, Activity, ArrowRight, BarChart3, Link2, Check, Sparkles } from "lucide-react";
 import * as React from "react";
-import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 

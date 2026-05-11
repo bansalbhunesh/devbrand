@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRight, Check, Link2, Sparkles, GitCommit } from "lucide-react";
+import { ArrowRight, Check, Link2, GitCommit } from "lucide-react";
+
 import { useQuery } from "@tanstack/react-query";
 import { getDemoOutputs } from "@/rpc.server";
-import { cn } from "@/lib/utils";
 
 const fallbackPairs = [
   {

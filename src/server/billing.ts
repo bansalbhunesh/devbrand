@@ -3,8 +3,8 @@ import { z } from "zod";
 import Razorpay from "razorpay";
 import crypto from "crypto";
 import { db } from "./db";
-import { users, subscriptions, userEvents } from "./schema";
-import { eq, sql } from "drizzle-orm";
+import { users, userEvents } from "./schema";
+import { eq } from "drizzle-orm";
 import { getSession } from "./auth";
 
 let razorpay: Razorpay | null = null;

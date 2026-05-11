@@ -6,7 +6,7 @@ import { analyzeInvisibleWork } from "./layer4";
 import { generateNarrative } from "./layer5";
 import { runLayer6 } from "./layer6";
 import { runLayer7 } from "./layer7";
-import type { NarrativeDraft, UserContext, GraphImpactReport, GraphMetrics } from "./types";
+import type { NarrativeDraft, UserContext, GraphImpactReport } from "./types";
 
 import { logger } from "@/lib/logger";
 

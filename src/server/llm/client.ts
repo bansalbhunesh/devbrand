@@ -66,7 +66,7 @@ async function completeOpenAiCompatible(params: CompleteTextParams): Promise<str
 async function completeAnthropic(params: CompleteTextParams): Promise<string> {
   const { default: AnthropicCtor } = await import("@anthropic-ai/sdk");
   const client = new AnthropicCtor({ apiKey: process.env.ANTHROPIC_API_KEY });
-  const model = process.env.CLAUDE_MODEL ?? "claude-3-5-sonnet-20241022";
+  const model = process.env.CLAUDE_MODEL ?? "claude-3-7-sonnet-20250219";
   const response = await client.messages.create({
     model,
     max_tokens: params.maxTokens,

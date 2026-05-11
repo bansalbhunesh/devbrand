@@ -1,5 +1,4 @@
-import * as React from "react";
-import { Plus, Users, Zap, TrendingUp, Trophy, ArrowRight, ShieldCheck, Star } from "lucide-react";
+import { Plus, Users, TrendingUp, Trophy, ArrowRight, ShieldCheck, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface TeamsTabProps {

@@ -2,9 +2,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { getWrappedStats } from "@/rpc.server";
 import { 
-  Trophy, Zap, BarChart3, Rocket, Star, 
-  ArrowRight, Share2, Twitter, Linkedin, 
-  Github, LayoutGrid, Calendar, ChevronRight, ChevronLeft, Sparkles, ShieldCheck
+  Trophy, 
+  ArrowRight, Twitter, Linkedin, 
+  LayoutGrid, ChevronRight, ChevronLeft, Sparkles, ShieldCheck
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import * as React from "react";

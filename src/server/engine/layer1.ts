@@ -79,8 +79,8 @@ export function calculateHalsteadMetrics(code: string) {
       UnaryExpression(path: any) { operators.add(path.node.operator); N1++; },
       AssignmentExpression(path: any) { operators.add(path.node.operator); N1++; },
       UpdateExpression(path: any) { operators.add(path.node.operator); N1++; },
-      CallExpression(path: any) { operators.add('()'); N1++; },
-      MemberExpression(path: any) { operators.add('.'); N1++; }
+      CallExpression(_path: any) { operators.add('()'); N1++; },
+      MemberExpression(_path: any) { operators.add('.'); N1++; }
     });
   } catch (e) {
     return { volume: 0, difficulty: 0 };

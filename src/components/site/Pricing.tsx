@@ -7,7 +7,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 declare global {
   interface Window {
@@ -151,6 +151,7 @@ export function Pricing() {
             >
               <motion.div
                 animate={{ x: billingCycle === "monthly" ? 0 : 24 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
                 className="w-4 h-4 rounded-full bg-blue-500 shadow-sm"
               />
             </button>
@@ -167,13 +168,14 @@ export function Pricing() {
               key={tier.name}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              viewport={{ once: true, margin: "-100px" }}
               transition={{ delay: idx * 0.1 }}
+              whileHover={tier.popular ? { scale: 1.05, translateY: -4 } : { translateY: -4 }}
               className={cn(
                 "relative flex flex-col p-10 rounded-3xl border transition-all duration-300",
                 tier.popular 
-                  ? "border-blue-500/40 bg-background/60 backdrop-blur-xl shadow-2xl shadow-blue-500/10 scale-105 z-10" 
-                  : "border-border bg-muted/20 hover:bg-muted/40"
+                  ? "border-blue-500/40 bg-background/60 backdrop-blur-xl shadow-2xl shadow-blue-500/10 z-10" 
+                  : "border-border bg-muted/20"
               )}
             >
               {tier.popular && (
@@ -184,10 +186,19 @@ export function Pricing() {
               
               <div className="mb-8">
                 <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-4">{tier.name}</h3>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-5xl font-bold tracking-tighter">
-                    {billingCycle === "monthly" ? tier.price.monthly : tier.price.yearly}
-                  </span>
+                <div className="flex items-baseline gap-1 h-[60px] overflow-hidden">
+                  <AnimatePresence mode="wait">
+                    <motion.span
+                      key={billingCycle}
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      exit={{ y: -20, opacity: 0 }}
+                      transition={{ duration: 0.2, ease: "easeOut" }}
+                      className="text-5xl font-bold tracking-tighter"
+                    >
+                      {billingCycle === "monthly" ? tier.price.monthly : tier.price.yearly}
+                    </motion.span>
+                  </AnimatePresence>
                   <span className="text-muted-foreground font-medium">/mo</span>
                 </div>
                 <p className="mt-4 text-sm text-muted-foreground leading-relaxed">{tier.description}</p>
@@ -298,3 +309,5 @@ function ComparisonRow({ label, free, pro }: { label: string; free: boolean | st
     </tr>
   );
 }
+
+

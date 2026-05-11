@@ -12,7 +12,7 @@ export interface InvisibleWorkSignal {
   impactCategory: string;
 }
 
-export function classifyWork(prTitle: string, filenameList: string[], diffSize: { added: number, deleted: number }): InvisibleWorkSignal {
+export function classifyWork(prTitle: string, _filenameList: string[], diffSize: { added: number, deleted: number }): InvisibleWorkSignal {
   const title = prTitle.toLowerCase();
   
   // Basic heuristic-based classifier for V1

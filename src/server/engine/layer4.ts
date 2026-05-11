@@ -1,13 +1,13 @@
 import type {
   EnrichedPR,
-  StaticMetrics,
   InvisibleWorkReport,
   InvisibleWorkCategory,
+  StaticMetrics,
 } from "./types";
 
 export function analyzeInvisibleWork(
   enrichedPR: EnrichedPR,
-  staticMetrics: StaticMetrics
+  _staticMetrics: StaticMetrics
 ): InvisibleWorkReport {
   const categories: InvisibleWorkCategory[] = [];
 

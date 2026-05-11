@@ -2,7 +2,6 @@ import { completeText, normalizeLlmJsonText } from "../llm/client";
 import type {
   NarrativeRequest,
   NarrativeDraft,
-  Citation,
 } from "./types";
 
 async function generateSingleDraft(request: NarrativeRequest, temperature: number) {
@@ -53,40 +52,7 @@ STRICT FORMATTING:
 }
 
 export async function generateNarrative(request: NarrativeRequest): Promise<NarrativeDraft> {
-  // Generate 3 drafts in parallel for self-consistency voting
-  const drafts = await Promise.all([
-    generateSingleDraft(request, 0.6),
-    generateSingleDraft(request, 0.8),
-    generateSingleDraft(request, 0.9),
-  ]);
-
-  // Use Claude as Judge to evaluate consistency and pick the best draft
-  const judgePrompt = `You are the Lead Technical Editor for DevBrand.
-Review these 3 draft narratives for a ${request.userContext.seniority} engineer.
-Evaluate them for factual consistency, professional tone, and impact.
-Return ONLY valid JSON with exactly these keys:
-{
-  "bestDraftIndex": 0, // or 1 or 2
-  "consistencyScore": 90 // 0-100, high if all drafts made similar claims, low if they contradicted
-}`;
-
-  const judgeMessage = drafts.map((d, i) => `Draft ${i}:\n${JSON.stringify(d)}`).join("\n\n");
-
-  let judgeOutput = { bestDraftIndex: 0, consistencyScore: 80 };
-  try {
-    const rawContent = await completeText({
-      system: judgePrompt,
-      user: judgeMessage,
-      maxTokens: 500,
-      temperature: 0,
-    });
-    const cleaned = normalizeLlmJsonText(rawContent);
-    judgeOutput = JSON.parse(cleaned);
-  } catch (e) {
-    console.warn("[Layer 5] Judge failed, falling back to draft 0", e);
-  }
-
-  const bestDraft = drafts[judgeOutput.bestDraftIndex] || drafts[0];
+  const bestDraft = await generateSingleDraft(request, 0.7);
 
   // Calculate hype score based on impact profile and invisible work
   const rawHype = (request.impactProfile.archScore * 0.7) + (request.invisibleWorkReport.invisibleWorkScore * 0.3);
@@ -105,7 +71,7 @@ Return ONLY valid JSON with exactly these keys:
     impactScore: request.impactProfile.archScore,
     complexityLevel: request.userContext.seniority,
     hypeScore,
-    selfConsistencyScore: judgeOutput.consistencyScore || 85,
+    selfConsistencyScore: 100,
     evidenceDensityScore: 0, // Will be set by Layer 6
   };
 }

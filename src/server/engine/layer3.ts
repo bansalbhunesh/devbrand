@@ -6,15 +6,13 @@ import type {
   ImpactDimensions,
   ScoreBreakdown,
   FileContribution,
-  RiskFactor,
 } from "./types";
-import { getRequest } from "@tanstack/react-start/server";
 
-export function computeImpactProfile(
+export async function computeImpactProfile(
   enrichedPR: EnrichedPR,
   staticMetrics: StaticMetrics,
   graphMetrics: GraphMetrics
-): ImpactProfile {
+): Promise<ImpactProfile> {
   const perFileContributions: FileContribution[] = enrichedPR.diffs.map(d => {
     const gMetric = graphMetrics.nodeMetrics.find(m => m.filename === d.filename);
     const sMetric = staticMetrics.fileMetrics.find(m => m.filename === d.filename);
@@ -40,7 +38,7 @@ export function computeImpactProfile(
   });
 
   // Calculate Impact Signature
-  const totalModularity = graphMetrics.globalMetrics.modularity;
+
   const isHighModularityChange = (graphMetrics.structuralChanges || []).some(s => s.changeType === 'community_shift');
   
   const dimensions: ImpactDimensions = {

@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { db } from "./db";
 import { outputs, users } from "./schema";
-import { eq, and, gte, lte, sql } from "drizzle-orm";
+import { eq, and, gte, lte } from "drizzle-orm";
 
 export const getWrappedStats = createServerFn({ method: "GET" })
   .inputValidator(z.string().uuid())
