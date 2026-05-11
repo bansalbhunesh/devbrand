@@ -1,12 +1,16 @@
 import { Redis } from "@upstash/redis";
 
-let redis: Redis | null = null;
+let _redis: Redis | null = null;
 
-if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
-  redis = new Redis({
-    url: process.env.UPSTASH_REDIS_REST_URL,
-    token: process.env.UPSTASH_REDIS_REST_TOKEN,
-  });
+function getRedis(): Redis | null {
+  if (_redis) return _redis;
+  if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+    _redis = new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN,
+    });
+  }
+  return _redis;
 }
 
 export interface RateLimitResult {
@@ -25,6 +29,7 @@ export async function rateLimit(
   limit: number,
   windowSeconds: number
 ): Promise<RateLimitResult> {
+  const redis = getRedis();
   if (!redis) {
     if (process.env.NODE_ENV === "production") {
       throw new Error("CRITICAL: Redis not configured in production. Rate limiting is required for security.");
@@ -93,6 +98,7 @@ export async function logSecurityEvent(
   ip: string,
   details: Record<string, unknown> = {}
 ): Promise<void> {
+  const redis = getRedis();
   if (!redis) return;
 
   const event = {
@@ -123,12 +129,14 @@ export async function logSecurityEvent(
  * IP Blocking Utility
  */
 export async function blockIP(ip: string, reason: string, durationSeconds: number = 3600): Promise<void> {
+  const redis = getRedis();
   if (!redis) return;
   await redis.set(`block:${ip}`, JSON.stringify({ reason, blockedAt: Date.now() }), { ex: durationSeconds });
   await logSecurityEvent("rate_limit_exceeded", null, ip, { reason, action: "blocked", durationSeconds });
 }
 
 export async function isIPBlocked(ip: string): Promise<boolean> {
+  const redis = getRedis();
   if (!redis) return false;
   return (await redis.exists(`block:${ip}`)) === 1;
 }
