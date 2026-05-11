@@ -32,7 +32,7 @@ describe("Engine Robustness & Edge Cases", () => {
     it("should ignore binary files or files with no patches", () => {
       const mockPR: Partial<EnrichedPR> = {
         diffs: [
-          { filename: "logo.png", status: "added", additions: 0, deletions: 0, patch: undefined },
+          { filename: "logo.png", status: "added", additions: 0, deletions: 0, patch: "" },
           { filename: "data.bin", status: "modified", additions: 100, deletions: 100, patch: "" }
         ],
         astDiffs: []
@@ -91,7 +91,7 @@ describe("Engine Robustness & Edge Cases", () => {
     it("should detect massive cleanups (Net Negative Churn)", () => {
       const mockPR: Partial<EnrichedPR> = {
         diffs: [{ filename: "legacy.ts", status: "modified", additions: 5, deletions: 500, patch: "deleted the world" }],
-        astDiffs: [{ filename: "legacy.ts", beforeSymbols: [], afterSymbols: [], addedSymbols: [], removedSymbols: [], changedSymbols: [], addedImports: [], removedImports: [], semanticChange: "cleanup" }]
+        astDiffs: [{ filename: "legacy.ts", beforeSymbols: [], afterSymbols: [], addedSymbols: [], removedSymbols: [], changedSymbols: [], addedImports: [], removedImports: [], semanticChange: "refactor" }]
       };
       const metrics = analyzeStaticMetrics(mockPR as EnrichedPR);
       const report = analyzeInvisibleWork(mockPR as EnrichedPR, metrics);

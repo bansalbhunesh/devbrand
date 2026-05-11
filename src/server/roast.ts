@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getHeader } from "@tanstack/react-start/server";
+import { getCookie, setCookie, deleteCookie, getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { Octokit } from "octokit";
 import { completeText, normalizeLlmJsonText } from "./llm/client";
@@ -69,7 +69,8 @@ export const generateRoast = createServerFn({ method: "POST" })
       }
     } else {
       // IP-based rate limit for anonymous users
-      const ip = getHeader("x-forwarded-for")?.split(",")[0] || "127.0.0.1";
+      const request = getRequest();
+      const ip = request?.headers.get("x-forwarded-for")?.split(",")[0] || "127.0.0.1";
       const { success } = await rateLimit(`roast:anon:${ip}`, PUBLIC_ANON_LIMIT, 3600);
       if (!success) throw new Error("PUBLIC_RATE_LIMIT_REACHED");
     }

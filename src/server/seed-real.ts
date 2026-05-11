@@ -84,7 +84,7 @@ async function seedRealData() {
 
       logger.info(`Successfully ingested: ${slug}`);
     } catch (err) {
-      logger.error(`Failed to process PR ${prUrl}:`, err);
+      logger.error(err as Error, { prUrl });
     }
   }
 

@@ -21,7 +21,10 @@ function WrappedPage() {
 
   const { data: stats, isLoading } = useQuery({
     queryKey: ["wrapped", session?.id],
-    queryFn: () => getWrappedStats({ data: session?.id! }),
+    queryFn: async () => {
+      const res = await getWrappedStats();
+      return res as any;
+    },
     enabled: !!session?.id,
   });
 
@@ -120,7 +123,7 @@ function WrappedPage() {
 
         {/* Category breakdown */}
         <div className="grid md:grid-cols-3 gap-6 mb-32">
-          {stats.categoryBreakdown.slice(0, 3).map(([cat, count], i) => (
+          {(stats.categoryBreakdown as any[]).slice(0, 3).map(([cat, count]: [string, number], i: number) => (
             <div key={cat} className="p-8 rounded-[1.5rem] border border-white/5 bg-white/5 animate-in fade-in slide-in-from-bottom-8 duration-700" style={{ animationDelay: `${500 + (i * 100)}ms` }}>
               <div className="text-3xl font-bold mb-2">{count}</div>
               <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{cat}</div>

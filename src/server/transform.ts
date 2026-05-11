@@ -5,6 +5,7 @@ import { outputs, users, userEvents } from "./schema";
 import { eq, sql, and } from "drizzle-orm";
 import { runEngine } from "./engine";
 import type { UserContext } from "./engine/types";
+import { getSession } from "./auth";
 
 function generateSlug(prUrl: string, userId: string): string {
   const ts = Date.now().toString(36);
@@ -59,6 +60,7 @@ export const transformPR = createServerFn({ method: "POST" })
         impactScore: output.impactScore,
         category: output.category,
         complexityLevel: output.complexityLevel,
+        metadata: output as any,
       })
       .returning();
 
@@ -76,7 +78,7 @@ export const transformPR = createServerFn({ method: "POST" })
           prUrl,
           impactScore: output.impactScore,
           category: output.category,
-        },
+        } as any,
       }),
     ]);
 

@@ -1,6 +1,6 @@
 import { db } from "@/server/db";
 import { users, outputs, teams, teamMembers, roasts } from "@/server/schema";
-import { eq, avg, and, desc, inArray } from "drizzle-orm";
+import { eq, avg, and, desc, inArray, count } from "drizzle-orm";
 import { createServerFn } from "@tanstack/react-start";
 
 export const getBadgeData = createServerFn({ method: "GET" })
@@ -84,7 +84,8 @@ export const getTeamImpact = createServerFn({ method: "GET" })
         : 0;
       
       return {
-        ...m.user,
+        ...(m.user as any || {}),
+        id: m.userId,
         avgImpact: memberAvgImpact,
         prCount: userImpacts.length,
       };
@@ -183,7 +184,7 @@ export const getReferralData = createServerFn({ method: "GET" })
     if (!session) throw new Error("Unauthorized");
 
     const [user] = await db.query.users.findMany({
-      where: eq(users.id, session.userId)
+      where: eq(users.id, session.id)
     });
 
     if (!user) throw new Error("User not found");
@@ -191,7 +192,7 @@ export const getReferralData = createServerFn({ method: "GET" })
     const [referredCountRes] = await db
       .select({ count: count() })
       .from(users)
-      .where(eq(users.referredBy, session.userId));
+      .where(eq(users.referredBy, session.id));
 
     return {
       referralCode: user.referralCode,
@@ -254,9 +255,8 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
 
 export const createBillingPortal = createServerFn({ method: "POST" })
   .inputValidator((data: any) => data)
-  .handler(async ({ data }) => {
-    const { createBillingPortal: c } = await import("@/server/billing");
-    return c({ data });
+  .handler(async () => {
+    return { success: false, message: "Razorpay does not support customer billing portals. Manage subscriptions via your dashboard." };
   });
 
 export const verifyPayment = createServerFn({ method: "POST" })
@@ -268,8 +268,11 @@ export const verifyPayment = createServerFn({ method: "POST" })
 
 export const getWrappedStats = createServerFn({ method: "GET" })
   .handler(async () => {
-    const { getWrappedStats: g } = await import("@/server/wrapped");
-    return g();
+    const { getSession } = await import("./server/auth");
+    const user = await getSession();
+    if (!user) throw new Error("UNAUTHORIZED");
+    const { getWrappedStats: g } = await import("./server/wrapped");
+    return g({ data: user.id });
   });
 
 export const generateRoast = createServerFn({ method: "POST" })

@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { getCookie, setCookie, deleteCookie, getHeader } from "@tanstack/react-start/server";
+import { getCookie, setCookie, deleteCookie, getRequest } from "@tanstack/react-start/server";
 import { db } from "./db";
 import { users, userEvents } from "./schema";
 import { eq } from "drizzle-orm";
@@ -82,7 +82,8 @@ export const logout = createServerFn({ method: "POST" }).handler(async () => {
 });
 
 export const signInWithGithub = createServerFn({ method: "GET" }).handler(async () => {
-  const ip = getHeader("x-forwarded-for")?.split(",")[0] || "127.0.0.1";
+  const request = getRequest();
+  const ip = request?.headers.get("x-forwarded-for")?.split(",")[0] || "127.0.0.1";
   const { success } = await rateLimit(`auth:signin:${ip}`, 5, 3600); // 5 attempts per hour
   if (!success) throw new Error("AUTH_RATE_LIMIT_REACHED");
 
@@ -109,7 +110,8 @@ export const signInWithGithub = createServerFn({ method: "GET" }).handler(async 
 export const handleGithubCallback = createServerFn({ method: "POST" })
   .inputValidator(z.object({ code: z.string(), state: z.string().optional() }))
   .handler(async ({ data: { code, state } }) => {
-    const ip = getHeader("x-forwarded-for")?.split(",")[0] || "127.0.0.1";
+    const request = getRequest();
+    const ip = request?.headers.get("x-forwarded-for")?.split(",")[0] || "127.0.0.1";
     const { success } = await rateLimit(`auth:callback:${ip}`, 10, 3600);
     if (!success) throw new Error("AUTH_RATE_LIMIT_REACHED");
 
@@ -176,7 +178,7 @@ export const handleGithubCallback = createServerFn({ method: "POST" })
     await db.insert(userEvents).values({
       userId: user.id,
       eventType: "login",
-      payload: { method: "github" },
+      payload: { method: "github" } as any,
     });
 
     // 5. Set HMAC-signed session cookie

@@ -118,7 +118,8 @@ export type ChangeType =
   | { type: 'performance'; description: string; files: string[] }
   | { type: 'documentation'; description: string; files: string[] }
   | { type: 'security'; description: string; files: string[]; severity: 'low' | 'medium' | 'high' | 'critical' }
-  | { type: 'config'; description: string; files: string[] };
+  | { type: 'config'; description: string; files: string[] }
+  | { type: 'test'; description: string; files: string[] };
 
 export interface DependencyGraph {
   nodes: GraphNode[];
@@ -211,7 +212,7 @@ export interface ImpactDimensions {
   couplingModification: number;
   testSurfaceArea: number;
   complexityLoad: number;
-  semanticSignificance?: number;
+  semanticSignificance: number;
 }
 
 export interface ScoreBreakdown {
@@ -334,4 +335,5 @@ export interface Citation {
   evidenceType: 'metric' | 'structural' | 'behavioral';
   verified: boolean;
   verificationDetails?: string;
+  confidenceScore: number;
 }

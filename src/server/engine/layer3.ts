@@ -6,7 +6,9 @@ import type {
   ImpactDimensions,
   ScoreBreakdown,
   FileContribution,
+  RiskFactor,
 } from "./types";
+import { getRequest } from "@tanstack/react-start/server";
 
 export function computeImpactProfile(
   enrichedPR: EnrichedPR,
@@ -49,17 +51,19 @@ export function computeImpactProfile(
     couplingModification: graphMetrics.globalMetrics.density * 200,
     testSurfaceArea: enrichedPR.diffs.filter(d => d.filename.includes("test")).length * 10,
     complexityLoad: staticMetrics.overallMetrics.avgComplexity * 1.5,
+    semanticSignificance: (enrichedPR.astDiffs || []).filter(a => a.semanticChange !== 'none').length * 20,
   };
 
   // Weighted average for a more accurate ArchScore
   const weights: Record<keyof ImpactDimensions, number> = {
-    architecturalDisruption: 0.30, // Increased weight for architectural changes
+    architecturalDisruption: 0.25,
     riskAndHotspot: 0.15,
     crossCuttingIndex: 0.10,
     knowledgeDispersion: 0.05,
-    couplingModification: 0.20,
+    couplingModification: 0.15,
     testSurfaceArea: 0.10,
     complexityLoad: 0.10,
+    semanticSignificance: 0.10,
   };
 
   const archScore = Math.min(100, Object.entries(dimensions).reduce((acc, [key, val]) => {
@@ -82,7 +86,6 @@ export function computeImpactProfile(
     confidence: 0.92, // Increased confidence due to more rigorous metrics
     rawSignals: [],
     perFileContributions,
-    riskFactors: dimensions.riskAndHotspot > 70 ? ["High complexity hotspot detected"] : [],
+    riskFactors: dimensions.riskAndHotspot > 70 ? [{ factor: "hotspot", severity: "high", description: "High complexity hotspot detected", mitigatable: true }] : [],
   };
 }
-

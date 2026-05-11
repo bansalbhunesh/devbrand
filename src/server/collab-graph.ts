@@ -1,21 +1,11 @@
 import { Octokit } from "octokit";
 import { db } from "./db";
-import { profiles } from "./schema";
+import { users, profiles } from "./schema";
 import { eq } from "drizzle-orm";
 
 const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
-const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6h
-
-export interface CollabProfile {
-  reviewsGiven: number;
-  reviewsReceived: number;
-  forceMultiplierScore: number;
-  topCollaborators: string[];
-  lastComputedAt: string;
-}
-
-export interface ContributionRhythm {
+interface ContributionRhythm {
   mostActiveDay: string;
   streakDays: number;
   avgPRsPerMonth: number;
@@ -23,114 +13,46 @@ export interface ContributionRhythm {
   lastComputedAt: string;
 }
 
-const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-
-export async function buildCollabGraph(
-  userId: string,
-  username: string
-): Promise<CollabProfile> {
-  const profile = await db.query.profiles.findFirst({
-    where: eq(profiles.userId, userId),
-  });
-
-  if (
-    profile?.collabStats &&
-    Date.now() - new Date(profile.collabStats.lastComputedAt).getTime() < CACHE_TTL_MS
-  ) {
-    return profile.collabStats;
-  }
-
-  try {
-    const [reviewsGivenRes, reviewsReceivedRes, eventsRes] = await Promise.all([
-      octokit.rest.search.issuesAndPullRequests({
-        q: `type:pr reviewed-by:${username} -author:${username}`,
-        per_page: 100,
-      }),
-      octokit.rest.search.issuesAndPullRequests({
-        q: `type:pr author:${username} review-requested:${username}`,
-        per_page: 100,
-      }),
-      octokit.rest.activity.listPublicEventsForUser({ username, per_page: 100 }),
-    ]);
-
-    const reviewsGiven = Math.min(reviewsGivenRes.data.total_count, 100);
-    const reviewsReceived = Math.min(reviewsReceivedRes.data.total_count, 100);
-
-    const collaborators: Record<string, number> = {};
-    for (const event of eventsRes.data) {
-      if (event.type === "PullRequestReviewEvent" && event.actor?.login !== username) {
-        collaborators[event.actor.login] = (collaborators[event.actor.login] ?? 0) + 1;
-      }
-    }
-    const topCollaborators = Object.entries(collaborators)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 5)
-      .map(([login]) => login);
-
-    const forceMultiplierScore = Math.min(100, Math.round((reviewsGiven / Math.max(reviewsGiven + reviewsReceived, 1)) * 100));
-
-    const stats: CollabProfile = {
-      reviewsGiven,
-      reviewsReceived,
-      forceMultiplierScore,
-      topCollaborators,
-      lastComputedAt: new Date().toISOString(),
-    };
-
-    await db
-      .insert(profiles)
-      .values({ userId, collabStats: stats })
-      .onConflictDoUpdate({ target: profiles.userId, set: { collabStats: stats, updatedAt: new Date() } });
-
-    return stats;
-  } catch (err) {
-    console.error("buildCollabGraph failed:", err);
-    return {
-      reviewsGiven: 0,
-      reviewsReceived: 0,
-      forceMultiplierScore: 0,
-      topCollaborators: [],
-      lastComputedAt: new Date().toISOString(),
-    };
-  }
-}
-
-export async function buildContributionRhythm(
-  userId: string,
-  username: string
-): Promise<ContributionRhythm> {
-  const profile = await db.query.profiles.findFirst({ where: eq(profiles.userId, userId) });
-
-  if (
-    profile?.contributionRhythm &&
-    Date.now() - new Date(profile.contributionRhythm.lastComputedAt).getTime() < CACHE_TTL_MS
-  ) {
-    return profile.contributionRhythm;
-  }
+export async function computeCollabGraph(userId: string) {
+  const user = await db.query.users.findFirst({ where: eq(users.id, userId) });
+  if (!user || !user.githubLogin) return;
 
   try {
     const { data: events } = await octokit.rest.activity.listPublicEventsForUser({
-      username,
+      username: user.githubLogin,
       per_page: 100,
     });
 
+    const pushEvents = events.filter((e) => e.type === "PushEvent");
+    
+    // 1. Activity Distribution
     const dayCounts = new Array(7).fill(0);
-    let streak = 0;
-    let lastDay = "";
-
-    for (const event of events) {
-      if (!event.created_at) continue;
-      const d = new Date(event.created_at);
+    const hourlyCounts = new Array(24).fill(0);
+    
+    pushEvents.forEach((e) => {
+      const d = new Date(e.created_at!);
       dayCounts[d.getDay()]++;
-      
-      const dayKey = d.toISOString().slice(0, 10);
-      if (lastDay !== dayKey) {
+      hourlyCounts[d.getHours()]++;
+    });
+
+    const mostActiveDayIdx = dayCounts.indexOf(Math.max(...dayCounts));
+    const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+    // 2. Compute Rhythm
+    // Simple streak detection (past 90 days)
+    const dates = [...new Set(pushEvents.map((e) => new Date(e.created_at!).toDateString()))];
+    let streak = 0;
+    const today = new Date();
+    for (let i = 0; i < 90; i++) {
+      const check = new Date(today);
+      check.setDate(check.getDate() - i);
+      if (dates.includes(check.toDateString())) {
         streak++;
-        lastDay = dayKey;
+      } else if (i > 0) {
+        break; // break if gap
       }
     }
 
-    const mostActiveDayIdx = dayCounts.indexOf(Math.max(...dayCounts));
     const avgPRsPerMonth = Math.round((events.filter((e) => e.type === "PullRequestEvent").length / 3) * 10) / 10;
 
     const label: ContributionRhythm["label"] =
@@ -146,20 +68,20 @@ export async function buildContributionRhythm(
 
     await db
       .insert(profiles)
-      .values({ userId, contributionRhythm: rhythm })
+      .values({ userId, contributionRhythm: rhythm as any })
       .onConflictDoUpdate({
         target: profiles.userId,
-        set: { contributionRhythm: rhythm, updatedAt: new Date() },
+        set: { contributionRhythm: rhythm as any, updatedAt: new Date() },
       });
 
-    return rhythm;
-  } catch (err) {
-    console.error("buildContributionRhythm failed:", err);
+    return { rhythm };
+  } catch (error) {
+    console.error("[Collab Graph] Computation failed", error);
     return {
       mostActiveDay: "Unknown",
       streakDays: 0,
       avgPRsPerMonth: 0,
-      label: "Infrequent",
+      label: "Infrequent" as any,
       lastComputedAt: new Date().toISOString(),
     };
   }

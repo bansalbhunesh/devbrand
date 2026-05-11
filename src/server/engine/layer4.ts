@@ -37,7 +37,7 @@ export function analyzeInvisibleWork(
     const isCodeCleanup = diff.deletions > diff.additions * 2 && diff.deletions > 20;
     const hasTechDebtMarkers = ["todo", "fixme", "hack", "workaround"].some(m => (diff.patch || "").toLowerCase().includes(m));
 
-    if (isCodeCleanup || hasTechDebtMarkers || astDiff.semanticChange === 'cleanup') {
+    if (isCodeCleanup || hasTechDebtMarkers || astDiff.semanticChange === 'refactor') {
       const cleanupScore = isCodeCleanup ? Math.floor(diff.deletions / 10) : 5;
       codeDeletionScore += cleanupScore;
       cleanupFiles.push(astDiff.filename);

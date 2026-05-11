@@ -22,6 +22,7 @@ import {
   Users,
   Plus,
   Lock,
+  BarChart3,
 } from "lucide-react";
 import { 
   getSession, 
@@ -67,7 +68,10 @@ function Dashboard() {
 
   const { data: outputs, isLoading: outputsLoading } = useQuery({
     queryKey: ["outputs", user?.id],
-    queryFn: () => getUserOutputs({ data: user!.id }),
+    queryFn: async () => {
+      const res = await getUserOutputs();
+      return res as any;
+    },
     enabled: !!user && tab === "history",
   });
 
@@ -101,14 +105,20 @@ function Dashboard() {
 
   const handleUpgrade = async () => {
     if (!user) return;
-    const { url } = await createCheckoutSession({ data: { userId: user.id } });
-    window.location.href = url;
+    try {
+      const res = await createCheckoutSession() as any;
+      if (res.orderId) {
+        alert("Payment initiated! Order ID: " + res.orderId + ". In production, this would open the Razorpay checkout modal.");
+      }
+    } catch (e) {
+      setError("Payment failed to initialize.");
+    }
   };
 
   const handlePortal = async () => {
     if (!user) return;
-    const { url } = await createBillingPortal({ data: { userId: user.id } });
-    window.location.href = url;
+    const res = await createBillingPortal() as any;
+    alert(res.message);
   };
 
   const handleSaveSettings = async () => {
@@ -414,7 +424,7 @@ function Dashboard() {
               </div>
             ) : outputs && outputs.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {outputs.map((o) => (
+                {(outputs as any[])?.map((o: any) => (
                   <HistoryCard key={o.id} output={o} userId={user.id} onQueryInvalidate={() => qc.invalidateQueries({ queryKey: ["outputs", user.id] })} />
                 ))}
               </div>

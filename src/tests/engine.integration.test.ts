@@ -226,7 +226,7 @@ describe("Layer 6: Semantic Verification", () => {
   it("should verify citations using the mocked LLM", async () => {
     const mockDraft: Partial<NarrativeDraft> = {
       citations: [
-        { claim: "Refactored the auth middleware", ref: "src/auth.ts", sha: "abc123", evidenceType: "structural", verified: false },
+        { claim: "Refactored the auth middleware", ref: "src/auth.ts", sha: "abc123", evidenceType: "structural", verified: false, confidenceScore: 0.5 },
       ],
     };
     const mockPR: Partial<EnrichedPR> = {
@@ -248,9 +248,9 @@ describe("Layer 6: Semantic Verification", () => {
   it("should compute self-consistency as ratio of verified citations", () => {
     const draft: Partial<NarrativeDraft> = {
       citations: [
-        { claim: "A", ref: "a.ts", sha: "", evidenceType: "metric", verified: true },
-        { claim: "B", ref: "b.ts", sha: "", evidenceType: "metric", verified: false },
-        { claim: "C", ref: "c.ts", sha: "", evidenceType: "structural", verified: true },
+        { claim: "Claim", ref: "file.ts", sha: "abc", evidenceType: "metric", verified: true, confidenceScore: 0.9 },
+        { claim: "B", ref: "b.ts", sha: "", evidenceType: "metric", verified: false, confidenceScore: 0 },
+        { claim: "C", ref: "c.ts", sha: "", evidenceType: "structural", verified: true, confidenceScore: 0.8 },
       ],
     };
     expect(computeSelfConsistency(draft as NarrativeDraft)).toBeCloseTo(0.667, 2);
@@ -265,7 +265,7 @@ describe("Layer 6: Semantic Verification", () => {
     });
 
     const result = await verifyCitations(
-      { citations: [{ claim: "Did something", ref: "exists.ts", sha: "", evidenceType: "behavioral", verified: false }] } as any,
+      { citations: [{ claim: "Did something", ref: "exists.ts", sha: "", evidenceType: "behavioral", verified: false, confidenceScore: 0.5 }] } as any,
       { diffs: [{ filename: "exists.ts", status: "modified", additions: 1, deletions: 0, patch: "// noop" }] } as any,
       { fileMetrics: [] } as any,
       { perFileContributions: [] } as any
@@ -277,7 +277,7 @@ describe("Layer 6: Semantic Verification", () => {
 
   it("should handle citations for non-existent files", async () => {
     const result = await verifyCitations(
-      { citations: [{ claim: "Changed ghost.ts", ref: "ghost.ts", sha: "", evidenceType: "metric", verified: false }] } as any,
+      { citations: [{ claim: "Changed ghost.ts", ref: "ghost.ts", sha: "", evidenceType: "metric", verified: false, confidenceScore: 0.1 }] } as any,
       { diffs: [] } as any,
       { fileMetrics: [] } as any,
       { perFileContributions: [] } as any

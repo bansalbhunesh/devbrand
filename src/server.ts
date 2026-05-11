@@ -77,6 +77,6 @@ export default {
       return new Response(svg, { headers: { "Content-Type": "image/svg+xml", "Cache-Control": "public, max-age=86400" } });
     }
 
-    return handler(request, env, ctx);
+    return (handler as any)(request, env, ctx);
   },
 };

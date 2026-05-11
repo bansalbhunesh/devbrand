@@ -7,6 +7,7 @@ import {
   boolean,
   index,
   uniqueIndex,
+  jsonb,
 } from "drizzle-orm/pg-core";
 import { sql, relations } from "drizzle-orm";
 
@@ -51,14 +52,14 @@ export const profiles = pgTable("profiles", {
   customDomain: text("custom_domain").unique(),
   isPublic: boolean("is_public").notNull().default(true),
   theme: text("theme").notNull().default("dark"),
-  collabStats: text("collab_stats", { mode: "json" }).$type<{
+  collabStats: jsonb("collab_stats").$type<{
     reviewsGiven: number;
     reviewsReceived: number;
     forceMultiplierScore: number;
     topCollaborators: string[];
     lastComputedAt: string;
   }>(),
-  contributionRhythm: text("contribution_rhythm", { mode: "json" }).$type<{
+  contributionRhythm: jsonb("contribution_rhythm").$type<{
     mostActiveDay: string;
     streakDays: number;
     avgPRsPerMonth: number;
@@ -90,13 +91,14 @@ export const outputs = pgTable(
     linkedinPost3: text("linkedin_post_3").notNull(),
     resumeBullet: text("resume_bullet").notNull(),
     interviewHook: text("interview_hook").notNull(),
-    citations: text("citations", { mode: "json" }).$type<
+    citations: jsonb("citations").$type<
       Array<{ claim: string; ref: string; sha: string; evidenceType: string }>
     >(),
     isPublic: boolean("is_public").notNull().default(false),
     impactScore: integer("impact_score").notNull().default(0),
     category: text("category"),
     complexityLevel: text("complexity_level"),
+    metadata: jsonb("metadata").$type<any>(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
@@ -115,7 +117,7 @@ export const repoGraphs = pgTable("repo_graphs", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
   owner: text("owner").notNull(),
   repo: text("repo").notNull(),
-  graphData: text("graph_data", { mode: "json" }).notNull(),
+  graphData: jsonb("graph_data").notNull(),
   computedAt: timestamp("computed_at", { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [
   uniqueIndex("repo_graphs_owner_repo_idx").on(t.owner, t.repo),
@@ -128,7 +130,7 @@ export const userEvents = pgTable(
     id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
     userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }),
     eventType: text("event_type").notNull(),
-    payload: text("payload", { mode: "json" }),
+    payload: jsonb("payload"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
@@ -200,7 +202,7 @@ export const roasts = pgTable("roasts", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: uuid("user_id").references(() => users.id),
   githubUsername: text("github_username").notNull(),
-  roastData: text("roast_data", { mode: "json" }).$type<{
+  roastData: jsonb("roast_data").$type<{
     roast: string;
     criticality: "LOW" | "MEDIUM" | "HIGH" | "NUCLEAR";
     card_title: string;

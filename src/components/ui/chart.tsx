@@ -14,10 +14,8 @@ type ChartConfig = {
   );
 };
 
-type Themes = {
-  light: string;
-  dark: string;
-};
+const THEMES = { light: "", dark: ".dark" } as const;
+type Themes = typeof THEMES;
 
 type ChartContextProps = {
   config: ChartConfig;
@@ -39,6 +37,7 @@ const ChartContainer = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<"div"> & {
     config: ChartConfig;
+    showLegend?: boolean;
     children: React.ComponentProps<typeof RechartsPrimitive.ResponsiveContainer>["children"];
   }
 >(({ id, className, showLegend = false, config, children, ...props }, ref) => {
@@ -83,7 +82,7 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
   return (
     <style
       dangerouslySetInnerHTML={{
-        __html: Object.entries(Themes)
+        __html: Object.entries(THEMES)
           .map(
             ([theme, prefix]) => `
 ${prefix} [data-chart="${id}"] {

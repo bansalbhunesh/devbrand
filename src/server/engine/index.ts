@@ -6,7 +6,7 @@ import { analyzeInvisibleWork } from "./layer4";
 import { generateNarrative } from "./layer5";
 import { runLayer6 } from "./layer6";
 import { runLayer7 } from "./layer7";
-import type { NarrativeDraft, UserContext } from "./types";
+import type { NarrativeDraft, UserContext, GraphImpactReport, GraphMetrics } from "./types";
 
 import { logger } from "@/lib/logger";
 
@@ -22,10 +22,18 @@ export async function runEngine(prUrl: string, userId: string, context: UserCont
     const staticMetrics = await analyzeStaticMetrics(enrichedPR);
 
     // Layer 2: Graph Analysis
-    const graphImpactReport = await analyzeDependencyGraph(enrichedPR);
+    const graphMetrics = await analyzeDependencyGraph(enrichedPR);
+    const graphImpactReport: GraphImpactReport = {
+      preGraphMetrics: graphMetrics,
+      postGraphMetrics: graphMetrics,
+      changedNodes: graphMetrics.nodeMetrics,
+      propagationReach: [],
+      graphEditDistance: 0,
+      cycleChanges: { introduced: 0, broken: 0 },
+    };
 
     // Layer 3: Impact Scoring
-    const impactProfile = await computeImpactProfile(enrichedPR, staticMetrics, graphImpactReport);
+    const impactProfile = await computeImpactProfile(enrichedPR, staticMetrics, graphMetrics);
 
     // Layer 4: Invisible Work
     const invisibleWorkReport = await analyzeInvisibleWork(enrichedPR, staticMetrics);

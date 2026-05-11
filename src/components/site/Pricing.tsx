@@ -7,6 +7,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
 
 declare global {
   interface Window {
@@ -17,7 +18,7 @@ declare global {
 const tiers = [
   {
     name: "Free",
-    price: "₹0",
+    price: { monthly: "₹0", yearly: "₹0" },
     description: "Perfect for students and early-career devs.",
     features: [
       "Monthly Wrapped reports",
@@ -30,7 +31,7 @@ const tiers = [
   },
   {
     name: "Pro",
-    price: "₹999",
+    price: { monthly: "₹999", yearly: "₹799" },
     description: "For active engineers building their reputation.",
     features: [
       "Unlimited AI transformations",
@@ -44,7 +45,7 @@ const tiers = [
   },
   {
     name: "Team",
-    price: "₹3999",
+    price: { monthly: "₹3999", yearly: "₹3199" },
     description: "Help your team showcase their impact.",
     features: [
       "Team-wide impact dashboard",
@@ -60,6 +61,7 @@ const tiers = [
 export function Pricing() {
   const { data: session } = useQuery({ queryKey: ["session"], queryFn: () => getSession() });
   const [loading, setLoading] = useState<string | null>(null);
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
   const navigate = useNavigate();
 
   const handleAction = async (tier: string) => {
@@ -120,24 +122,56 @@ export function Pricing() {
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-blue-500/5 blur-[120px] rounded-full pointer-events-none" />
       
       <div className="mx-auto max-w-7xl px-6 relative">
-        <div className="text-center mb-20">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-[10px] font-bold text-blue-500 uppercase tracking-widest mb-6">
+        <div className="text-center mb-12">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-[10px] font-bold text-blue-500 uppercase tracking-widest mb-6"
+          >
             Pricing
+          </motion.div>
+          <motion.h2 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className="text-4xl md:text-5xl font-bold tracking-tight mb-6"
+          >
+            No hype. Just high-signal data.
+          </motion.h2>
+          
+          {/* Billing Toggle */}
+          <div className="flex items-center justify-center gap-4 mt-8">
+            <span className={cn("text-sm font-medium transition", billingCycle === "monthly" ? "text-foreground" : "text-muted-foreground")}>Monthly</span>
+            <button
+              onClick={() => setBillingCycle(prev => prev === "monthly" ? "yearly" : "monthly")}
+              className="relative w-12 h-6 rounded-full bg-muted border border-border p-1 transition-colors hover:border-blue-500/50"
+            >
+              <motion.div
+                animate={{ x: billingCycle === "monthly" ? 0 : 24 }}
+                className="w-4 h-4 rounded-full bg-blue-500 shadow-sm"
+              />
+            </button>
+            <div className="flex items-center gap-2">
+              <span className={cn("text-sm font-medium transition", billingCycle === "yearly" ? "text-foreground" : "text-muted-foreground")}>Yearly</span>
+              <span className="text-[10px] font-bold bg-green-500/10 text-green-500 px-2 py-0.5 rounded-full">SAVE 20%</span>
+            </div>
           </div>
-          <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-6">No hype. Just high-signal data.</h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
-            Choose the plan that fits your career stage. All plans start with a 30-day read-only trial.
-          </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 items-start">
-          {tiers.map((tier) => (
-            <div
+        <div className="grid md:grid-cols-3 gap-8 items-start mt-20">
+          {tiers.map((tier, idx) => (
+            <motion.div
               key={tier.name}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: idx * 0.1 }}
               className={cn(
                 "relative flex flex-col p-10 rounded-3xl border transition-all duration-300",
                 tier.popular 
-                  ? "border-blue-500/40 bg-background shadow-2xl shadow-blue-500/10 scale-105 z-10" 
+                  ? "border-blue-500/40 bg-background/60 backdrop-blur-xl shadow-2xl shadow-blue-500/10 scale-105 z-10" 
                   : "border-border bg-muted/20 hover:bg-muted/40"
               )}
             >
@@ -150,7 +184,9 @@ export function Pricing() {
               <div className="mb-8">
                 <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-4">{tier.name}</h3>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-5xl font-bold tracking-tighter">{tier.price}</span>
+                  <span className="text-5xl font-bold tracking-tighter">
+                    {billingCycle === "monthly" ? tier.price.monthly : tier.price.yearly}
+                  </span>
                   <span className="text-muted-foreground font-medium">/mo</span>
                 </div>
                 <p className="mt-4 text-sm text-muted-foreground leading-relaxed">{tier.description}</p>
@@ -196,7 +232,7 @@ export function Pricing() {
                   )}
                 </button>
               )}
-            </div>
+            </motion.div>
           ))}
         </div>
 

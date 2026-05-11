@@ -1,10 +1,11 @@
 "use client";
-
+ 
 import { useEffect, useRef, useState } from "react";
 import { ArrowRight, Github, Sparkles, GitPullRequest, Check, Link2, LayoutDashboard, Loader2 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { getSession, signInWithGithub } from "@/rpc.server";
+import { motion, AnimatePresence } from "framer-motion";
 
 export function Hero() {
   const cardRef = useRef<HTMLDivElement>(null);
@@ -58,21 +59,41 @@ export function Hero() {
       
       <div className="relative mx-auto max-w-7xl px-6 pt-24 pb-20 md:pt-32 md:pb-28">
         <div className="flex flex-col items-center text-center">
-          <div className="inline-flex items-center gap-2 text-[11px] font-bold text-muted-foreground border border-border rounded-full pl-1 pr-3 py-1 bg-muted/30 backdrop-blur hover:text-foreground transition group cursor-default">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="inline-flex items-center gap-2 text-[11px] font-bold text-muted-foreground border border-border rounded-full pl-1 pr-3 py-1 bg-muted/30 backdrop-blur hover:text-foreground transition group cursor-default"
+          >
             <span className="rounded-full bg-blue-500/10 text-blue-500 px-2 py-0.5 text-[9px]">BETA</span>
             Impact Story Engine v1.0 is live
             <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-0.5" />
-          </div>
+          </motion.div>
 
-          <h1 className="mt-8 text-5xl md:text-7xl lg:text-8xl font-bold tracking-[-0.04em] leading-[0.98] text-balance gradient-text pb-2">
+          <motion.h1 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="mt-8 text-5xl md:text-7xl lg:text-8xl font-bold tracking-[-0.04em] leading-[0.98] text-balance gradient-text pb-2"
+          >
             Verifiable career<br className="hidden md:block" /> leverage for devs.
-          </h1>
-          <p className="mt-6 max-w-2xl text-[17px] md:text-lg leading-[1.6] text-muted-foreground text-pretty">
+          </motion.h1>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="mt-6 max-w-2xl text-[17px] md:text-lg leading-[1.6] text-muted-foreground text-pretty"
+          >
             DevBrand transforms your GitHub metadata — PRs, reviews, and architectural shifts — into 
             high-signal posts, resume bullets, and a reputation layer recruiters actually trust.
-          </p>
+          </motion.p>
 
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="mt-10 flex flex-wrap items-center justify-center gap-4"
+          >
             {session ? (
               <Link
                 to="/dashboard"
@@ -98,18 +119,26 @@ export function Hero() {
             >
               <Sparkles className="h-4 w-4 text-blue-500" /> Watch Demo
             </a>
-          </div>
+          </motion.div>
 
-          <div className="mt-8 flex flex-wrap justify-center items-center gap-6 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1, delay: 0.5 }}
+            className="mt-8 flex flex-wrap justify-center items-center gap-6 text-[11px] font-bold text-muted-foreground uppercase tracking-widest"
+          >
             <span className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-green-500" /> 30-Sec Setup</span>
             <span className="hidden sm:flex items-center gap-2"><Check className="h-3.5 w-3.5 text-green-500" /> Read-Only Access</span>
             <span className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-green-500" /> Free to Start</span>
-          </div>
+          </motion.div>
         </div>
 
         {/* Live transformation preview — cursor-aware */}
-        <div
+        <motion.div
           ref={cardRef}
+          initial={{ opacity: 0, y: 40, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.8, delay: 0.4, type: "spring", bounce: 0.4 }}
           className="relative mt-20 md:mt-24 mx-auto max-w-5xl group/card transition-transform duration-200 ease-out"
           style={{ 
             ["--mx" as any]: "50%", 
@@ -195,15 +224,20 @@ export function Hero() {
           </div>
 
           {/* trust strip */}
-          <div className="mt-12 flex flex-col items-center gap-6">
+          <motion.div 
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="mt-12 flex flex-col items-center gap-6"
+          >
             <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground opacity-50">Built for engineers shipping at</p>
             <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-6 grayscale opacity-40 hover:grayscale-0 hover:opacity-100 transition-all duration-500">
               {["VERCEL", "STRIPE", "LINEAR", "SUPABASE", "GITHUB", "RAYCAST"].map((b) => (
                 <span key={b} className="font-mono text-[11px] font-black tracking-[0.3em]">{b}</span>
               ))}
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </div>
     </section>
   );
