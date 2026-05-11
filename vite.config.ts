@@ -12,4 +12,11 @@ export default defineConfig({
   tanstackStart: {
     server: { entry: "server" },
   },
+  vite: {
+    resolve: {
+      alias: {
+        "@tanstack/react-start/api": "@tanstack/react-start",
+      },
+    },
+  },
 });
