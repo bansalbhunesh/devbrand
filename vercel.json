@@ -11,5 +11,10 @@
       "includeFiles": "dist/server/**"
     }
   },
-  "rewrites": [{ "source": "/(.*)", "destination": "/api/index" }]
+  "rewrites": [
+    {
+      "source": "/((?!api/|assets/|favicon|robots\\.txt|sitemap\\.xml).*)",
+      "destination": "/api/index"
+    }
+  ]
 }
