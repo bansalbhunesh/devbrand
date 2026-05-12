@@ -15,6 +15,13 @@ export default defineConfig({
     tailwindcss(),
     tsconfigPaths(),
   ],
+  server: {
+    // Pin dev port so Playwright's webServer healthcheck (localhost:3000)
+    // hits a deterministic target. Vite's default 5173 was getting squatted
+    // by stale dev processes and hopping to 5176, leaving the e2e suite to
+    // time out waiting on 3000.
+    port: 3000,
+  },
   build: {
     minify: "terser",
     terserOptions: {

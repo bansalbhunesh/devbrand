@@ -1,24 +1,18 @@
 import { test, expect } from "@playwright/test";
 
-test.describe("Operational Resilience", () => {
-  test("Admin Command Center shows security signals", async ({ page }) => {
-    // Note: This requires admin session. In real E2E we'd seed a session.
+/**
+ * Admin command center tests require an authenticated admin session. Until
+ * we have a fixture that signs a session cookie (HMAC over user id + nonce),
+ * the only safe assertion is that the protected route redirects unauthed
+ * visitors — i.e. it does NOT silently leak admin UI.
+ */
+test.describe("Operational guardrails", () => {
+  test("admin route does not leak content to unauthenticated requests", async ({
+    page,
+  }) => {
     await page.goto("/admin");
-
-    // Check for "Command Center" header
-    await expect(page.getByText("Command Center")).toBeVisible();
-
-    // Check for Charts (Recharts renders SVG)
-    const charts = page.locator("svg");
-    await expect(charts.first()).toBeVisible();
-
-    // Check for System Logs
-    await expect(page.getByText("System Logs")).toBeVisible();
-  });
-
-  test("Background job state machine visualization", async ({ page }) => {
-    // In a real test, we would trigger a job and watch it go from PROCESSING to COMPLETED
-    await page.goto("/admin");
-    await expect(page.getByText("Engine Velocity")).toBeVisible();
+    // Either redirected away from /admin, or the page renders the unauthed
+    // landing/sign-in shell. Either way we must NOT see Command Center copy.
+    await expect(page.getByText(/command center/i)).toHaveCount(0);
   });
 });

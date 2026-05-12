@@ -224,11 +224,15 @@ function ExplorePage() {
                         #{i + 1}
                       </div>
                       <div className="flex items-center gap-3">
-                        <img
-                          src={eng.avatarUrl ?? ""}
-                          className="h-8 w-8 rounded-lg shadow-xl shadow-black/20"
-                          alt=""
-                        />
+                        {eng.avatarUrl ? (
+                          <img
+                            src={eng.avatarUrl}
+                            className="h-8 w-8 rounded-lg shadow-xl shadow-black/20"
+                            alt=""
+                          />
+                        ) : (
+                          <div className="h-8 w-8 rounded-lg bg-muted/40 shadow-xl shadow-black/20" />
+                        )}
                         <span className="text-sm font-bold truncate max-w-[100px]">
                           {eng.githubLogin}
                         </span>

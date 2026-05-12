@@ -22,5 +22,8 @@ export default defineConfig({
     command: "npm run dev",
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
+    // TanStack Start dev boot pulls in .server modules (DB, Redis, Anthropic
+    // clients) and can exceed Playwright's default 60s on cold filesystem.
+    timeout: 180_000,
   },
 });

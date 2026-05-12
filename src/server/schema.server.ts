@@ -72,6 +72,8 @@ export const backgroundJobs = pgTable(
     payload: jsonb("payload").$type<any>(),
     result: jsonb("result").$type<any>(),
     error: text("error"),
+    retryCount: integer("retry_count").default(0),
+    maxRetries: integer("max_retries").default(3),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
