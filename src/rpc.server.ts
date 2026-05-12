@@ -319,8 +319,8 @@ export const verifyPayment = createServerFn({ method: "POST" })
 export const handleRazorpayWebhook = createServerFn({ method: "POST" })
   .inputValidator((data: any) => data)
   .handler(async ({ data }) => {
-    const { handleRazorpayWebhook: h } = await import("@/server/billing");
-    return h({ data });
+    const { processRazorpayWebhookRaw } = await import("@/server/webhooks.server");
+    return processRazorpayWebhookRaw(data.rawBody, data.signature);
   });
 
 export const generateRoast = createServerFn({ method: "POST" })
