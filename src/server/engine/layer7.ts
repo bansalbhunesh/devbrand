@@ -1,5 +1,5 @@
-import { db } from "../db";
-import { userEvents, reputationHistory } from "../schema";
+import { db } from "../db.server";
+import { userEvents, reputationHistory } from "../schema.server";
 
 import { eq, desc } from "drizzle-orm";
 import type { NarrativeDraft } from "./types";

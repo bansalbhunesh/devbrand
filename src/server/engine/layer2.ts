@@ -1,6 +1,6 @@
 import { Octokit } from "octokit";
-import { db } from "../db";
-import { repoGraphs } from "../schema";
+import { db } from "../db.server";
+import { repoGraphs } from "../schema.server";
 import { eq, and, gt } from "drizzle-orm";
 import type {
   EnrichedPR,
