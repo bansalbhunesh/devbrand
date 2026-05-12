@@ -360,3 +360,35 @@ export const webhookDeliveries = pgTable("webhook_deliveries", {
     .defaultNow(),
   status: text("status").notNull(), // accepted | duplicate | invalid_sig | filtered | enqueued
 });
+
+export const digests = pgTable(
+  "digests",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    kind: text("kind").notNull(), // weekly | release_notes
+    periodStart: timestamp("period_start", { withTimezone: true }).notNull(),
+    periodEnd: timestamp("period_end", { withTimezone: true }).notNull(),
+    linkedinPost: text("linkedin_post").notNull(),
+    twitterThread: jsonb("twitter_thread").$type<string[]>().notNull(),
+    releaseNotes: text("release_notes").notNull(),
+    // Postgres uuid[] — stored as a native array so we can join later without
+    // an extra junction table for the small N (~dozens) per digest.
+    includedOutputIds: uuid("included_output_ids").array().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("digests_user_id_idx").on(t.userId),
+    index("digests_created_at_idx").on(t.createdAt),
+  ],
+);
+
+export const digestsRelations = relations(digests, ({ one }) => ({
+  user: one(users, { fields: [digests.userId], references: [users.id] }),
+}));

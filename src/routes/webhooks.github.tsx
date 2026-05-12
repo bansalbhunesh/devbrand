@@ -23,9 +23,8 @@ export const Route = createFileRoute("/webhooks/github")({
           // signature verification.
           const rawBody = await request.text();
 
-          const { processGithubWebhookRaw } = await import(
-            "@/server/webhooks.server"
-          );
+          const { processGithubWebhookRaw } =
+            await import("@/server/webhooks.server");
           const result = await processGithubWebhookRaw(rawBody, {
             signature,
             deliveryId,

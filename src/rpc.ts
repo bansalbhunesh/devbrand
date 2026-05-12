@@ -85,6 +85,28 @@ export const trackedRepoIdSchema = z.object({
   id: z.string().uuid(),
 });
 
+// Coerce because the client typically sends ISO date strings, but we accept
+// real Date objects too if a server-side caller passes them through.
+const dateLike = z.preprocess(
+  (v) => (v instanceof Date ? v : typeof v === "string" ? new Date(v) : v),
+  z.date(),
+);
+
+export const generateDigestSchema = z
+  .object({
+    kind: z.enum(["weekly", "release_notes"]),
+    since: dateLike,
+    until: dateLike,
+  })
+  .refine((v) => v.since.getTime() < v.until.getTime(), {
+    message: "since must be before until",
+    path: ["since"],
+  });
+
+export const digestIdSchema = z.object({
+  id: z.string().uuid(),
+});
+
 // ── Auth ─────────────────────────────────────────────────────────────────────
 
 export const getSession = createServerFn({ method: "GET" }).handler(
@@ -359,6 +381,31 @@ export const getWrappedStats = createServerFn({ method: "GET" }).handler(
     return getWrappedStatsImpl();
   },
 );
+
+// ── Digests ──────────────────────────────────────────────────────────────────
+
+export const generateDigest = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => generateDigestSchema.parse(data))
+  .handler(async ({ data }) => {
+    await checkRateLimit("digest_generate", 5, 3600);
+    const { generateDigestFn } = await import("@/server/digest.server");
+    return generateDigestFn(data);
+  });
+
+export const listDigests = createServerFn({ method: "GET" }).handler(
+  async () => {
+    const { listDigestsFn } = await import("@/server/digest.server");
+    return listDigestsFn();
+  },
+);
+
+export const getDigest = createServerFn({ method: "GET" })
+  .inputValidator((id: string) => digestIdSchema.parse({ id }).id)
+  .handler(async ({ data: id }) => {
+    const { getDigestFn } = await import("@/server/digest.server");
+    return getDigestFn(id);
+  });
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 async function checkRateLimit(

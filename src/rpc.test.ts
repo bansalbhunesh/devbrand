@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  digestIdSchema,
+  generateDigestSchema,
   githubCallbackSchema,
   postToXSchema,
   roastSchema,
@@ -154,6 +156,67 @@ describe("rpc input schemas", () => {
           razorpay_payment_id: "pay_xyz",
         }),
       ).toThrow();
+    });
+  });
+
+  describe("generateDigestSchema", () => {
+    const since = "2026-05-01T00:00:00Z";
+    const until = "2026-05-08T00:00:00Z";
+
+    it("accepts ISO strings and coerces them to Date", () => {
+      const parsed = generateDigestSchema.parse({
+        kind: "weekly",
+        since,
+        until,
+      });
+      expect(parsed.since).toBeInstanceOf(Date);
+      expect(parsed.until).toBeInstanceOf(Date);
+      expect(parsed.kind).toBe("weekly");
+    });
+    it("accepts release_notes kind", () => {
+      expect(() =>
+        generateDigestSchema.parse({
+          kind: "release_notes",
+          since,
+          until,
+        }),
+      ).not.toThrow();
+    });
+    it("rejects unknown kind", () => {
+      expect(() =>
+        generateDigestSchema.parse({
+          kind: "monthly",
+          since,
+          until,
+        }),
+      ).toThrow();
+    });
+    it("rejects inverted range", () => {
+      expect(() =>
+        generateDigestSchema.parse({
+          kind: "weekly",
+          since: until,
+          until: since,
+        }),
+      ).toThrow();
+    });
+    it("rejects equal range", () => {
+      expect(() =>
+        generateDigestSchema.parse({
+          kind: "weekly",
+          since,
+          until: since,
+        }),
+      ).toThrow();
+    });
+  });
+
+  describe("digestIdSchema", () => {
+    it("accepts a uuid", () => {
+      expect(() => digestIdSchema.parse({ id: validUuid })).not.toThrow();
+    });
+    it("rejects non-uuid", () => {
+      expect(() => digestIdSchema.parse({ id: "not-a-uuid" })).toThrow();
     });
   });
 

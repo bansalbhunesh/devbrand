@@ -16,6 +16,7 @@ import {
   LogOut,
   Shield,
   Github,
+  Calendar,
 } from "lucide-react";
 import {
   getSession,
@@ -41,7 +42,14 @@ export const Route = createFileRoute("/dashboard")({
   component: Dashboard,
 });
 
-type Tab = "generate" | "history" | "repos" | "teams" | "settings" | "security";
+type Tab =
+  | "generate"
+  | "history"
+  | "digest"
+  | "repos"
+  | "teams"
+  | "settings"
+  | "security";
 
 import { Suspense, lazy } from "react";
 
@@ -53,6 +61,11 @@ const GenerateTab = lazy(() =>
 const HistoryTab = lazy(() =>
   import("@/components/dashboard/HistoryTab").then((m) => ({
     default: m.HistoryTab,
+  })),
+);
+const DigestTab = lazy(() =>
+  import("@/components/dashboard/DigestTab").then((m) => ({
+    default: m.DigestTab,
   })),
 );
 const TeamsTab = lazy(() =>
@@ -286,6 +299,7 @@ function Dashboard() {
               [
                 "generate",
                 "history",
+                "digest",
                 "repos",
                 "teams",
                 "settings",
@@ -320,6 +334,7 @@ function Dashboard() {
                   )}
                   {t === "generate" && <Sparkles className="h-4 w-4" />}
                   {t === "history" && <GitPullRequest className="h-4 w-4" />}
+                  {t === "digest" && <Calendar className="h-4 w-4" />}
                   {t === "repos" && <Github className="h-4 w-4" />}
                   {t === "teams" && <Users className="h-4 w-4" />}
                   {t === "settings" && <BarChart3 className="h-4 w-4" />}
@@ -410,6 +425,7 @@ function Dashboard() {
               [
                 "generate",
                 "history",
+                "digest",
                 "repos",
                 "teams",
                 "settings",
@@ -491,6 +507,8 @@ function Dashboard() {
                     qc={qc}
                   />
                 )}
+
+                {tab === "digest" && <DigestTab />}
 
                 {tab === "repos" && <TrackedReposTab />}
 
