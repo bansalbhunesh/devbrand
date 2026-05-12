@@ -14,110 +14,104 @@ function generateSlug(prUrl: string, userId: string): string {
   return `${prPart}-${hash}-${ts}`;
 }
 
-export const transformPR = createServerFn({ method: "POST" })
-  .inputValidator(
-    z.object({
-      prUrl: z.string().url(),
-      userId: z.string().uuid().optional(),
-    }),
-  )
-  .handler(async ({ data: { prUrl } }) => {
-    const user = await loadSessionUser();
-    if (!user) throw new Error("UNAUTHORIZED");
-    const userId = user.id;
+// ── Plain Functions (Server-Only) ─────────────────────────────────────────────
 
-    const { checkAndResetLimits } = await import("./limits");
-    const freshUser = await checkAndResetLimits(userId);
+export async function transformPRFn(data: {
+  prUrl: string;
+  userId?: string;
+}) {
+  const { prUrl } = data;
+  const user = await loadSessionUser();
+  if (!user) throw new Error("UNAUTHORIZED");
+  const userId = user.id;
 
-    const isFreeLimitReached =
-      freshUser?.plan === "free" && (freshUser?.generationsThisMonth ?? 0) >= 3;
-    if (isFreeLimitReached) throw new Error("LIMIT_REACHED");
+  const { checkAndResetLimits } = await import("./limits.server");
+  const freshUser = await checkAndResetLimits(userId);
 
-    // Run the 7-Layer Core Engine
-    const context: UserContext = {
-      seniority: user.seniority as any,
-      tone: user.tone as any,
-      targetAudience: (user as any).targetAudience || "recruiter",
-    };
+  const isFreeLimitReached =
+    freshUser?.plan === "free" && (freshUser?.generationsThisMonth ?? 0) >= 3;
+  if (isFreeLimitReached) throw new Error("LIMIT_REACHED");
 
-    const output = await runEngine(prUrl, userId, context);
+  // Run the 7-Layer Core Engine
+  const context: UserContext = {
+    seniority: user.seniority as any,
+    tone: user.tone as any,
+    targetAudience: (user as any).targetAudience || "recruiter",
+  };
 
-    const slug = generateSlug(prUrl, userId);
-    const [inserted] = await db
-      .insert(outputs)
-      .values({
+  const output = await runEngine(prUrl, userId, context);
+
+  const slug = generateSlug(prUrl, userId);
+  const [inserted] = await db
+    .insert(outputs)
+    .values({
+      slug,
+      userId,
+      prTitle: output.commitMessageSummary,
+      prUrl,
+      prCommitMessage: output.commitMessageSummary,
+      prSignals: output.citations.map((c) => c.evidenceType),
+      stack: [],
+      linkedinPost1: output.linkedinPost1,
+      linkedinPost2: output.linkedinPost2,
+      linkedinPost3: output.linkedinPost3,
+      resumeBullet: output.resumeBullet,
+      interviewHook: output.interviewHook,
+      citations: output.citations.map((c) => ({
+        claim: c.claim,
+        ref: c.ref,
+        sha: c.sha,
+        evidenceType: c.evidenceType,
+      })),
+      impactScore: output.impactScore,
+      category: output.category,
+      complexityLevel: output.complexityLevel,
+      metadata: output as any,
+    })
+    .returning();
+
+  await Promise.all([
+    db
+      .update(users)
+      .set({ generationsThisMonth: sql`${users.generationsThisMonth} + 1` })
+      .where(eq(users.id, userId)),
+    db.insert(userEvents).values({
+      userId,
+      eventType: "generate",
+      payload: {
+        outputId: inserted.id,
         slug,
-        userId,
-        prTitle: output.commitMessageSummary, // Using summary as title for output record
         prUrl,
-        prCommitMessage: output.commitMessageSummary,
-        prSignals: output.citations.map((c) => c.evidenceType),
-        stack: [], // Stack detection now part of engine if needed
-        linkedinPost1: output.linkedinPost1,
-        linkedinPost2: output.linkedinPost2,
-        linkedinPost3: output.linkedinPost3,
-        resumeBullet: output.resumeBullet,
-        interviewHook: output.interviewHook,
-        citations: output.citations.map((c) => ({
-          claim: c.claim,
-          ref: c.ref,
-          sha: c.sha,
-          evidenceType: c.evidenceType,
-        })),
         impactScore: output.impactScore,
         category: output.category,
-        complexityLevel: output.complexityLevel,
-        metadata: output as any,
-      })
-      .returning();
+      } as any,
+    }),
+  ]);
 
-    await Promise.all([
-      db
-        .update(users)
-        .set({ generationsThisMonth: sql`${users.generationsThisMonth} + 1` })
-        .where(eq(users.id, userId)),
-      db.insert(userEvents).values({
-        userId,
-        eventType: "generate",
-        payload: {
-          outputId: inserted.id,
-          slug,
-          prUrl,
-          impactScore: output.impactScore,
-          category: output.category,
-        } as any,
-      }),
-    ]);
+  return inserted;
+}
 
-    return inserted;
+export async function getUserOutputsFn() {
+  const user = await loadSessionUser();
+  if (!user) throw new Error("UNAUTHORIZED");
+  const userId = user.id;
+
+  return db.query.outputs.findMany({
+    where: eq(outputs.userId, userId),
+    orderBy: [desc(outputs.createdAt)],
+    limit: 50,
   });
+}
 
-export const getUserOutputs = createServerFn({ method: "GET" }).handler(
-  async () => {
-    const user = await loadSessionUser();
-    if (!user) throw new Error("UNAUTHORIZED");
-    const userId = user.id;
+export async function toggleOutputVisibilityFn(data: { outputId: string; isPublic: boolean }) {
+  const { outputId, isPublic } = data;
+  const user = await loadSessionUser();
+  if (!user) throw new Error("UNAUTHORIZED");
+  const userId = user.id;
 
-    return db.query.outputs.findMany({
-      where: eq(outputs.userId, userId),
-      orderBy: [desc(outputs.createdAt)],
-      limit: 50,
-    });
-  },
-);
-
-export const toggleOutputVisibility = createServerFn({ method: "POST" })
-  .inputValidator(
-    z.object({ outputId: z.string().uuid(), isPublic: z.boolean() }),
-  )
-  .handler(async ({ data: { outputId, isPublic } }) => {
-    const user = await loadSessionUser();
-    if (!user) throw new Error("UNAUTHORIZED");
-    const userId = user.id;
-
-    await db
-      .update(outputs)
-      .set({ isPublic })
-      .where(and(eq(outputs.id, outputId), eq(outputs.userId, userId)));
-    return { success: true };
-  });
+  await db
+    .update(outputs)
+    .set({ isPublic })
+    .where(and(eq(outputs.id, outputId), eq(outputs.userId, userId)));
+  return { success: true };
+}

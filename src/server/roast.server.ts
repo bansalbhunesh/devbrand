@@ -44,108 +44,105 @@ const PERSONA_MAP = {
     "You are a Deep Systems Specialist. You care about memory allocation, Big O, and concurrency bugs. You judge code based on efficiency and correctness.",
 };
 
-export const generateRoast = createServerFn({ method: "POST" })
-  .inputValidator(
-    z.object({
-      username: z.string().min(1).max(39),
-      userId: z.string().uuid().optional(),
-      tone: z
-        .enum(["salty", "helpful", "nuclear", "technical"])
-        .default("salty"),
-    }),
-  )
-  .handler(async ({ data: { username, userId, tone } }) => {
-    // 1. Rate limiting & Limit Reset
-    if (userId) {
-      const { checkAndResetLimits } = await import("./limits");
-      const user = await checkAndResetLimits(userId);
-      if (
-        user &&
-        user.plan === "free" &&
-        (user.roastCountThisMonth ?? 0) >= FREE_ROAST_LIMIT
-      ) {
-        throw new Error("ROAST_LIMIT_REACHED");
-      }
-    } else {
-      // IP-based rate limit for anonymous users
-      const request = getRequest();
-      const ip =
-        request?.headers.get("x-forwarded-for")?.split(",")[0] || "127.0.0.1";
-      const { success } = await rateLimit(
-        `roast:anon:${ip}`,
-        PUBLIC_ANON_LIMIT,
-        3600,
-      );
-      if (!success) throw new Error("PUBLIC_RATE_LIMIT_REACHED");
+// ── Plain Function (Server-Only) ─────────────────────────────────────────────
+
+export async function generateRoastFn(data: {
+  username: string;
+  userId?: string;
+  tone: "salty" | "helpful" | "nuclear" | "technical";
+}) {
+  const { username, userId, tone } = data;
+  // 1. Rate limiting & Limit Reset
+  if (userId) {
+    const { checkAndResetLimits } = await import("./limits.server");
+    const user = await checkAndResetLimits(userId);
+    if (
+      user &&
+      user.plan === "free" &&
+      (user.roastCountThisMonth ?? 0) >= FREE_ROAST_LIMIT
+    ) {
+      throw new Error("ROAST_LIMIT_REACHED");
     }
+  } else {
+    // IP-based rate limit for anonymous users
+    const request = getRequest();
+    const ip =
+      request?.headers.get("x-forwarded-for")?.split(",")[0] || "127.0.0.1";
+    const { success } = await rateLimit(
+      `roast:anon:${ip}`,
+      PUBLIC_ANON_LIMIT,
+      3600,
+    );
+    if (!success) throw new Error("PUBLIC_RATE_LIMIT_REACHED");
+  }
 
-    const octokitInstance = getOctokit();
+  const octokitInstance = getOctokit();
 
-    const [userRes, eventsRes, reposRes] = await Promise.all([
-      octokitInstance.rest.users.getByUsername({ username }),
-      octokitInstance.rest.activity.listPublicEventsForUser({
-        username,
-        per_page: 50,
-      }),
-      octokitInstance.rest.repos.listForUser({
-        username,
-        sort: "updated",
-        per_page: 10,
-      }),
-    ]);
+  const [userRes, eventsRes, reposRes] = await Promise.all([
+    octokitInstance.rest.users.getByUsername({ username }),
+    octokitInstance.rest.activity.listPublicEventsForUser({
+      username,
+      per_page: 50,
+    }),
+    octokitInstance.rest.repos.listForUser({
+      username,
+      sort: "updated",
+      per_page: 10,
+    }),
+  ]);
 
-    const ghUser = userRes.data;
-    const events = eventsRes.data;
-    const repos = reposRes.data;
+  const ghUser = userRes.data;
+  const events = eventsRes.data;
+  const repos = reposRes.data;
 
-    const pushEvents = events.filter((e) => e.type === "PushEvent");
-    const commitMessages = pushEvents
-      .flatMap(
-        (e) =>
-          ((e.payload as any).commits as any[])?.map((c: any) => c.message) ??
-          [],
-      )
-      .filter(Boolean)
-      .slice(0, 20);
+  const pushEvents = events.filter((e) => e.type === "PushEvent");
+  const commitMessages = pushEvents
+    .flatMap(
+      (e) =>
+        ((e.payload as any).commits as any[])?.map((c: any) => c.message) ??
+        [],
+    )
+    .filter(Boolean)
+    .slice(0, 20);
 
-    const languages = repos
-      .map((r) => r.language)
-      .filter(Boolean)
-      .reduce<Record<string, number>>((acc, lang) => {
-        acc[lang!] = (acc[lang!] ?? 0) + 1;
-        return acc;
-      }, {});
+  const languages = repos
+    .map((r) => r.language)
+    .filter(Boolean)
+    .reduce<Record<string, number>>((acc, lang) => {
+      acc[lang!] = (acc[lang!] ?? 0) + 1;
+      return acc;
+    }, {});
 
-    const lowEffortCommits = commitMessages.filter(
-      (m) =>
-        /^(fix|update|test|chore|merge|tmp|save|.)(\s|$|:)/i.test(m) ||
-        m.length < 5,
-    ).length;
+  const lowEffortCommits = commitMessages.filter(
+    (m) =>
+      /^(fix|update|test|chore|merge|tmp|save|.)(\s|$|:)/i.test(m) ||
+      m.length < 5,
+  ).length;
 
-    const profileSummary = {
-      login: ghUser.login,
-      bio: ghUser.bio ?? "No bio",
-      public_repos: ghUser.public_repos,
-      followers: ghUser.followers,
-      following: ghUser.following,
-      account_age_years: Math.floor(
-        (Date.now() - new Date(ghUser.created_at).getTime()) /
-          (365 * 24 * 60 * 60 * 1000),
-      ),
-      top_repos: repos.map((r) => ({
-        name: r.name,
-        lang: r.language,
-        stars: r.stargazers_count,
-        forks: r.forks_count,
-        description: r.description?.slice(0, 60),
-      })),
-      language_breakdown: languages,
-      recent_commits: commitMessages,
-      low_effort_commit_count: lowEffortCommits,
-      commit_frequency_per_week: Math.round(pushEvents.length / 4),
-    };
+  const profileSummary = {
+    login: ghUser.login,
+    bio: ghUser.bio ?? "No bio",
+    public_repos: ghUser.public_repos,
+    followers: ghUser.followers,
+    following: ghUser.following,
+    account_age_years: Math.floor(
+      (Date.now() - new Date(ghUser.created_at).getTime()) /
+        (365 * 24 * 60 * 60 * 1000),
+    ),
+    top_repos: repos.map((r) => ({
+      name: r.name,
+      lang: r.language,
+      stars: r.stargazers_count,
+      forks: r.forks_count,
+      description: r.description?.slice(0, 60),
+    })),
+    language_breakdown: languages,
+    recent_commits: commitMessages,
+    low_effort_commit_count: lowEffortCommits,
+    commit_frequency_per_week: Math.round(pushEvents.length / 4),
+  };
 
-    const systemPrompt = `${PERSONA_MAP[tone]} You are doing a code-level audit of a GitHub profile. 
+  const systemPrompt = `${PERSONA_MAP[tone]} You are doing a code-level audit of a GitHub profile. 
     
 YOUR TASK:
 - Write a roast that is technically deep and matches your persona.
@@ -165,41 +162,41 @@ OUTPUT JSON SCHEMA:
 
 Return ONLY valid JSON. No preamble.`;
 
-    const rawContent = await completeText({
-      system: systemPrompt,
-      user: JSON.stringify(profileSummary, null, 2),
-      maxTokens: 1000,
-      temperature: 0.8,
-    });
-    const cleaned = normalizeLlmJsonText(rawContent);
-    const output = RoastOutputSchema.parse(JSON.parse(cleaned));
-
-    const [inserted] = await db
-      .insert(roasts)
-      .values({
-        userId: userId || null,
-        githubUsername: username,
-        roastData: output,
-      })
-      .returning();
-
-    if (userId) {
-      await Promise.all([
-        db
-          .update(users)
-          .set({ roastCountThisMonth: sql`${users.roastCountThisMonth} + 1` })
-          .where(eq(users.id, userId)),
-        db.insert(userEvents).values({
-          userId,
-          eventType: "roast",
-          payload: {
-            username,
-            criticality: output.criticality,
-            roastId: inserted.id,
-          },
-        }),
-      ]);
-    }
-
-    return { ...output, id: inserted.id, githubUsername: username };
+  const rawContent = await completeText({
+    system: systemPrompt,
+    user: JSON.stringify(profileSummary, null, 2),
+    maxTokens: 1000,
+    temperature: 0.8,
   });
+  const cleaned = normalizeLlmJsonText(rawContent);
+  const output = RoastOutputSchema.parse(JSON.parse(cleaned));
+
+  const [inserted] = await db
+    .insert(roasts)
+    .values({
+      userId: userId || null,
+      githubUsername: username,
+      roastData: output,
+    })
+    .returning();
+
+  if (userId) {
+    await Promise.all([
+      db
+        .update(users)
+        .set({ roastCountThisMonth: sql`${users.roastCountThisMonth} + 1` })
+        .where(eq(users.id, userId)),
+      db.insert(userEvents).values({
+        userId,
+        eventType: "roast",
+        payload: {
+          username,
+          criticality: output.criticality,
+          roastId: inserted.id,
+        },
+      }),
+    ]);
+  }
+
+  return { ...output, id: inserted.id, githubUsername: username };
+}

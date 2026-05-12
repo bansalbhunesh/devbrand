@@ -1,11 +1,44 @@
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
 
 /**
  * ELITE ARCHITECTURE: The RPC Bridge.
- * This file is imported by client components. 
- * IT MUST NOT HAVE ANY TOP-LEVEL SERVER IMPORTS (db, schema, drizzle, etc).
- * All server logic is dynamically imported inside the handlers.
+ * This file is now the ONLY place in the project where createServerFn is defined.
+ * IT MUST NOT HAVE ANY TOP-LEVEL SERVER IMPORTS.
  */
+
+// ── Auth ─────────────────────────────────────────────────────────────────────
+
+export const getSession = createServerFn({ method: "GET" }).handler(async () => {
+  const { getSessionFn } = await import("@/server/auth.server");
+  return getSessionFn();
+});
+
+export const logout = createServerFn({ method: "POST" }).handler(async () => {
+  const { logoutFn } = await import("@/server/auth.server");
+  return logoutFn();
+});
+
+export const signInWithGithub = createServerFn({ method: "GET" }).handler(async () => {
+  const { signInWithGithubFn } = await import("@/server/auth.server");
+  return signInWithGithubFn();
+});
+
+export const handleGithubCallback = createServerFn({ method: "POST" })
+  .inputValidator((data: any) => data)
+  .handler(async ({ data }) => {
+    const { handleGithubCallbackFn } = await import("@/server/auth.server");
+    return handleGithubCallbackFn(data);
+  });
+
+export const updateUserSettings = createServerFn({ method: "POST" })
+  .inputValidator((data: any) => data)
+  .handler(async ({ data }) => {
+    const { updateUserSettingsFn } = await import("@/server/auth.server");
+    return updateUserSettingsFn(data);
+  });
+
+// ── Engine ───────────────────────────────────────────────────────────────────
 
 export const getBadgeData = createServerFn({ method: "GET" })
   .inputValidator((login: string) => login)
@@ -53,52 +86,44 @@ export const getOutputBySlug = createServerFn({ method: "GET" })
     return db.query.outputs.findFirst({ where: eq(outputs.slug, slug), with: { user: true } });
   });
 
-export const getSession = createServerFn({ method: "GET" }).handler(async () => {
-  const { getSession: gs } = await import("@/server/auth.server");
-  return gs();
-});
-
-export const logout = createServerFn({ method: "POST" }).handler(async () => {
-  const { logout: l } = await import("@/server/auth.server");
-  return l();
-});
-
-export const signInWithGithub = createServerFn({ method: "GET" }).handler(async () => {
-  const { signInWithGithub: s } = await import("@/server/auth.server");
-  return s();
-});
-
-export const handleGithubCallback = createServerFn({ method: "POST" })
-  .inputValidator((data: any) => data)
-  .handler(async ({ data }) => {
-    const { handleGithubCallback: h } = await import("@/server/auth.server");
-    return h({ data });
-  });
-
 export const transformPR = createServerFn({ method: "POST" })
   .inputValidator((data: any) => data)
   .handler(async ({ data }) => {
-    const { transformPR: t } = await import("@/server/transform.server");
-    return t({ data });
+    const { transformPRFn } = await import("@/server/transform.server");
+    return transformPRFn(data);
+  });
+
+export const getUserOutputs = createServerFn({ method: "GET" }).handler(async () => {
+  const { getUserOutputsFn } = await import("@/server/transform.server");
+  return getUserOutputsFn();
+});
+
+export const toggleOutputVisibility = createServerFn({ method: "POST" })
+  .inputValidator((data: any) => data)
+  .handler(async ({ data }) => {
+    const { toggleOutputVisibilityFn } = await import("@/server/transform.server");
+    return toggleOutputVisibilityFn(data);
   });
 
 export const generateRoast = createServerFn({ method: "POST" })
   .inputValidator((data: any) => data)
   .handler(async ({ data }) => {
-    const { generateRoast: g } = await import("@/server/roast.server");
-    return g({ data });
+    const { generateRoastFn } = await import("@/server/roast.server");
+    return generateRoastFn(data);
   });
 
+// ── Billing ──────────────────────────────────────────────────────────────────
+
 export const createCheckoutSession = createServerFn({ method: "POST" }).handler(async () => {
-  const { createCheckoutSession: c } = await import("@/server/billing.server");
-  return c();
+  const { createCheckoutSessionFn } = await import("@/server/billing.server");
+  return createCheckoutSessionFn();
 });
 
 export const verifyPayment = createServerFn({ method: "POST" })
   .inputValidator((data: any) => data)
   .handler(async ({ data }) => {
-    const { verifyPayment: v } = await import("@/server/billing.server");
-    return v({ data });
+    const { verifyPaymentFn } = await import("@/server/billing.server");
+    return verifyPaymentFn(data);
   });
 
 export const getReferralData = createServerFn({ method: "GET" }).handler(async () => {

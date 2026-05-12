@@ -281,135 +281,119 @@ export async function completeGithubOAuth(data: {
   return user;
 }
 
-// ── Server functions ─────────────────────────────────────────────────────────
+// ── Plain Functions (Server-Only) ─────────────────────────────────────────────
 
-export const getSession = createServerFn({ method: "GET" }).handler(async () =>
-  loadSessionUser(),
-);
+export async function getSessionFn() {
+  return loadSessionUser();
+}
 
-export const logout = createServerFn({ method: "POST" }).handler(async () => {
+export async function logoutFn() {
   deleteCookie(sessionCookieName(), { path: "/" });
   return { success: true };
-});
+}
 
-export const logoutAllDevices = createServerFn({ method: "POST" }).handler(
-  async () => {
-    const raw = getCookie(sessionCookieName());
-    deleteCookie(sessionCookieName(), { path: "/" });
-    if (!raw) return { success: true };
-    const verified = await verifySession(raw);
-    if (!verified) return { success: true };
-    await db
-      .update(users)
-      .set({ sessionNonce: crypto.randomUUID(), updatedAt: new Date() })
-      .where(eq(users.id, verified.userId));
-    return { success: true };
-  },
-);
+export async function logoutAllDevicesFn() {
+  const raw = getCookie(sessionCookieName());
+  deleteCookie(sessionCookieName(), { path: "/" });
+  if (!raw) return { success: true };
+  const verified = await verifySession(raw);
+  if (!verified) return { success: true };
+  await db
+    .update(users)
+    .set({ sessionNonce: crypto.randomUUID(), updatedAt: new Date() })
+    .where(eq(users.id, verified.userId));
+  return { success: true };
+}
 
-export const getSecurityEvents = createServerFn({ method: "GET" }).handler(
-  async () => {
-    const user = await loadSessionUser();
-    if (!user) throw new Error("UNAUTHORIZED");
-    if (user.plan !== "pro") throw new Error("PRO_REQUIRED");
-    const { readSecurityEvents } = await import("./redis");
-    const rows = await readSecurityEvents(100);
-    return rows.map((r) => ({
-      type: r.type,
-      ip: r.ip,
-      timestamp: r.timestamp.toISOString(),
-      details: r.details,
-    }));
-  },
-);
+export async function getSecurityEventsFn() {
+  const user = await loadSessionUser();
+  if (!user) throw new Error("UNAUTHORIZED");
+  if (user.plan !== "pro") throw new Error("PRO_REQUIRED");
+  const { readSecurityEvents } = await import("./redis");
+  const rows = await readSecurityEvents(100);
+  return rows.map((r) => ({
+    type: r.type,
+    ip: r.ip,
+    timestamp: r.timestamp.toISOString(),
+    details: r.details,
+  }));
+}
 
-const settingsSchema = z.object({
-  userId: z.string().uuid().optional(),
-  seniority: z.enum(["junior", "mid", "senior", "staff"]),
-  tone: z.enum(["direct", "storytelling", "technical"]),
-});
+export async function updateUserSettingsFn(data: z.infer<typeof settingsSchema>) {
+  const user = await loadSessionUser();
+  if (!user) throw new Error("UNAUTHORIZED");
+  await db
+    .update(users)
+    .set({
+      seniority: data.seniority,
+      tone: data.tone,
+      updatedAt: new Date(),
+    })
+    .where(eq(users.id, user.id));
+  return { success: true };
+}
 
-export const updateUserSettings = createServerFn({ method: "POST" })
-  .inputValidator(settingsSchema)
-  .handler(async ({ data }) => {
-    const user = await loadSessionUser();
-    if (!user) throw new Error("UNAUTHORIZED");
-    await db
-      .update(users)
-      .set({
-        seniority: data.seniority,
-        tone: data.tone,
-        updatedAt: new Date(),
-      })
-      .where(eq(users.id, user.id));
-    return { success: true };
+export async function signInWithGithubFn() {
+  const request = getRequest();
+  const ip =
+    request?.headers.get("x-forwarded-for")?.split(",")[0] || "127.0.0.1";
+  const userAgent = request?.headers.get("user-agent") || "unknown";
+
+  const { success, remaining, resetAt } = await rateLimit(
+    `auth:signin:${ip}`,
+    5,
+    3600,
+  );
+  if (!success) {
+    const { logSecurityEvent } = await import("./redis");
+    await logSecurityEvent("rate_limit_exceeded", null, ip, {
+      action: "signin",
+    });
+    return { error: "RATE_LIMIT_REACHED", resetAt };
+  }
+
+  const codeVerifier = crypto.randomUUID() + crypto.randomUUID();
+  const codeChallenge = await sha256Base64Url(codeVerifier);
+
+  const stateBase = crypto.randomUUID();
+  const stateData = {
+    value: stateBase,
+    ip,
+    ua: userAgent.slice(0, 100),
+    createdAt: Date.now(),
+  };
+
+  setCookie(STATE_COOKIE_NAME, JSON.stringify(stateData), {
+    httpOnly: true,
+    secure: cookieSecure(),
+    sameSite: "strict",
+    maxAge: 60 * 10,
+    path: "/",
   });
 
-export const signInWithGithub = createServerFn({ method: "GET" }).handler(
-  async () => {
-    const request = getRequest();
-    const ip =
-      request?.headers.get("x-forwarded-for")?.split(",")[0] || "127.0.0.1";
-    const userAgent = request?.headers.get("user-agent") || "unknown";
+  setCookie("devbrand_pkce_verifier", codeVerifier, {
+    httpOnly: true,
+    secure: cookieSecure(),
+    sameSite: "strict",
+    maxAge: 60 * 10,
+    path: "/",
+  });
 
-    const { success, remaining, resetAt } = await rateLimit(
-      `auth:signin:${ip}`,
-      5,
-      3600,
-    );
-    if (!success) {
-      const { logSecurityEvent } = await import("./redis");
-      await logSecurityEvent("rate_limit_exceeded", null, ip, {
-        action: "signin",
-      });
-      return { error: "RATE_LIMIT_REACHED", resetAt };
-    }
+  const params = new URLSearchParams({
+    client_id: env.GITHUB_CLIENT_ID,
+    redirect_uri: getOAuthRedirectUri(),
+    scope: "read:user user:email",
+    state: stateBase,
+    code_challenge: codeChallenge,
+    code_challenge_method: "S256",
+  });
+  return {
+    url: `https://github.com/login/oauth/authorize?${params}`,
+    remaining,
+    resetAt,
+  };
+}
 
-    const codeVerifier = crypto.randomUUID() + crypto.randomUUID();
-    const codeChallenge = await sha256Base64Url(codeVerifier);
-
-    const stateBase = crypto.randomUUID();
-    const stateData = {
-      value: stateBase,
-      ip,
-      ua: userAgent.slice(0, 100),
-      createdAt: Date.now(),
-    };
-
-    setCookie(STATE_COOKIE_NAME, JSON.stringify(stateData), {
-      httpOnly: true,
-      secure: cookieSecure(),
-      sameSite: "strict",
-      maxAge: 60 * 10,
-      path: "/",
-    });
-
-    setCookie("devbrand_pkce_verifier", codeVerifier, {
-      httpOnly: true,
-      secure: cookieSecure(),
-      sameSite: "strict",
-      maxAge: 60 * 10,
-      path: "/",
-    });
-
-    const params = new URLSearchParams({
-      client_id: env.GITHUB_CLIENT_ID,
-      redirect_uri: getOAuthRedirectUri(),
-      scope: "read:user user:email",
-      state: stateBase,
-      code_challenge: codeChallenge,
-      code_challenge_method: "S256",
-    });
-    return {
-      url: `https://github.com/login/oauth/authorize?${params}`,
-      remaining,
-      resetAt,
-    };
-  },
-);
-
-export const handleGithubCallback = createServerFn({ method: "POST" })
-  .inputValidator(z.object({ code: z.string(), state: z.string().optional() }))
-  .handler(async ({ data: { code, state } }) =>
-    completeGithubOAuth({ code, state }),
-  );
+export async function handleGithubCallbackFn(data: { code: string; state?: string }) {
+  return completeGithubOAuth(data);
+}
