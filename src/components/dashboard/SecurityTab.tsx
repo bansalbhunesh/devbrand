@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getSecurityEvents } from "@/rpc.server";
+import { getSecurityEvents } from "@/rpc";
 import {
   Shield,
   AlertTriangle,

@@ -19,7 +19,7 @@ import {
   createCheckoutSession,
   createBillingPortal,
   verifyPayment,
-} from "@/rpc.server";
+} from "@/rpc";
 import { cn } from "@/lib/utils";
 
 import { toast } from "sonner";

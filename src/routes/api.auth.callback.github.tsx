@@ -1,5 +1,5 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { handleGithubCallback } from "@/rpc.server";
+import { handleGithubCallback } from "@/rpc";
 
 export const Route = createFileRoute("/api/auth/callback/github")({
   loader: async ({ location }) => {

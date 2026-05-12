@@ -8,7 +8,7 @@ import {
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "@/styles.css";
 import * as React from "react";
-import { getSession } from "@/rpc.server";
+import { getSession } from "@/rpc";
 
 const queryClient = new QueryClient({
   defaultOptions: {

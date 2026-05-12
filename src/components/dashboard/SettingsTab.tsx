@@ -101,7 +101,7 @@ export function SettingsTab({
           </div>
           <button
             onClick={async () => {
-              const { logoutAllDevices } = await import("@/rpc.server");
+              const { logoutAllDevices } = await import("@/rpc");
               await logoutAllDevices();
               window.location.href = "/";
             }}

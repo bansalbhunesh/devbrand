@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { getTeamImpact } from "@/rpc.server";
+import { getTeamImpact } from "@/rpc";
 import { Users, TrendingUp, BarChart3, Download, Zap } from "lucide-react";
 import * as React from "react";
 

@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { getOutputBySlug } from "@/rpc.server";
+import { getOutputBySlug } from "@/rpc";
 import {
   Sparkles,
   ArrowRight,

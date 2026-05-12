@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getRoast, postToX } from "@/rpc.server";
+import { getRoast, postToX } from "@/rpc";
 import {
   Share2,
   Twitter,

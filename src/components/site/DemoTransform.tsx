@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ArrowRight, Check, Link2, GitCommit } from "lucide-react";
 
 import { useQuery } from "@tanstack/react-query";
-import { getDemoOutputs } from "@/rpc.server";
+import { getDemoOutputs } from "@/rpc";
 
 const fallbackPairs = [
   {

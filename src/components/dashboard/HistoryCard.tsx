@@ -9,7 +9,7 @@ import {
   FileSearch,
   Sparkles,
 } from "lucide-react";
-import { toggleOutputVisibility } from "@/rpc.server";
+import { toggleOutputVisibility } from "@/rpc";
 import { toast } from "sonner";
 import {
   Dialog,

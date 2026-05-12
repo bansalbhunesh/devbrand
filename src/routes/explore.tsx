@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { getPublicFeed } from "@/rpc.server";
+import { getPublicFeed } from "@/rpc";
 import {
   Compass,
   Sparkles,

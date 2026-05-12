@@ -12,7 +12,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
-import { signInWithGithub } from "@/rpc.server";
+import { signInWithGithub } from "@/rpc";
 import {
   motion,
   useMotionValue,

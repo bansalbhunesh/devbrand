@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { getProfileData } from "@/rpc.server";
+import { getProfileData } from "@/rpc";
 import {
   Github,
   ShieldCheck,

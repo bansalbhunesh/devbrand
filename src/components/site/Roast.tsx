@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Flame, Terminal, Loader2, ShieldAlert, Share2 } from "lucide-react";
-import { generateRoast } from "@/rpc.server";
+import { generateRoast } from "@/rpc";
 import { cn } from "@/lib/utils";
 import { Route } from "@/routes/__root";
 

@@ -10,8 +10,8 @@ import {
   Share2,
   UserPlus,
 } from "lucide-react";
-import { getSession } from "@/rpc.server";
-import { generateRoast } from "@/rpc.server";
+import { getSession } from "@/rpc";
+import { generateRoast } from "@/rpc";
 import { cn } from "@/lib/utils";
 import { Nav } from "@/components/site/Nav";
 import { Footer } from "@/components/site/Footer";

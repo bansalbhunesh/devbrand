@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { getReferralData } from "@/rpc.server";
+import { getReferralData } from "@/rpc";
 import { Users, Copy, CheckCircle2, Gift } from "lucide-react";
 import { useState } from "react";
 
