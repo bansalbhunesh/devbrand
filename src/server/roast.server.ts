@@ -54,7 +54,8 @@ export async function generateRoastFn(data: {
   const { username, userId, tone } = data;
   // 1. Rate limiting & Limit Reset
   if (userId) {
-    const { checkAndResetLimits } = await import("./limits.server");
+    const { checkAndResetLimits, enforceTokenBudget } =
+      await import("./limits.server");
     const user = await checkAndResetLimits(userId);
     if (
       user &&
@@ -63,6 +64,8 @@ export async function generateRoastFn(data: {
     ) {
       throw new Error("ROAST_LIMIT_REACHED");
     }
+    // Hard token cap — surfaces as ROAST_BUDGET_REACHED on the client.
+    await enforceTokenBudget(userId);
   } else {
     // IP-based rate limit for anonymous users
     const request = getRequest();
@@ -181,11 +184,13 @@ Return ONLY valid JSON. No preamble.`;
     .returning();
 
   if (userId) {
+    const { recordTokenUsage } = await import("./limits.server");
     await Promise.all([
       db
         .update(users)
         .set({ roastCountThisMonth: sql`${users.roastCountThisMonth} + 1` })
         .where(eq(users.id, userId)),
+      recordTokenUsage(userId, llmResult.usage),
       db.insert(userEvents).values({
         userId,
         eventType: "roast",

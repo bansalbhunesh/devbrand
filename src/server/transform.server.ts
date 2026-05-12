@@ -42,7 +42,8 @@ export async function transformPRFn(data: { prUrl: string; userId?: string }) {
     try {
       await updateJobStatusFn(job.id, { status: "PROCESSING" });
 
-      const { checkAndResetLimits } = await import("./limits.server");
+      const { checkAndResetLimits, enforceTokenBudget, recordTokenUsage } =
+        await import("./limits.server");
       const freshUser = await checkAndResetLimits(userId);
 
       const isFreeLimitReached =
@@ -51,6 +52,11 @@ export async function transformPRFn(data: { prUrl: string; userId?: string }) {
       if (isFreeLimitReached) {
         throw new Error("LIMIT_REACHED");
       }
+
+      // Hard token cap. Throws TokenBudgetExceededError if the user is
+      // already over their per-plan monthly cap (free: 30k in / 5k out,
+      // pro: 500k / 80k). Lets the catch block below mark the job FAILED.
+      await enforceTokenBudget(userId);
 
       const context: UserContext = {
         seniority: user.seniority as any,
@@ -102,6 +108,7 @@ export async function transformPRFn(data: { prUrl: string; userId?: string }) {
           .update(users)
           .set({ generationsThisMonth: sql`${users.generationsThisMonth} + 1` })
           .where(eq(users.id, userId)),
+        recordTokenUsage(userId, usage),
         db.insert(userEvents).values({
           userId,
           eventType: "generate",

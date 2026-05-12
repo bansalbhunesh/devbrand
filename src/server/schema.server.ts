@@ -29,6 +29,14 @@ export const users = pgTable("users", {
   planExpiresAt: timestamp("plan_expires_at", { withTimezone: true }),
   generationsThisMonth: integer("generations_this_month").notNull().default(0),
   roastCountThisMonth: integer("roast_count_this_month").notNull().default(0), // separate from generations
+  // Token budget counters — reset on the same monthly cadence as
+  // generationsThisMonth via checkAndResetLimits. Counted as Anthropic
+  // billable input + output. Cache reads excluded from the cap since
+  // they're priced at ~10% of fresh input.
+  tokensInputThisMonth: integer("tokens_input_this_month").notNull().default(0),
+  tokensOutputThisMonth: integer("tokens_output_this_month")
+    .notNull()
+    .default(0),
   monthResetAt: timestamp("month_reset_at", { withTimezone: true })
     .notNull()
     .default(sql`date_trunc('month', now()) + interval '1 month'`),
