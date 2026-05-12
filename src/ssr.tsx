@@ -1,6 +1,5 @@
 import { createStartHandler, defaultStreamHandler } from "@tanstack/react-start/server";
 import { getRouter } from "./router";
-import { processRazorpayWebhookRaw } from "./server/webhooks.server";
 
 const handler = createStartHandler({
   createRouter: getRouter,
@@ -10,12 +9,16 @@ const handler = createStartHandler({
 export default async (request: Request, env?: unknown, ctx?: unknown) => {
   const url = new URL(request.url);
   
-  // Handle Razorpay Webhook directly
+  // Handle Razorpay Webhook directly with a dynamic import to avoid static scan issues
   if (url.pathname === "/api/webhook/razorpay" && request.method === "POST") {
     try {
       const signature = request.headers.get("x-razorpay-signature")?.trim() ?? "";
       const rawBody = await request.text();
+      
+      // Dynamic import ensures this server-only code is never seen by the shared bundler
+      const { processRazorpayWebhookRaw } = await import("./server/webhooks.server");
       await processRazorpayWebhookRaw(rawBody, signature);
+      
       return new Response(JSON.stringify({ received: true }), {
         status: 200,
         headers: { "Content-Type": "application/json" },
