@@ -13,6 +13,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import { Reveal, RevealItem } from "./Reveal";
 
 declare global {
   interface Window {
@@ -207,24 +208,19 @@ export function Pricing() {
           </div>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 items-start mt-20">
-          {tiers.map((tier, idx) => (
-            <motion.div
+        <Reveal
+          stagger={0.08}
+          rootMargin="-15% 0px -15% 0px"
+          className="grid md:grid-cols-3 gap-8 items-start mt-20"
+        >
+          {tiers.map((tier) => (
+            <RevealItem
               key={tier.name}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-100px" }}
-              transition={{ delay: idx * 0.1 }}
-              whileHover={
-                tier.popular
-                  ? { scale: 1.05, translateY: -4 }
-                  : { translateY: -4 }
-              }
               className={cn(
-                "relative flex flex-col p-10 rounded-3xl border transition-all duration-300",
+                "relative flex flex-col p-10 rounded-3xl border transition-all duration-300 hover:-translate-y-1",
                 tier.popular
-                  ? "border-blue-500/40 bg-background/60 backdrop-blur-xl shadow-2xl shadow-blue-500/10 z-10"
-                  : "border-border bg-muted/20",
+                  ? "border-blue-500/40 bg-background/60 backdrop-blur-xl shadow-2xl shadow-blue-500/10 z-10 hover:shadow-[0_32px_80px_-16px_rgba(59,130,246,0.35)]"
+                  : "border-border bg-muted/20 hover:shadow-[0_24px_60px_-24px_rgba(255,255,255,0.08)]",
               )}
             >
               {tier.popular && (
@@ -307,9 +303,9 @@ export function Pricing() {
                   )}
                 </button>
               )}
-            </motion.div>
+            </RevealItem>
           ))}
-        </div>
+        </Reveal>
 
         {/* Comparison Table */}
         <div className="mt-40 max-w-4xl mx-auto overflow-x-auto">

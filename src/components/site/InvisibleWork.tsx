@@ -4,6 +4,7 @@ import { ShieldCheck, Code2, Zap, ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { Reveal, RevealItem } from "./Reveal";
 
 export function InvisibleWork() {
   const [mounted, setMounted] = useState(false);
@@ -18,44 +19,57 @@ export function InvisibleWork() {
 
       <div className="mx-auto max-w-7xl px-6">
         <div className="grid lg:grid-cols-[1fr_1.2fr] gap-20 items-center">
-          <div className="relative">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-[10px] font-bold text-blue-500 uppercase tracking-widest mb-8">
-              Deep Analysis
-            </div>
-            <h2 className="text-4xl md:text-6xl font-bold tracking-tight mb-8 leading-[1.1]">
-              Quantify the <span className="text-blue-500">invisible</span>{" "}
-              work.
-            </h2>
-            <p className="text-muted-foreground text-lg leading-relaxed mb-10">
-              Refactors, security patches, and architectural reviews are the
-              bedrock of high-scale systems, yet they often go unnoticed in
-              performance reviews. DevBrand surfaces these high-leverage signals
-              using our proprietary **ArchScore** engine.
-            </p>
+          <Reveal direction="up" stagger={0.08} className="relative">
+            <RevealItem>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-[10px] font-bold text-blue-500 uppercase tracking-widest mb-8">
+                Deep Analysis
+              </div>
+            </RevealItem>
+            <RevealItem>
+              <h2 className="text-4xl md:text-6xl font-bold tracking-tight mb-8 leading-[1.1]">
+                Quantify the <span className="text-blue-500">invisible</span>{" "}
+                work.
+              </h2>
+            </RevealItem>
+            <RevealItem>
+              <p className="text-muted-foreground text-lg leading-relaxed mb-10">
+                Refactors, security patches, and architectural reviews are the
+                bedrock of high-scale systems, yet they often go unnoticed in
+                performance reviews. DevBrand surfaces these high-leverage
+                signals using our proprietary <strong>ArchScore</strong> engine.
+              </p>
+            </RevealItem>
 
             <div className="space-y-6">
-              <FeatureRow
-                icon={<ShieldCheck className="h-5 w-5 text-green-500" />}
-                title="Security Hardening"
-                desc="Detects path-sensitive security fixes and dependency sanitization."
-              />
-              <FeatureRow
-                icon={<Code2 className="h-5 w-5 text-blue-500" />}
-                title="Refactor Density"
-                desc="Calculates cyclomatic complexity reduction across core modules."
-              />
-              <FeatureRow
-                icon={<Zap className="h-5 w-5 text-yellow-500" />}
-                title="Force Multipliers"
-                desc="Measures your impact on other engineers through high-value code reviews."
-              />
+              <RevealItem>
+                <FeatureRow
+                  icon={<ShieldCheck className="h-5 w-5 text-green-500" />}
+                  title="Security Hardening"
+                  desc="Detects path-sensitive security fixes and dependency sanitization."
+                />
+              </RevealItem>
+              <RevealItem>
+                <FeatureRow
+                  icon={<Code2 className="h-5 w-5 text-blue-500" />}
+                  title="Refactor Density"
+                  desc="Calculates cyclomatic complexity reduction across core modules."
+                />
+              </RevealItem>
+              <RevealItem>
+                <FeatureRow
+                  icon={<Zap className="h-5 w-5 text-yellow-500" />}
+                  title="Force Multipliers"
+                  desc="Measures your impact on other engineers through high-value code reviews."
+                />
+              </RevealItem>
             </div>
-          </div>
+          </Reveal>
 
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
+          <Reveal
+            direction="left"
+            distance={28}
+            duration={0.9}
+            delay={0.1}
             className="relative"
           >
             {/* Abstract visualization of a dependency graph */}
@@ -121,7 +135,20 @@ export function InvisibleWork() {
                         />
                       </svg>
                       <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-blue-500/10 rounded-full flex items-center justify-center border border-blue-500/20 shadow-2xl shadow-blue-500/10">
-                        <div className="text-center">
+                        <motion.span
+                          aria-hidden
+                          className="absolute inset-0 rounded-full border border-blue-500/40"
+                          animate={{
+                            scale: [1, 1.18, 1.35],
+                            opacity: [0.5, 0.2, 0],
+                          }}
+                          transition={{
+                            duration: 3.2,
+                            repeat: Infinity,
+                            ease: "easeOut",
+                          }}
+                        />
+                        <div className="text-center relative">
                           <div className="text-2xl font-bold text-blue-500">
                             84
                           </div>
@@ -142,7 +169,7 @@ export function InvisibleWork() {
                 </div>
               </div>
             </div>
-          </motion.div>
+          </Reveal>
         </div>
       </div>
     </section>

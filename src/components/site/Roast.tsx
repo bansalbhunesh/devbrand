@@ -4,6 +4,7 @@ import { Flame, Terminal, Loader2, ShieldAlert, Share2 } from "lucide-react";
 import { generateRoast } from "@/rpc";
 import { cn } from "@/lib/utils";
 import { useRouteContext } from "@tanstack/react-router";
+import { Reveal } from "./Reveal";
 
 export function Roast() {
   const { session } = useRouteContext({ strict: false }) as any;
@@ -64,11 +65,7 @@ export function Roast() {
 
       <div className="mx-auto max-w-7xl px-6 relative">
         <div className="grid lg:grid-cols-2 gap-20 items-center">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-          >
+          <Reveal direction="right" distance={24} duration={0.85}>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-[10px] font-bold text-red-500 uppercase tracking-widest mb-6">
               Brutal Honesty
             </div>
@@ -161,9 +158,15 @@ export function Roast() {
                 Roast Profile
               </button>
             </div>
-          </motion.div>
+          </Reveal>
 
-          <div className="relative">
+          <Reveal
+            direction="left"
+            distance={24}
+            duration={0.85}
+            delay={0.1}
+            className="relative"
+          >
             <div className="absolute -inset-4 bg-gradient-to-br from-red-500/20 to-transparent blur-xl opacity-10" />
             <motion.div
               layout
@@ -431,7 +434,7 @@ export function Roast() {
                 )}
               </div>
             </motion.div>
-          </div>
+          </Reveal>
         </div>
       </div>
     </section>
