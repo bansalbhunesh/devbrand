@@ -1,4 +1,15 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
-  "framework": "tanstack-start"
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist/client",
+  "functions": {
+    "api/index.ts": {
+      "runtime": "@vercel/node@5.0.0",
+      "memory": 1024,
+      "maxDuration": 60,
+      "includeFiles": "dist/server/**"
+    }
+  },
+  "rewrites": [{ "source": "/(.*)", "destination": "/api/index" }]
 }

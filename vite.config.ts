@@ -6,10 +6,11 @@ import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
   plugins: [
-    tanstackStart({
-      // @ts-expect-error preset key isn't surfaced in current Start types but is accepted at runtime
-      preset: "vercel",
-    }),
+    // TanStack Start v1.167 has no Vercel adapter — `preset: "vercel"` here
+    // was decorative and silently ignored, producing a plain Node ESM bundle
+    // at dist/server/server.js that Vercel didn't know how to invoke.
+    // Vercel wiring is now explicit via api/index.ts + vercel.json rewrites.
+    tanstackStart(),
     react(),
     tailwindcss(),
     tsconfigPaths(),
