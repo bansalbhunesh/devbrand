@@ -1,7 +1,32 @@
 import * as React from "react";
-import { GitPullRequest, Loader2, Sparkles, Zap, Lock } from "lucide-react";
+import {
+  GitPullRequest,
+  Loader2,
+  Sparkles,
+  Zap,
+  Lock,
+  AlertCircle,
+} from "lucide-react";
 import { motion } from "framer-motion";
 import { fadeInDown } from "@/lib/animations";
+import { cn } from "@/lib/utils";
+
+// Live URL validity hint — catches obvious typos before the user submits.
+// Returns null while the field is empty (no nag on initial state).
+function validatePrUrl(url: string): { ok: boolean; hint: string } | null {
+  if (!url || url.trim().length === 0) return null;
+  const trimmed = url.trim();
+  if (!/^https?:\/\//i.test(trimmed)) {
+    return { ok: false, hint: "Must start with https://" };
+  }
+  if (!/github\.com\/[^/]+\/[^/]+\/pull\/\d+/i.test(trimmed)) {
+    return {
+      ok: false,
+      hint: "Should look like github.com/owner/repo/pull/123",
+    };
+  }
+  return { ok: true, hint: "Looks like a valid PR." };
+}
 
 interface GenerateFormProps {
   prUrl: string;
@@ -23,6 +48,7 @@ export const GenerateForm = React.memo(
     handleUpgrade,
     error,
   }: GenerateFormProps) => {
+    const validity = React.useMemo(() => validatePrUrl(prUrl), [prUrl]);
     return (
       <motion.div
         variants={fadeInDown}
@@ -54,16 +80,17 @@ export const GenerateForm = React.memo(
                 </p>
                 <button
                   onClick={handleUpgrade}
-                  className="mt-5 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-blue-500 transition shadow-xl shadow-blue-500/20 active:scale-95"
+                  className="group mt-5 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest transition-all duration-300 shadow-[0_18px_40px_-16px_rgba(37,99,235,0.6)] hover:-translate-y-0.5 hover:shadow-[0_24px_60px_-16px_rgba(37,99,235,0.8)]"
                 >
-                  <Zap className="h-3.5 w-3.5" /> Unlock Pro — ₹999
+                  <Zap className="h-3.5 w-3.5 transition-transform duration-300 group-hover:rotate-[-8deg]" />{" "}
+                  Unlock Pro — ₹999
                 </button>
               </div>
             </div>
           </div>
         )}
 
-        <div className="space-y-4">
+        <div className="space-y-3">
           <label className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.25em] ml-1">
             Source Artifact (GitHub PR)
           </label>
@@ -76,15 +103,44 @@ export const GenerateForm = React.memo(
               onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
               placeholder="https://github.com/org/repo/pull/123"
               disabled={isFreeLimitReached}
-              className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white/[0.03] border border-white/5 focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/5 transition-all outline-none text-sm disabled:opacity-40 font-mono placeholder:text-muted-foreground/30 shadow-inner"
+              aria-invalid={validity?.ok === false || undefined}
+              className={cn(
+                "w-full pl-12 pr-4 py-4 rounded-2xl bg-white/[0.03] border focus:ring-4 transition-all outline-none text-sm disabled:opacity-40 font-mono placeholder:text-muted-foreground/30 shadow-inner",
+                validity?.ok === false
+                  ? "border-red-500/40 focus:border-red-500/60 focus:ring-red-500/5"
+                  : "border-white/5 focus:border-blue-500/50 focus:ring-blue-500/5",
+              )}
             />
+          </div>
+          {/* Inline validity hint — appears once the user starts typing, lets
+              them course-correct without waiting for a server-side validation
+              error after submit. Reserves height so the layout doesn't jump. */}
+          <div className="h-4 ml-1">
+            {validity && (
+              <motion.span
+                key={validity.hint}
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={cn(
+                  "text-[10px] font-medium tracking-tight",
+                  validity.ok ? "text-blue-500/70" : "text-red-500/80",
+                )}
+              >
+                {validity.hint}
+              </motion.span>
+            )}
           </div>
         </div>
 
         <button
           onClick={handleGenerate}
-          disabled={generating || !prUrl.trim() || isFreeLimitReached}
-          className="w-full inline-flex items-center justify-center gap-2 px-6 py-4 rounded-2xl bg-foreground text-background font-black text-xs uppercase tracking-[0.15em] hover:opacity-90 disabled:opacity-40 transition-all shadow-2xl shadow-foreground/10 active:scale-[0.98] border border-white/10"
+          disabled={
+            generating ||
+            !prUrl.trim() ||
+            isFreeLimitReached ||
+            validity?.ok === false
+          }
+          className="group w-full inline-flex items-center justify-center gap-2 px-6 py-4 rounded-2xl bg-foreground text-background font-black text-xs uppercase tracking-[0.15em] disabled:opacity-40 disabled:translate-y-0 transition-all duration-300 shadow-[0_20px_50px_-16px_rgba(0,0,0,0.5)] hover:-translate-y-0.5 hover:shadow-[0_28px_70px_-16px_rgba(0,0,0,0.65)] border border-white/10"
         >
           {generating ? (
             <>
@@ -93,8 +149,8 @@ export const GenerateForm = React.memo(
             </>
           ) : (
             <>
-              <Sparkles className="h-4 w-4 text-blue-500" /> Extract Impact
-              Story
+              <Sparkles className="h-4 w-4 text-blue-500 transition-transform duration-300 group-hover:rotate-[-8deg]" />{" "}
+              Extract Impact Story
             </>
           )}
         </button>
@@ -103,20 +159,39 @@ export const GenerateForm = React.memo(
           <motion.div
             initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
-            className="p-4 rounded-xl bg-red-500/5 border border-red-500/10 flex items-center gap-3"
+            className="p-4 rounded-xl bg-red-500/5 border border-red-500/15 flex items-start gap-3"
           >
-            <div className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
-            <span className="text-[11px] text-red-500 font-bold uppercase tracking-widest">
-              {error === "limit"
-                ? "Monthly limit reached. Upgrade to Pro."
-                : error === "ai"
-                  ? "Neural Engine failed. Retrying..."
-                  : "Validation Error: Link must be public."}
-            </span>
+            <AlertCircle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <div className="text-[10px] font-black text-red-500 uppercase tracking-widest mb-0.5">
+                Transformation Failed
+              </div>
+              <div className="text-[11px] text-red-400 font-medium leading-relaxed break-words">
+                {prettifyError(error)}
+              </div>
+            </div>
           </motion.div>
         )}
       </motion.div>
     );
+
+    function prettifyError(raw: string): string {
+      // Map known short codes to human strings; fall back to the raw RPC
+      // message for anything else (Zod errors etc. arrive that way).
+      if (raw === "limit" || raw.includes("LIMIT_REACHED")) {
+        return "Monthly limit reached. Upgrade to Pro for unlimited transformations.";
+      }
+      if (raw === "ai" || raw.includes("ENGINE_TIMEOUT")) {
+        return "Neural engine timed out. Try again in a moment — the PR may be unusually large.";
+      }
+      if (raw.includes("Must be a GitHub PR URL") || raw === "validation") {
+        return "Link must be a public GitHub PR (https://github.com/owner/repo/pull/N).";
+      }
+      if (raw.includes("RATE_LIMIT")) {
+        return "Too many requests recently. Give it a minute and try again.";
+      }
+      return raw;
+    }
   },
 );
 

@@ -57,9 +57,10 @@ export const GenerateResult = React.memo(
             href={`/t/${result.slug}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="h-10 w-10 rounded-full bg-white/5 border border-white/10 grid place-items-center hover:bg-white/10 transition-colors group"
+            aria-label="Open public share page"
+            className="h-10 w-10 rounded-full bg-white/5 border border-white/10 grid place-items-center hover:bg-white/10 hover:border-white/20 hover:-translate-y-0.5 hover:shadow-[0_12px_24px_-12px_rgba(0,0,0,0.5)] transition-all duration-300 group"
           >
-            <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+            <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-all duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
           </a>
         </div>
 
@@ -108,12 +109,13 @@ export const GenerateResult = React.memo(
                       `post-${selectedPost}`,
                     )
                   }
-                  className="h-9 w-9 rounded-xl bg-white/5 border border-white/10 grid place-items-center hover:bg-white/10 transition-all"
+                  aria-label="Copy current post"
+                  className="group/copy h-9 w-9 rounded-xl bg-white/5 border border-white/10 grid place-items-center hover:bg-white/10 hover:border-white/20 hover:-translate-y-0.5 transition-all duration-300"
                 >
                   {copied === `post-${selectedPost}` ? (
                     <Check className="h-4 w-4 text-green-500" />
                   ) : (
-                    <ClipboardCopy className="h-4 w-4 text-muted-foreground" />
+                    <ClipboardCopy className="h-4 w-4 text-muted-foreground transition-transform duration-300 group-hover/copy:rotate-[-8deg]" />
                   )}
                 </button>
                 <button
@@ -135,10 +137,10 @@ export const GenerateResult = React.memo(
                     }, 500);
                   }}
                   className={cn(
-                    "h-9 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border",
+                    "h-9 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 border",
                     user?.plan === "pro"
-                      ? "bg-[#0077b5] text-white border-[#0077b5] hover:brightness-110"
-                      : "bg-white/5 text-muted-foreground border-white/10",
+                      ? "bg-[#0077b5] text-white border-[#0077b5] hover:-translate-y-0.5 shadow-[0_12px_30px_-12px_rgba(0,119,181,0.6)] hover:shadow-[0_18px_45px_-12px_rgba(0,119,181,0.8)]"
+                      : "bg-white/5 text-muted-foreground border-white/10 hover:bg-white/10 hover:border-white/20 hover:text-foreground",
                   )}
                 >
                   {user?.plan === "pro" ? "Copy & Post" : "Unlock Pro"}
@@ -168,19 +170,20 @@ export const GenerateResult = React.memo(
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="rounded-[2rem] border border-white/5 bg-white/[0.02] p-8 glass-morphism">
+          <div className="group rounded-[2rem] border border-white/5 bg-white/[0.02] p-8 glass-morphism hover:border-white/10 hover:-translate-y-0.5 hover:shadow-[0_24px_60px_-32px_rgba(59,130,246,0.25)] transition-all duration-300">
             <div className="flex items-center justify-between mb-4">
               <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-black">
                 Resume Artifact
               </span>
               <button
                 onClick={() => handleCopy(result.resumeBullet, "resume")}
+                aria-label="Copy resume bullet"
                 className="text-muted-foreground hover:text-foreground transition-colors"
               >
                 {copied === "resume" ? (
                   <Check className="h-3.5 w-3.5 text-green-500" />
                 ) : (
-                  <ClipboardCopy className="h-3.5 w-3.5" />
+                  <ClipboardCopy className="h-3.5 w-3.5 transition-transform duration-300 group-hover:rotate-[-8deg]" />
                 )}
               </button>
             </div>
@@ -189,19 +192,20 @@ export const GenerateResult = React.memo(
             </p>
           </div>
 
-          <div className="rounded-[2rem] border border-white/5 bg-white/[0.02] p-8 glass-morphism">
+          <div className="group rounded-[2rem] border border-white/5 bg-white/[0.02] p-8 glass-morphism hover:border-white/10 hover:-translate-y-0.5 hover:shadow-[0_24px_60px_-32px_rgba(168,85,247,0.25)] transition-all duration-300">
             <div className="flex items-center justify-between mb-4">
               <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-black">
                 Interview Anchor
               </span>
               <button
                 onClick={() => handleCopy(result.interviewHook, "hook")}
+                aria-label="Copy interview hook"
                 className="text-muted-foreground hover:text-foreground transition-colors"
               >
                 {copied === "hook" ? (
                   <Check className="h-3.5 w-3.5 text-green-500" />
                 ) : (
-                  <ClipboardCopy className="h-3.5 w-3.5" />
+                  <ClipboardCopy className="h-3.5 w-3.5 transition-transform duration-300 group-hover:rotate-[-8deg]" />
                 )}
               </button>
             </div>
