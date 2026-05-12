@@ -3,15 +3,9 @@ import {
   ArrowRight,
   Github,
   Sparkles,
-  GitPullRequest,
-  Check,
-  Link2,
   LayoutDashboard,
   Loader2,
   Code2,
-  Zap,
-  Globe,
-  Cpu,
   ShieldCheck,
   Terminal,
 } from "lucide-react";
@@ -26,8 +20,19 @@ import {
   useScroll,
 } from "framer-motion";
 import { NeuralBackground } from "./NeuralBackground";
+import { REVEAL_EASE } from "./Reveal";
 
 const springConfig = { damping: 25, stiffness: 120, mass: 0.5 };
+
+// Tighter entrance choreography. The prior sequence had delays up to 3.2s
+// before the user saw the full hero settled — too much "loading-feel" for a
+// landing page. This pace lands in ~1.4s while keeping the staged reveal.
+const T_BADGE = 0.05;
+const T_HEAD = 0.18;
+const T_SUBHEAD = 0.6;
+const T_CTA = 0.78;
+const T_CARD = 0.95;
+const T_PROGRESS = 1.4;
 
 export function Hero() {
   const cardRef = useRef<HTMLDivElement>(null);
@@ -141,9 +146,9 @@ export function Hero() {
       >
         <div className="flex flex-col items-center text-center">
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
+            initial={{ opacity: 0, y: -12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, ease: "easeOut" }}
+            transition={{ duration: 0.7, delay: T_BADGE, ease: REVEAL_EASE }}
             className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.4em] text-blue-500/80 border border-blue-500/20 rounded-full px-4 py-2 bg-blue-500/5 backdrop-blur-xl mb-12"
           >
             <ShieldCheck className="h-3 w-3" />
@@ -153,68 +158,85 @@ export function Hero() {
           <div className="relative mb-12">
             <h1 className="text-7xl md:text-9xl lg:text-[12rem] font-black tracking-[-0.08em] leading-[0.8] text-balance">
               <span className="inline-block relative">
-                <TextReveal text="SYSTEMS" delay={0.2} />
+                <TextReveal text="SYSTEMS" delay={T_HEAD} />
+                {/* Refined underglow: a horizontal gradient sweep, not a flat
+                    blurred bar. Reads as a subtle accent rather than a marker. */}
                 <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: "100%" }}
-                  transition={{ delay: 1, duration: 1, ease: "circOut" }}
-                  className="absolute -bottom-4 left-0 h-2 bg-blue-500/20 blur-sm"
+                  initial={{ opacity: 0, scaleX: 0 }}
+                  animate={{ opacity: 1, scaleX: 1 }}
+                  transition={{
+                    delay: T_HEAD + 0.5,
+                    duration: 0.9,
+                    ease: REVEAL_EASE,
+                  }}
+                  style={{ transformOrigin: "left" }}
+                  className="absolute -bottom-3 left-0 right-0 h-[3px] bg-gradient-to-r from-blue-500/0 via-blue-500/60 to-purple-500/0 blur-[2px]"
                 />
               </span>
               <br />
-              <span className="text-white drop-shadow-[0_0_50px_rgba(255,255,255,0.1)]">
-                <TextReveal text="OF PROOF" delay={0.6} />
+              <span
+                className="inline-block bg-clip-text text-transparent drop-shadow-[0_0_60px_rgba(120,140,255,0.18)]"
+                style={{
+                  backgroundImage:
+                    "linear-gradient(180deg, #ffffff 0%, #ffffff 55%, rgba(180,195,255,0.85) 100%)",
+                }}
+              >
+                <TextReveal text="OF PROOF" delay={T_HEAD + 0.32} />
               </span>
             </h1>
           </div>
 
           <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1.5, delay: 1.4 }}
-            className="max-w-2xl text-[18px] md:text-[22px] leading-relaxed text-muted-foreground/50 text-pretty font-medium mb-16 tracking-tight"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.9, delay: T_SUBHEAD, ease: REVEAL_EASE }}
+            className="max-w-2xl text-[18px] md:text-[22px] leading-relaxed text-muted-foreground/75 text-pretty font-medium mb-14 tracking-tight"
           >
             DevBrand transforms the invisible labor of engineering into
-            verifiable high-fidelity career leverage.
+            verifiable, high-fidelity career leverage.
           </motion.p>
 
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 1.8 }}
-            className="flex flex-wrap items-center justify-center gap-8"
+            transition={{ duration: 0.7, delay: T_CTA, ease: REVEAL_EASE }}
+            className="flex flex-wrap items-center justify-center gap-5"
           >
             <AnimatePresence mode="wait">
               {session ? (
                 <Link
                   to="/dashboard"
-                  className="group relative inline-flex items-center gap-4 px-10 py-5 rounded-2xl bg-foreground text-background font-black text-xs uppercase tracking-[0.2em] hover:scale-105 transition-all shadow-[0_20px_50px_rgba(0,0,0,0.5)] active:scale-95"
+                  className="group relative inline-flex items-center gap-4 px-10 py-5 rounded-2xl bg-foreground text-background font-black text-xs uppercase tracking-[0.2em] transition-all duration-300 shadow-[0_24px_60px_-12px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.06)] hover:-translate-y-0.5 hover:shadow-[0_32px_80px_-12px_rgba(80,120,255,0.35),0_0_0_1px_rgba(255,255,255,0.12)] active:translate-y-0"
                 >
                   <LayoutDashboard className="h-4 w-4" /> Open Workspace
-                  <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
+                  <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
                 </Link>
               ) : (
                 <button
                   onClick={handleAuth}
                   disabled={loggingIn}
-                  className="group relative inline-flex items-center gap-4 px-10 py-5 rounded-2xl bg-foreground text-background font-black text-xs uppercase tracking-[0.2em] hover:scale-105 transition-all shadow-[0_20px_50px_rgba(0,0,0,0.5)] active:scale-95"
+                  className="group relative inline-flex items-center gap-4 px-10 py-5 rounded-2xl bg-foreground text-background font-black text-xs uppercase tracking-[0.2em] transition-all duration-300 shadow-[0_24px_60px_-12px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.06)] hover:-translate-y-0.5 hover:shadow-[0_32px_80px_-12px_rgba(80,120,255,0.35),0_0_0_1px_rgba(255,255,255,0.12)] active:translate-y-0 disabled:opacity-70 disabled:cursor-not-allowed overflow-hidden"
                 >
+                  {/* Subtle idle shimmer to draw the eye back to the primary CTA.
+                      Pure CSS / GPU transform, runs continuously but is cheap. */}
+                  <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/15 to-transparent skew-x-[-12deg] group-hover:animate-[shine_900ms_ease-out] motion-reduce:hidden" />
                   {loggingIn ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
                     <Github className="h-4 w-4" />
                   )}
                   Initialize Session
-                  <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
+                  <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
                 </button>
               )}
             </AnimatePresence>
 
             <a
               href="#demo"
-              className="inline-flex items-center gap-4 px-10 py-5 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-3xl hover:bg-white/10 text-foreground transition-all font-black text-xs uppercase tracking-[0.2em]"
+              className="group inline-flex items-center gap-4 px-10 py-5 rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-3xl hover:bg-white/[0.07] hover:border-white/20 text-foreground transition-all duration-300 font-black text-xs uppercase tracking-[0.2em]"
             >
-              <Terminal className="h-4 w-4 text-blue-500" /> View Methodology
+              <Terminal className="h-4 w-4 text-blue-500 transition-transform duration-300 group-hover:rotate-[-8deg]" />{" "}
+              View Methodology
             </a>
           </motion.div>
         </div>
@@ -223,9 +245,9 @@ export function Hero() {
         <div className="relative mt-40 perspective-2000 px-4">
           <motion.div
             ref={cardRef}
-            initial={{ opacity: 0, rotateX: 20, y: 100 }}
+            initial={{ opacity: 0, rotateX: 14, y: 60 }}
             animate={{ opacity: 1, rotateX: 0, y: 0 }}
-            transition={{ duration: 2, delay: 2.2, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 1.4, delay: T_CARD, ease: REVEAL_EASE }}
             style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
             className="mx-auto max-w-5xl rounded-[3.5rem] border border-white/10 bg-[#0A0A0A]/80 backdrop-blur-[100px] shadow-[0_0_150px_rgba(0,0,0,0.8)] overflow-hidden border-glow group/card"
           >
@@ -310,7 +332,11 @@ export function Hero() {
                         <motion.div
                           initial={{ width: 0 }}
                           animate={{ width: "85%" }}
-                          transition={{ delay: 3, duration: 1.5 }}
+                          transition={{
+                            delay: T_PROGRESS,
+                            duration: 1.2,
+                            ease: REVEAL_EASE,
+                          }}
                           className="h-full bg-blue-500"
                         />
                       </div>
@@ -324,7 +350,11 @@ export function Hero() {
                         <motion.div
                           initial={{ width: 0 }}
                           animate={{ width: "92%" }}
-                          transition={{ delay: 3.2, duration: 1.5 }}
+                          transition={{
+                            delay: T_PROGRESS + 0.15,
+                            duration: 1.2,
+                            ease: REVEAL_EASE,
+                          }}
                           className="h-full bg-purple-500"
                         />
                       </div>
@@ -344,48 +374,14 @@ export function Hero() {
   );
 }
 
-function FloatingIcon({
-  icon,
-  delay,
-  top,
-  left,
-}: {
-  icon: React.ReactNode;
-  delay: number;
-  top: string;
-  left: string;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0 }}
-      animate={{
-        opacity: [0.2, 0.5, 0.2],
-        scale: 1,
-        y: [0, -30, 0],
-        rotate: [0, 15, -15, 0],
-      }}
-      transition={{
-        duration: 10,
-        delay,
-        repeat: Infinity,
-        ease: "easeInOut",
-      }}
-      className="absolute text-blue-400/40"
-      style={{ top, left }}
-    >
-      {icon}
-    </motion.div>
-  );
-}
-
 function TextReveal({ text, delay = 0 }: { text: string; delay?: number }) {
   const letters = Array.from(text);
   const container = {
     hidden: { opacity: 0 },
-    visible: (i: number = 1) => ({
+    visible: {
       opacity: 1,
-      transition: { staggerChildren: 0.05, delayChildren: delay * i },
-    }),
+      transition: { staggerChildren: 0.035, delayChildren: delay },
+    },
   };
 
   const child = {
@@ -393,16 +389,12 @@ function TextReveal({ text, delay = 0 }: { text: string; delay?: number }) {
       opacity: 1,
       y: 0,
       filter: "blur(0px)",
-      transition: {
-        type: "spring",
-        damping: 12,
-        stiffness: 100,
-      },
+      transition: { duration: 0.55, ease: REVEAL_EASE },
     },
     hidden: {
       opacity: 0,
-      y: 50,
-      filter: "blur(10px)",
+      y: 28,
+      filter: "blur(6px)",
     },
   };
 
@@ -419,29 +411,5 @@ function TextReveal({ text, delay = 0 }: { text: string; delay?: number }) {
         </motion.span>
       ))}
     </motion.span>
-  );
-}
-
-function Cite({ n, children }: { n: number; children: React.ReactNode }) {
-  return (
-    <span className="relative">
-      <span className="bg-blue-500/10 text-foreground rounded-[4px] px-0.5 -mx-0.5 ring-1 ring-blue-500/20">
-        {children}
-      </span>
-      <sup className="ml-1 text-[10px] font-mono font-bold text-blue-500">
-        [{n}]
-      </sup>
-    </span>
-  );
-}
-
-function CiteRow({ n, ref_, sha }: { n: number; ref_: string; sha: string }) {
-  return (
-    <li className="flex items-center gap-2">
-      <span className="text-blue-500 font-bold">[{n}]</span>
-      <span className="text-foreground/70">{ref_}</span>
-      <span className="opacity-20">·</span>
-      <span className="opacity-40">{sha}</span>
-    </li>
   );
 }

@@ -203,3 +203,14 @@
     transform: translateY(-10px);
   }
 }
+
+/* Sweeping highlight used by the primary CTA on hover (Hero etc.).
+   Single-shot animation; controlled by `group-hover:animate-[shine_...]`. */
+@keyframes shine {
+  from {
+    transform: translateX(-100%) skewX(-12deg);
+  }
+  to {
+    transform: translateX(220%) skewX(-12deg);
+  }
+}

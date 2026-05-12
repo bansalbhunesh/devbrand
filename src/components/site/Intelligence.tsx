@@ -2,6 +2,7 @@
 
 import { Cpu, Shield, GitBranch, Terminal } from "lucide-react";
 import { motion } from "framer-motion";
+import { Reveal, RevealItem } from "./Reveal";
 
 const capabilities = [
   {
@@ -42,15 +43,15 @@ export function Intelligence() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
+        <Reveal
+          stagger={0.08}
+          className="grid md:grid-cols-3 gap-8"
+          rootMargin="-15% 0px -15% 0px"
+        >
           {capabilities.map((cap, i) => (
-            <motion.div
+            <RevealItem
               key={i}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              className="group p-8 rounded-3xl border border-border bg-background hover:border-purple-500/30 transition-all hover:shadow-2xl hover:shadow-purple-500/5"
+              className="group p-8 rounded-3xl border border-border bg-background hover:border-purple-500/30 transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/5 hover:-translate-y-0.5"
             >
               <div className="mb-6 p-3 rounded-2xl bg-muted border border-border w-fit group-hover:bg-purple-500/5 group-hover:border-purple-500/20 transition-colors">
                 {cap.icon}
@@ -59,9 +60,9 @@ export function Intelligence() {
               <p className="text-sm text-muted-foreground leading-relaxed">
                 {cap.desc}
               </p>
-            </motion.div>
+            </RevealItem>
           ))}
-        </div>
+        </Reveal>
 
         <div className="mt-20 rounded-3xl border border-border bg-background overflow-hidden shadow-2xl">
           <div className="grid md:grid-cols-[1fr_1.5fr]">
