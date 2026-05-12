@@ -40,18 +40,32 @@ export function GenerateTab({
   copied,
   setTab,
 }: GenerateTabProps) {
+  // Step advances from 0 → 3 based on elapsed real time once `generating`
+  // flips true. The engine doesn't emit phase progress (the job-status API
+  // returns PROCESSING/COMPLETED/FAILED only), so step here is a UI heuristic
+  // that paces with the typical 10-30s engine duration:
+  //   step 0: 0-3s       (reading diff)
+  //   step 1: 3-9s       (analyzing)
+  //   step 2: 9-18s      (scoring)
+  //   step 3: 18s+       (synthesizing)
+  // It pins at 3 instead of cycling, so a long run doesn't look like it's
+  // restarting. Resets to 0 the moment generation ends.
   const [step, setStep] = React.useState(0);
 
   React.useEffect(() => {
-    if (generating) {
-      const interval = setInterval(() => {
-        setStep((s) => (s < 3 ? s + 1 : s));
-      }, 2000);
-      return () => {
-        clearInterval(interval);
-        setStep(0);
-      };
+    if (!generating) {
+      setStep(0);
+      return;
     }
+    const startedAt = Date.now();
+    const interval = setInterval(() => {
+      const elapsed = Date.now() - startedAt;
+      if (elapsed > 18_000) setStep(3);
+      else if (elapsed > 9_000) setStep(2);
+      else if (elapsed > 3_000) setStep(1);
+      else setStep(0);
+    }, 500);
+    return () => clearInterval(interval);
   }, [generating]);
 
   return (

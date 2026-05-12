@@ -4,7 +4,7 @@ import {
   Link,
   useMatches,
 } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -99,47 +99,101 @@ function Dashboard() {
   const isFreeLimitReached =
     user?.plan === "free" && (user?.generationsThisMonth ?? 0) >= 3;
 
+  // Cancellation token for the current poll loop. A new generate or an
+  // unmount flips this; in-flight polls check it before scheduling the next
+  // tick. Prevents duplicate polling loops when the user clicks Generate twice,
+  // and stops polling after the tab unmounts (was leaking timers).
+  const pollAbortRef = useRef<{ cancelled: boolean } | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (pollAbortRef.current) pollAbortRef.current.cancelled = true;
+    };
+  }, []);
+
   const handleGenerate = async () => {
     if (!prUrl.trim() || !user) return;
+
+    // Cancel any prior in-flight poll loop (e.g. user clicked Generate twice).
+    if (pollAbortRef.current) pollAbortRef.current.cancelled = true;
+    const token = { cancelled: false };
+    pollAbortRef.current = token;
+
     setError(null);
     setResult(null);
     setGenerating(true);
+
     try {
       const { jobId } = (await transformPR({
         data: { prUrl: prUrl.trim(), userId: user.id },
       })) as any;
 
-      // Start Polling
-      const poll = async () => {
-        try {
-          const job = (await getJobStatus(jobId)) as any;
-          if (job.status === "COMPLETED") {
-            const out = await getOutputBySlug(job.result.slug);
-            setResult(out);
-            setSelectedPost(0);
-            qc.invalidateQueries({ queryKey: ["outputs", user.id] });
-            toast.success("Impact story generated!");
-            setGenerating(false);
-          } else if (job.status === "FAILED") {
-            setError(job.error?.includes("LIMIT") ? "limit" : "generic");
-            toast.error("Generation failed");
-            setGenerating(false);
-          } else {
-            // Keep polling
-            setTimeout(poll, 2000);
-          }
-        } catch (e) {
-          setError("generic");
-          setGenerating(false);
-        }
-      };
+      // Bounded backoff: ramps from 1.5s → 4s over the typical 10-30s engine
+      // run; caps total wait at ~120s before surfacing a timeout. The engine
+      // itself enforces ENGINE_TIMEOUT_MS (5 min default) so this is the UI's
+      // safety net, not the source of truth.
+      const POLL_DELAYS_MS = [
+        1500, 1500, 2000, 2000, 3000, 3000, 3000, 4000, 4000, 4000, 4000, 4000,
+        4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000,
+        4000, 4000, 4000, 4000, 4000, 4000,
+      ];
 
-      setTimeout(poll, 2000);
+      for (let i = 0; i < POLL_DELAYS_MS.length; i++) {
+        if (token.cancelled) return;
+        await new Promise((r) => setTimeout(r, POLL_DELAYS_MS[i]));
+        if (token.cancelled) return;
+
+        let job: any;
+        try {
+          job = await getJobStatus(jobId);
+        } catch {
+          // Single transient network blip doesn't kill the loop; we'll retry
+          // on the next tick. A persistent failure will eventually hit the
+          // cap below.
+          continue;
+        }
+
+        if (job.status === "COMPLETED") {
+          if (token.cancelled) return;
+          const out = await getOutputBySlug(job.result.slug);
+          if (token.cancelled) return;
+          setResult(out);
+          setSelectedPost(0);
+          qc.invalidateQueries({ queryKey: ["outputs", user.id] });
+          toast.success("Impact story generated!");
+          setGenerating(false);
+          return;
+        }
+
+        if (job.status === "FAILED") {
+          const code = job.error ?? "";
+          if (code.includes("LIMIT_REACHED")) setError("limit");
+          else if (code.includes("ENGINE_TIMEOUT")) setError("timeout");
+          else if (code.includes("AI_PARSE_ERROR")) setError("ai");
+          else setError(code || "generic");
+          toast.error("Generation failed");
+          setGenerating(false);
+          return;
+        }
+      }
+
+      // Exhausted the backoff schedule without seeing COMPLETED/FAILED.
+      // Surface a graceful timeout — the job may still finish server-side and
+      // appear in History; we just stopped polling.
+      if (!token.cancelled) {
+        setError("timeout");
+        toast.error(
+          "Still working… check the History tab in a minute for the result.",
+        );
+        setGenerating(false);
+      }
     } catch (e: any) {
+      if (token.cancelled) return;
       const msg = e?.message ?? "";
       if (msg.includes("LIMIT_REACHED")) setError("limit");
       else if (msg.includes("AI_PARSE_ERROR")) setError("ai");
-      else setError("generic");
+      else if (msg.includes("RATE_LIMIT")) setError("rate_limit");
+      else setError(msg || "generic");
       toast.error("Generation failed");
       setGenerating(false);
     }
