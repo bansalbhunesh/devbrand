@@ -9,12 +9,14 @@ import {
   ShieldAlert,
   Share2,
   UserPlus,
+  Check,
 } from "lucide-react";
 import { getSession } from "@/rpc";
 import { generateRoast } from "@/rpc";
 import { cn } from "@/lib/utils";
 import { Nav } from "@/components/site/Nav";
 import { Footer } from "@/components/site/Footer";
+import { Reveal, RevealItem, REVEAL_EASE } from "@/components/site/Reveal";
 
 export const Route = createFileRoute("/roast-friend")({
   component: RoastFriendPage,
@@ -34,6 +36,7 @@ function RoastFriendPage() {
   const [roastData, setRoastData] = useState<any>(null);
   const [username, setUsername] = useState(target || "");
   const [error, setError] = useState<string | null>(null);
+  const [linkCopied, setLinkCopied] = useState(false);
 
   const scanLogs = [
     "Locating victim in GitHub's witness protection...",
@@ -88,29 +91,31 @@ function RoastFriendPage() {
 
           <div className="mx-auto max-w-3xl px-6 relative">
             {/* Header */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center mb-16"
-            >
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-500 text-[10px] font-bold uppercase tracking-widest mb-6">
-                <UserPlus className="h-3 w-3" /> Roast a Friend
-              </div>
-              <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6">
-                {target ? `Roasting @${target}` : "Send a Friend to Judgment"}
-              </h1>
-              <p className="text-lg text-muted-foreground max-w-lg mx-auto">
-                Enter their GitHub username. We'll generate an evidence-backed
-                roast and let you tag them on social media. No mercy.
-              </p>
-            </motion.div>
+            <Reveal stagger={0.1} className="text-center mb-16">
+              <RevealItem>
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-500 text-[10px] font-bold uppercase tracking-widest mb-6">
+                  <UserPlus className="h-3 w-3" /> Roast a Friend
+                </div>
+              </RevealItem>
+              <RevealItem>
+                <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6">
+                  {target ? `Roasting @${target}` : "Send a Friend to Judgment"}
+                </h1>
+              </RevealItem>
+              <RevealItem>
+                <p className="text-lg text-muted-foreground max-w-lg mx-auto">
+                  Enter their GitHub username. We'll generate an evidence-backed
+                  roast and let you tag them on social media. No mercy.
+                </p>
+              </RevealItem>
+            </Reveal>
 
             {/* Input */}
             {!roastData && (
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
+                transition={{ delay: 0.3, duration: 0.6, ease: REVEAL_EASE }}
                 className="max-w-md mx-auto space-y-6"
               >
                 <div className="relative group">
@@ -142,12 +147,12 @@ function RoastFriendPage() {
                 <button
                   onClick={handleRoast}
                   disabled={loading || !username}
-                  className="w-full inline-flex items-center justify-center gap-2 px-6 py-4 rounded-2xl bg-orange-500 text-white font-bold hover:bg-orange-600 disabled:opacity-40 transition shadow-xl shadow-orange-500/20 active:scale-[0.98]"
+                  className="group w-full inline-flex items-center justify-center gap-2 px-6 py-4 rounded-2xl bg-orange-500 text-white font-bold disabled:opacity-40 transition-all duration-300 shadow-[0_20px_50px_-16px_rgba(249,115,22,0.55)] hover:-translate-y-0.5 hover:shadow-[0_28px_70px_-16px_rgba(249,115,22,0.75)] disabled:translate-y-0"
                 >
                   {loading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    <Flame className="h-4 w-4" />
+                    <Flame className="h-4 w-4 transition-transform duration-300 group-hover:rotate-[-8deg]" />
                   )}
                   {loading ? scanLogs[scanStep] : "Roast Their Profile"}
                 </button>
@@ -218,18 +223,19 @@ function RoastFriendPage() {
                         href={tagTweetUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="flex items-center justify-center gap-3 px-6 py-4 rounded-2xl bg-white text-black font-bold hover:brightness-90 transition shadow-xl shadow-white/10"
+                        className="group flex items-center justify-center gap-3 px-6 py-4 rounded-2xl bg-white text-black font-bold transition-all duration-300 shadow-[0_20px_50px_-16px_rgba(255,255,255,0.25)] hover:-translate-y-0.5 hover:shadow-[0_28px_70px_-16px_rgba(255,255,255,0.4)]"
                       >
-                        <Flame className="h-5 w-5 text-orange-500" /> Tag @
-                        {username} on X
+                        <Flame className="h-5 w-5 text-orange-500 transition-transform duration-300 group-hover:rotate-[-8deg]" />{" "}
+                        Tag @{username} on X
                       </a>
                       <a
                         href={challengeTweetUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="flex items-center justify-center gap-3 px-6 py-4 rounded-2xl border border-white/10 bg-white/5 font-bold hover:bg-white/10 transition"
+                        className="group flex items-center justify-center gap-3 px-6 py-4 rounded-2xl border border-white/10 bg-white/5 font-bold transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:-translate-y-0.5"
                       >
-                        <Share2 className="h-5 w-5" /> Challenge a Friend
+                        <Share2 className="h-5 w-5 transition-transform duration-300 group-hover:-rotate-6" />{" "}
+                        Challenge a Friend
                       </a>
                     </div>
 
@@ -246,10 +252,18 @@ function RoastFriendPage() {
                       <button
                         onClick={() => {
                           navigator.clipboard.writeText(shareUrl);
+                          setLinkCopied(true);
+                          setTimeout(() => setLinkCopied(false), 1800);
                         }}
-                        className="text-[10px] font-bold text-muted-foreground hover:text-foreground transition"
+                        className="text-[10px] font-bold text-muted-foreground hover:text-foreground transition flex items-center gap-1.5"
                       >
-                        Copy Link
+                        {linkCopied ? (
+                          <>
+                            <Check className="h-3 w-3 text-green-500" /> Copied
+                          </>
+                        ) : (
+                          "Copy Link"
+                        )}
                       </button>
                     </div>
                   </div>
@@ -269,9 +283,10 @@ function RoastFriendPage() {
                         setRoastData(null);
                         setUsername("");
                       }}
-                      className="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-red-500 text-white font-bold hover:bg-red-600 transition"
+                      className="group inline-flex items-center gap-2 px-8 py-3 rounded-full bg-red-500 text-white font-bold transition-all duration-300 shadow-[0_18px_40px_-12px_rgba(239,68,68,0.5)] hover:-translate-y-0.5 hover:shadow-[0_24px_60px_-12px_rgba(239,68,68,0.7)]"
                     >
-                      <Flame className="h-4 w-4" /> Roast Someone Else
+                      <Flame className="h-4 w-4 transition-transform duration-300 group-hover:rotate-[-8deg]" />{" "}
+                      Roast Someone Else
                     </button>
                   </motion.div>
                 </motion.div>
