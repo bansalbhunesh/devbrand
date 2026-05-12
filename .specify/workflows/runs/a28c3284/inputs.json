@@ -1,0 +1,7 @@
+{
+  "inputs": {
+    "spec": "specs/001-arch-health/spec.md",
+    "integration": "copilot",
+    "scope": "full"
+  }
+}

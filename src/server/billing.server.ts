@@ -126,3 +126,12 @@ export async function verifyPaymentFn(data: z.infer<typeof verifyPaymentSchema>)
   return { success: true };
 }
 
+export async function createBillingPortalFn() {
+  const sessionUser = await loadSessionUser();
+  if (!sessionUser) throw new Error("UNAUTHORIZED");
+  
+  // Razorpay handles billing differently, so we just return a success signal 
+  // or redirect to a local billing management page if we had one.
+  return { url: "/dashboard" }; 
+}
+

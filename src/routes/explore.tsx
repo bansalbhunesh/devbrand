@@ -14,6 +14,7 @@ import {
 import { cn } from "@/lib/utils";
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Nav } from "@/components/site/Nav";
 
 export const Route = createFileRoute("/explore")({
   component: ExplorePage,
@@ -45,6 +46,7 @@ function ExplorePage() {
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden text-foreground">
+      <Nav />
       {/* Decorative Background Blobs */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-500/5 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-purple-500/5 rounded-full blur-[100px] pointer-events-none" />

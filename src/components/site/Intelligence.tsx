@@ -90,33 +90,29 @@ export function Intelligence() {
               </div>
             </div>
             <div className="p-2 md:p-8 bg-muted/20">
-              <div className="rounded-2xl border border-border bg-background p-6 font-mono text-[11px] leading-7 shadow-inner">
-                <div className="text-purple-500/50 mb-4 tracking-widest uppercase">
-                  System Prompt V1.2
+              <div className="rounded-2xl border border-border bg-background p-6 font-mono text-[11px] leading-7 shadow-inner relative group">
+                <div className="text-purple-500/50 mb-4 tracking-widest uppercase flex items-center justify-between">
+                  <span>System Prompt V1.2</span>
+                  <div className="h-1.5 w-1.5 rounded-full bg-purple-500 animate-pulse" />
                 </div>
                 <div className="space-y-2 text-muted-foreground">
-                  <p>
-                    <span className="text-purple-500">SET</span> analyst_mode =
-                    PRECISE
-                  </p>
-                  <p>
-                    <span className="text-purple-500">ENFORCE</span>{" "}
-                    citation_model = TRUE
-                  </p>
-                  <p>
-                    <span className="text-purple-500">FORBID</span> buzzwords =
-                    ["game-changer", "revolutionary", "excited"]
-                  </p>
-                  <p>
-                    <span className="text-purple-500">PRIORITIZE</span>{" "}
-                    structural_impact_over_features = TRUE
-                  </p>
+                  <TypewriterText text='SET analyst_mode = PRECISE' delay={0} />
+                  <TypewriterText text='ENFORCE citation_model = TRUE' delay={1.5} />
+                  <TypewriterText text='FORBID buzzwords = ["game-changer", "revolutionary"]' delay={3} />
+                  <TypewriterText text='PRIORITIZE structural_impact = TRUE' delay={4.5} />
+                  
                   <div className="h-px bg-border my-6" />
-                  <p className="text-foreground/60 italic">
+                  
+                  <motion.p 
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    transition={{ delay: 6 }}
+                    className="text-foreground/60 italic"
+                  >
                     "Identify the core problem solved. If a refactor reduces
                     complexity but adds zero features, weight it 2x higher than
                     a feature-layer update."
-                  </p>
+                  </motion.p>
                 </div>
               </div>
             </div>
@@ -124,5 +120,32 @@ export function Intelligence() {
         </div>
       </div>
     </section>
+  );
+}
+
+function TypewriterText({ text, delay = 0 }: { text: string; delay?: number }) {
+  const letters = Array.from(text);
+  return (
+    <p>
+      {letters.map((char, i) => (
+        <motion.span
+          key={i}
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{
+            delay: delay + i * 0.03,
+            duration: 0.01,
+          }}
+          className={
+            char === "=" || char === "[" || char === "]" || char === '"'
+              ? "text-purple-500/50"
+              : ""
+          }
+        >
+          {char}
+        </motion.span>
+      ))}
+    </p>
   );
 }

@@ -3,10 +3,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Flame, Terminal, Loader2, ShieldAlert, Share2 } from "lucide-react";
 import { generateRoast } from "@/rpc";
 import { cn } from "@/lib/utils";
-import { Route } from "@/routes/__root";
+import { useRouteContext } from "@tanstack/react-router";
 
 export function Roast() {
-  const { session } = Route.useRouteContext() as { session: any };
+  const { session } = useRouteContext({ strict: false }) as any;
   const [loading, setLoading] = useState(false);
   const [roastData, setRoastData] = useState<any>(null);
   const [username, setUsername] = useState("");

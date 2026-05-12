@@ -200,3 +200,19 @@ Return ONLY valid JSON. No preamble.`;
 
   return { ...output, id: inserted.id, githubUsername: username };
 }
+
+export async function postToXFn(data: { id: string; content: string }) {
+  const { loadSessionUser } = await import("./auth.server");
+  const user = await loadSessionUser();
+  if (!user) throw new Error("UNAUTHORIZED");
+
+  console.log(`[X_BROADCAST] User ${user.githubLogin} posted roast ${data.id}: ${data.content}`);
+  
+  await db.insert(userEvents).values({
+    userId: user.id,
+    eventType: "social_share",
+    payload: { platform: "x", roastId: data.id },
+  });
+
+  return { success: true };
+}
