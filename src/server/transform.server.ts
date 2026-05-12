@@ -78,6 +78,7 @@ export async function runTransformForUser(args: {
       linkedinPost1: output.linkedinPost1,
       linkedinPost2: output.linkedinPost2,
       linkedinPost3: output.linkedinPost3,
+      twitterThread: output.twitterThread ?? [],
       resumeBullet: output.resumeBullet,
       interviewHook: output.interviewHook,
       citations: output.citations.map((c) => ({
@@ -190,6 +191,7 @@ export async function transformPRFn(data: { prUrl: string; userId?: string }) {
           linkedinPost1: output.linkedinPost1,
           linkedinPost2: output.linkedinPost2,
           linkedinPost3: output.linkedinPost3,
+          twitterThread: output.twitterThread ?? [],
           resumeBullet: output.resumeBullet,
           interviewHook: output.interviewHook,
           citations: output.citations.map((c) => ({

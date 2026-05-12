@@ -63,6 +63,11 @@ export async function runEngine(
     const { extractUserPreferences } = await import("./layer7.server");
     const userPreferences = await extractUserPreferences(userId);
 
+    // Voice memory — feed the user's last 3 edits as few-shot examples.
+    // Empty when voice_learning_enabled is false or no edits yet.
+    const { getUserVoiceExamples } = await import("../voice-memory.server");
+    const voiceExamples = await getUserVoiceExamples(userId);
+
     // Layer 5: Narrative Generation
     const narrative = await generateNarrative({
       impactProfile,
@@ -72,6 +77,7 @@ export async function runEngine(
       graphImpactReport,
       userContext: context,
       userPreferences,
+      voiceExamples,
     });
 
     // Layer 6: Verification & Evidence Linking (Semantic Upgrade)

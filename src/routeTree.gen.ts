@@ -17,6 +17,7 @@ import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as WebhooksRazorpayRouteImport } from './routes/webhooks.razorpay'
 import { Route as WebhooksGithubRouteImport } from './routes/webhooks.github'
 import { Route as ULoginRouteImport } from './routes/u.$login'
 import { Route as TeamIdRouteImport } from './routes/team.$id'
@@ -63,6 +64,11 @@ const AdminRoute = AdminRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WebhooksRazorpayRoute = WebhooksRazorpayRouteImport.update({
+  id: '/webhooks/razorpay',
+  path: '/webhooks/razorpay',
   getParentRoute: () => rootRouteImport,
 } as any)
 const WebhooksGithubRoute = WebhooksGithubRouteImport.update({
@@ -115,6 +121,7 @@ export interface FileRoutesByFullPath {
   '/team/$id': typeof TeamIdRoute
   '/u/$login': typeof ULoginRoute
   '/webhooks/github': typeof WebhooksGithubRoute
+  '/webhooks/razorpay': typeof WebhooksRazorpayRoute
   '/internal/cron/drain': typeof InternalCronDrainRoute
   '/api/auth/callback/github': typeof ApiAuthCallbackGithubRoute
 }
@@ -132,6 +139,7 @@ export interface FileRoutesByTo {
   '/team/$id': typeof TeamIdRoute
   '/u/$login': typeof ULoginRoute
   '/webhooks/github': typeof WebhooksGithubRoute
+  '/webhooks/razorpay': typeof WebhooksRazorpayRoute
   '/internal/cron/drain': typeof InternalCronDrainRoute
   '/api/auth/callback/github': typeof ApiAuthCallbackGithubRoute
 }
@@ -150,6 +158,7 @@ export interface FileRoutesById {
   '/team/$id': typeof TeamIdRoute
   '/u/$login': typeof ULoginRoute
   '/webhooks/github': typeof WebhooksGithubRoute
+  '/webhooks/razorpay': typeof WebhooksRazorpayRoute
   '/internal/cron/drain': typeof InternalCronDrainRoute
   '/api/auth/callback/github': typeof ApiAuthCallbackGithubRoute
 }
@@ -169,6 +178,7 @@ export interface FileRouteTypes {
     | '/team/$id'
     | '/u/$login'
     | '/webhooks/github'
+    | '/webhooks/razorpay'
     | '/internal/cron/drain'
     | '/api/auth/callback/github'
   fileRoutesByTo: FileRoutesByTo
@@ -186,6 +196,7 @@ export interface FileRouteTypes {
     | '/team/$id'
     | '/u/$login'
     | '/webhooks/github'
+    | '/webhooks/razorpay'
     | '/internal/cron/drain'
     | '/api/auth/callback/github'
   id:
@@ -203,6 +214,7 @@ export interface FileRouteTypes {
     | '/team/$id'
     | '/u/$login'
     | '/webhooks/github'
+    | '/webhooks/razorpay'
     | '/internal/cron/drain'
     | '/api/auth/callback/github'
   fileRoutesById: FileRoutesById
@@ -221,6 +233,7 @@ export interface RootRouteChildren {
   TeamIdRoute: typeof TeamIdRoute
   ULoginRoute: typeof ULoginRoute
   WebhooksGithubRoute: typeof WebhooksGithubRoute
+  WebhooksRazorpayRoute: typeof WebhooksRazorpayRoute
   InternalCronDrainRoute: typeof InternalCronDrainRoute
   ApiAuthCallbackGithubRoute: typeof ApiAuthCallbackGithubRoute
 }
@@ -281,6 +294,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/webhooks/razorpay': {
+      id: '/webhooks/razorpay'
+      path: '/webhooks/razorpay'
+      fullPath: '/webhooks/razorpay'
+      preLoaderRoute: typeof WebhooksRazorpayRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/webhooks/github': {
@@ -349,6 +369,7 @@ const rootRouteChildren: RootRouteChildren = {
   TeamIdRoute: TeamIdRoute,
   ULoginRoute: ULoginRoute,
   WebhooksGithubRoute: WebhooksGithubRoute,
+  WebhooksRazorpayRoute: WebhooksRazorpayRoute,
   InternalCronDrainRoute: InternalCronDrainRoute,
   ApiAuthCallbackGithubRoute: ApiAuthCallbackGithubRoute,
 }

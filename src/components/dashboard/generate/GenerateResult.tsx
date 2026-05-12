@@ -1,9 +1,18 @@
 import * as React from "react";
-import { ExternalLink, ClipboardCopy, Check, Lock } from "lucide-react";
+import {
+  ExternalLink,
+  ClipboardCopy,
+  Check,
+  Pencil,
+  Save,
+  X,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Stat } from "../HistoryCard";
-import { scaleIn, springs } from "@/lib/animations";
+import { scaleIn } from "@/lib/animations";
+import { saveEditedPost } from "@/rpc";
+import { toast } from "sonner";
 
 interface GenerateResultProps {
   result: any;
@@ -16,6 +25,7 @@ interface GenerateResultProps {
 }
 
 const postLabels = ["Problem / Outcome", "Tradeoff / Decision", "Learnings"];
+const postKinds = ["linkedinPost1", "linkedinPost2", "linkedinPost3"];
 
 export const GenerateResult = React.memo(
   ({
@@ -27,6 +37,39 @@ export const GenerateResult = React.memo(
     user,
     handleUpgrade,
   }: GenerateResultProps) => {
+    const [editing, setEditing] = React.useState<string | null>(null);
+    const [drafts, setDrafts] = React.useState<Record<string, string>>({});
+    const [saving, setSaving] = React.useState(false);
+
+    const sourceText = [
+      result.linkedinPost1,
+      result.linkedinPost2,
+      result.linkedinPost3,
+    ][selectedPost];
+    const currentPostText = drafts[postKinds[selectedPost]] ?? sourceText;
+    const twitterThread: string[] = Array.isArray(result.twitterThread)
+      ? result.twitterThread
+      : [];
+
+    const handleSaveEdit = async (postKind: string, text: string) => {
+      if (!result.id) {
+        toast.error("Cannot save edits — output not persisted yet");
+        return;
+      }
+      setSaving(true);
+      try {
+        await saveEditedPost({
+          data: { outputId: result.id, postKind, editedText: text },
+        });
+        toast.success("Edit saved — voice will learn from this");
+        setEditing(null);
+      } catch (err: any) {
+        toast.error(err?.message || "Save failed");
+      } finally {
+        setSaving(false);
+      }
+    };
+
     return (
       <motion.div
         variants={scaleIn}
@@ -99,15 +142,30 @@ export const GenerateResult = React.memo(
               </div>
               <div className="flex items-center gap-3">
                 <button
+                  onClick={() => {
+                    const k = postKinds[selectedPost];
+                    if (editing === k) {
+                      setEditing(null);
+                    } else {
+                      setDrafts((d) => ({
+                        ...d,
+                        [k]: d[k] ?? sourceText,
+                      }));
+                      setEditing(k);
+                    }
+                  }}
+                  aria-label="Edit current post"
+                  className="group/edit h-9 w-9 rounded-xl bg-white/5 border border-white/10 grid place-items-center hover:bg-white/10 hover:border-white/20 hover:-translate-y-0.5 transition-all duration-300"
+                >
+                  {editing === postKinds[selectedPost] ? (
+                    <X className="h-4 w-4 text-muted-foreground" />
+                  ) : (
+                    <Pencil className="h-4 w-4 text-muted-foreground transition-transform duration-300 group-hover/edit:rotate-[-8deg]" />
+                  )}
+                </button>
+                <button
                   onClick={() =>
-                    handleCopy(
-                      [
-                        result.linkedinPost1,
-                        result.linkedinPost2,
-                        result.linkedinPost3,
-                      ][selectedPost],
-                      `post-${selectedPost}`,
-                    )
+                    handleCopy(currentPostText, `post-${selectedPost}`)
                   }
                   aria-label="Copy current post"
                   className="group/copy h-9 w-9 rounded-xl bg-white/5 border border-white/10 grid place-items-center hover:bg-white/10 hover:border-white/20 hover:-translate-y-0.5 transition-all duration-300"
@@ -120,14 +178,7 @@ export const GenerateResult = React.memo(
                 </button>
                 <button
                   onClick={() => {
-                    handleCopy(
-                      [
-                        result.linkedinPost1,
-                        result.linkedinPost2,
-                        result.linkedinPost3,
-                      ][selectedPost],
-                      `post-${selectedPost}`,
-                    );
+                    handleCopy(currentPostText, `post-${selectedPost}`);
                     if (user?.plan !== "pro") return handleUpgrade();
                     setTimeout(() => {
                       window.open(
@@ -149,25 +200,132 @@ export const GenerateResult = React.memo(
             </div>
 
             <AnimatePresence mode="wait">
-              <motion.div
-                key={selectedPost}
-                initial={{ opacity: 0, filter: "blur(8px)" }}
-                animate={{ opacity: 1, filter: "blur(0px)" }}
-                exit={{ opacity: 0, filter: "blur(8px)" }}
-                transition={{ duration: 0.4 }}
-                className="text-[15px] leading-[1.8] text-pretty whitespace-pre-line font-medium text-foreground/90 selection:bg-blue-500/30"
-              >
-                {
-                  [
-                    result.linkedinPost1,
-                    result.linkedinPost2,
-                    result.linkedinPost3,
-                  ][selectedPost]
-                }
-              </motion.div>
+              {editing === postKinds[selectedPost] ? (
+                <motion.div
+                  key={`edit-${selectedPost}`}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="space-y-3"
+                >
+                  <textarea
+                    value={drafts[postKinds[selectedPost]] ?? ""}
+                    onChange={(e) =>
+                      setDrafts((d) => ({
+                        ...d,
+                        [postKinds[selectedPost]]: e.target.value,
+                      }))
+                    }
+                    rows={10}
+                    className="w-full bg-background/60 border border-white/10 rounded-2xl p-4 text-[15px] leading-[1.8] font-medium text-foreground/90 focus:outline-none focus:border-blue-500/40 transition resize-y"
+                  />
+                  <div className="flex justify-end gap-2">
+                    <button
+                      onClick={() => setEditing(null)}
+                      className="h-9 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest bg-white/5 border border-white/10 text-muted-foreground hover:bg-white/10 transition-all duration-300"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() =>
+                        handleSaveEdit(
+                          postKinds[selectedPost],
+                          drafts[postKinds[selectedPost]] ?? "",
+                        )
+                      }
+                      disabled={saving}
+                      className="h-9 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest bg-foreground text-background border border-foreground hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 flex items-center gap-2"
+                    >
+                      <Save className="h-3.5 w-3.5" />
+                      {saving ? "Saving" : "Save Edits"}
+                    </button>
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key={selectedPost}
+                  initial={{ opacity: 0, filter: "blur(8px)" }}
+                  animate={{ opacity: 1, filter: "blur(0px)" }}
+                  exit={{ opacity: 0, filter: "blur(8px)" }}
+                  transition={{ duration: 0.4 }}
+                  className="text-[15px] leading-[1.8] text-pretty whitespace-pre-line font-medium text-foreground/90 selection:bg-blue-500/30"
+                >
+                  {currentPostText}
+                </motion.div>
+              )}
             </AnimatePresence>
           </div>
         </div>
+
+        {twitterThread.length > 0 && (
+          <div className="rounded-[2.5rem] border border-white/5 bg-white/[0.02] p-1 glass-morphism">
+            <div className="bg-background/80 rounded-[2.4rem] p-8">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="h-2 w-2 rounded-full bg-sky-400 animate-pulse" />
+                  <span className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-black">
+                    Twitter / X Thread · {twitterThread.length} tweets
+                  </span>
+                </div>
+                <button
+                  onClick={() =>
+                    handleCopy(twitterThread.join("\n\n"), "thread-all")
+                  }
+                  aria-label="Copy entire thread"
+                  className="h-9 px-4 rounded-xl bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-foreground hover:bg-white/10 hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-2"
+                >
+                  {copied === "thread-all" ? (
+                    <Check className="h-3.5 w-3.5 text-green-500" />
+                  ) : (
+                    <ClipboardCopy className="h-3.5 w-3.5" />
+                  )}
+                  Copy All
+                </button>
+              </div>
+              <div className="space-y-3">
+                {twitterThread.map((tweet, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.04 }}
+                    className="group/tweet flex gap-3 p-4 rounded-2xl border border-white/5 bg-white/[0.015] hover:bg-white/[0.03] hover:border-white/10 transition-all duration-300"
+                  >
+                    <div className="text-[10px] font-black font-mono text-sky-400/60 pt-0.5 w-6 shrink-0">
+                      {String(i + 1).padStart(2, "0")}
+                    </div>
+                    <div className="flex-1 text-[14px] leading-[1.65] text-foreground/85 whitespace-pre-line">
+                      {tweet}
+                    </div>
+                    <div className="flex flex-col items-end gap-1.5 shrink-0">
+                      <button
+                        onClick={() => handleCopy(tweet, `tweet-${i}`)}
+                        aria-label={`Copy tweet ${i + 1}`}
+                        className="h-8 w-8 rounded-lg bg-white/5 border border-white/10 grid place-items-center opacity-0 group-hover/tweet:opacity-100 hover:bg-white/10 hover:border-white/20 transition-all duration-300"
+                      >
+                        {copied === `tweet-${i}` ? (
+                          <Check className="h-3.5 w-3.5 text-green-500" />
+                        ) : (
+                          <ClipboardCopy className="h-3.5 w-3.5 text-muted-foreground" />
+                        )}
+                      </button>
+                      <span
+                        className={cn(
+                          "text-[9px] font-mono font-bold tracking-tight",
+                          tweet.length > 270
+                            ? "text-amber-400/80"
+                            : "text-muted-foreground/50",
+                        )}
+                      >
+                        {tweet.length}/280
+                      </span>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="group rounded-[2rem] border border-white/5 bg-white/[0.02] p-8 glass-morphism hover:border-white/10 hover:-translate-y-0.5 hover:shadow-[0_24px_60px_-32px_rgba(59,130,246,0.25)] transition-all duration-300">

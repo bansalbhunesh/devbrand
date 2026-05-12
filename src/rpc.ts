@@ -65,6 +65,19 @@ export const postToXSchema = z.object({
   content: z.string().min(1).max(4000),
 });
 
+export const saveEditedPostSchema = z.object({
+  outputId: z.string().uuid(),
+  postKind: z.enum([
+    "linkedinPost1",
+    "linkedinPost2",
+    "linkedinPost3",
+    "twitterThread",
+    "resumeBullet",
+    "interviewHook",
+  ]),
+  editedText: z.string().min(1).max(10_000),
+});
+
 // GitHub login/repo character set per GitHub's own rules: login allows
 // alphanumerics + hyphens (no leading/trailing hyphen); repo allows dots,
 // underscores, hyphens, alphanumerics. Same regexes used in roastSchema.
@@ -207,6 +220,14 @@ export const toggleOutputVisibility = createServerFn({ method: "POST" })
     const { toggleOutputVisibilityFn } =
       await import("@/server/transform.server");
     return toggleOutputVisibilityFn(data);
+  });
+
+export const saveEditedPost = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => saveEditedPostSchema.parse(data))
+  .handler(async ({ data }) => {
+    await checkRateLimit("save_edit", 30, 60);
+    const { saveEditedPostFn } = await import("@/server/voice-memory.server");
+    return saveEditedPostFn(data);
   });
 
 export const generateRoast = createServerFn({ method: "POST" })

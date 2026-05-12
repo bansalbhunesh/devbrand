@@ -165,6 +165,38 @@ export function HistoryCard({
                       {output.resumeBullet}
                     </p>
                   </div>
+
+                  {Array.isArray(output.twitterThread) &&
+                    output.twitterThread.length > 0 && (
+                      <details className="p-4 rounded-xl border border-sky-400/10 bg-sky-400/[0.03] group/thread">
+                        <summary className="flex items-center justify-between cursor-pointer list-none">
+                          <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-sky-400">
+                            Twitter Thread · {output.twitterThread.length}{" "}
+                            tweets
+                          </h4>
+                          <span className="text-[10px] text-muted-foreground group-open/thread:hidden">
+                            expand
+                          </span>
+                        </summary>
+                        <div className="mt-3 space-y-2">
+                          <p className="text-[12px] leading-relaxed text-foreground/75 italic">
+                            "{output.twitterThread[0]}"
+                          </p>
+                          <div className="hidden group-open/thread:block space-y-2">
+                            {output.twitterThread
+                              .slice(1)
+                              .map((t: string, i: number) => (
+                                <p
+                                  key={i}
+                                  className="text-[12px] leading-relaxed text-foreground/65 pl-3 border-l border-sky-400/20"
+                                >
+                                  {t}
+                                </p>
+                              ))}
+                          </div>
+                        </div>
+                      </details>
+                    )}
                 </div>
 
                 <div className="p-8 bg-muted/10 space-y-6">

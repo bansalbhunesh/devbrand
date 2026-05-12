@@ -46,6 +46,10 @@ export const users = pgTable("users", {
 
   role: text("role").notNull().default("user"), // user | admin
 
+  voiceLearningEnabled: boolean("voice_learning_enabled")
+    .notNull()
+    .default(true),
+
   sessionNonce: text("session_nonce")
     .notNull()
     .default(sql`gen_random_uuid()`),
@@ -95,6 +99,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   profile: one(profiles, { fields: [users.id], references: [profiles.userId] }),
   outputs: many(outputs),
   events: many(userEvents),
+  postEdits: many(userPostEdits),
 }));
 
 export const profiles = pgTable("profiles", {
@@ -146,6 +151,7 @@ export const outputs = pgTable(
     linkedinPost1: text("linkedin_post_1").notNull(),
     linkedinPost2: text("linkedin_post_2").notNull(),
     linkedinPost3: text("linkedin_post_3").notNull(),
+    twitterThread: jsonb("twitter_thread").$type<string[]>(),
     resumeBullet: text("resume_bullet").notNull(),
     interviewHook: text("interview_hook").notNull(),
     citations:
@@ -169,8 +175,41 @@ export const outputs = pgTable(
   ],
 );
 
-export const outputsRelations = relations(outputs, ({ one }) => ({
+export const outputsRelations = relations(outputs, ({ one, many }) => ({
   user: one(users, { fields: [outputs.userId], references: [users.id] }),
+  edits: many(userPostEdits),
+}));
+
+export const userPostEdits = pgTable(
+  "user_post_edits",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    outputId: uuid("output_id")
+      .notNull()
+      .references(() => outputs.id, { onDelete: "cascade" }),
+    postKind: text("post_kind").notNull(),
+    editedText: text("edited_text").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("user_post_edits_user_idx").on(t.userId),
+    index("user_post_edits_user_created_idx").on(t.userId, t.createdAt),
+  ],
+);
+
+export const userPostEditsRelations = relations(userPostEdits, ({ one }) => ({
+  user: one(users, { fields: [userPostEdits.userId], references: [users.id] }),
+  output: one(outputs, {
+    fields: [userPostEdits.outputId],
+    references: [outputs.id],
+  }),
 }));
 
 export const repoGraphs = pgTable(

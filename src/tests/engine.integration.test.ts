@@ -640,6 +640,7 @@ describe("Type Safety Smoke Tests", () => {
       linkedinPost1: "Test",
       linkedinPost2: "Test",
       linkedinPost3: "Test",
+      twitterThread: [],
       resumeBullet: "Test",
       interviewHook: "Test",
       commitMessageSummary: "Test",

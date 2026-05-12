@@ -319,6 +319,11 @@ export interface UserPreference {
   frequentKeywords: string[];
 }
 
+export interface VoiceExample {
+  postKind: string;
+  editedText: string;
+}
+
 export interface NarrativeRequest {
   impactProfile: ImpactProfile;
   invisibleWorkReport: InvisibleWorkReport;
@@ -327,6 +332,7 @@ export interface NarrativeRequest {
   graphImpactReport: GraphImpactReport;
   userContext: UserContext;
   userPreferences?: UserPreference;
+  voiceExamples?: VoiceExample[];
 }
 
 export interface UserContext {
@@ -340,6 +346,7 @@ export interface NarrativeDraft {
   linkedinPost1: string;
   linkedinPost2: string;
   linkedinPost3: string;
+  twitterThread: string[];
   resumeBullet: string;
   interviewHook: string;
   commitMessageSummary: string;
