@@ -36,6 +36,8 @@ export const users = pgTable("users", {
   referralCode: text("referral_code").unique(),
   referredBy: uuid("referred_by").references((): any => users.id),
 
+  role: text("role").notNull().default("user"), // user | admin
+
   sessionNonce: text("session_nonce")
     .notNull()
     .default(sql`gen_random_uuid()`),
@@ -47,6 +49,37 @@ export const users = pgTable("users", {
     .notNull()
     .defaultNow(),
 });
+
+export const backgroundJobs = pgTable(
+  "background_jobs",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    type: text("type").notNull(),
+    status: text("status").notNull().default("PENDING"), // PENDING | PROCESSING | COMPLETED | FAILED
+    payload: jsonb("payload").$type<any>(),
+    result: jsonb("result").$type<any>(),
+    error: text("error"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("jobs_user_idx").on(t.userId),
+    index("jobs_status_idx").on(t.status),
+  ],
+);
+
+export const backgroundJobsRelations = relations(backgroundJobs, ({ one }) => ({
+  user: one(users, { fields: [backgroundJobs.userId], references: [users.id] }),
+}));
 
 export const usersRelations = relations(users, ({ one, many }) => ({
   profile: one(profiles, { fields: [users.id], references: [profiles.userId] }),

@@ -28,47 +28,49 @@ export const GenerateForm = React.memo(
         variants={fadeInDown}
         initial="initial"
         animate="animate"
-        className="space-y-6"
+        className="space-y-8"
       >
         <div>
-          <h2 className="text-2xl font-semibold tracking-tight mb-1 text-balance">
-            Transform a PR
+          <h2 className="text-3xl font-black tracking-tight mb-2 text-balance gradient-text">
+            Transform Impact
           </h2>
-          <p className="text-sm text-muted-foreground text-pretty">
-            Paste any GitHub pull request URL to generate LinkedIn posts, resume
-            bullets, and interview hooks.
+          <p className="text-[13px] text-muted-foreground/80 text-pretty font-medium leading-relaxed">
+            Paste a GitHub PR URL. Our AI extracts the architectural shifts, 
+            performance gains, and complexity to build your reputation.
           </p>
         </div>
 
         {isFreeLimitReached && (
-          <div className="rounded-xl border border-blue-500/30 bg-blue-500/5 p-5 glass-morphism">
-            <div className="flex items-start gap-3">
-              <Lock className="h-5 w-5 text-blue-500 mt-0.5 shrink-0" />
+          <div className="rounded-3xl border border-blue-500/20 bg-blue-500/5 p-6 glass-morphism border-glow">
+            <div className="flex items-start gap-4">
+              <div className="h-10 w-10 rounded-2xl bg-blue-500/10 grid place-items-center shrink-0">
+                <Lock className="h-5 w-5 text-blue-500" />
+              </div>
               <div className="flex-1">
-                <p className="text-sm font-medium">
-                  You've used all 3 free generations this month.
+                <p className="text-sm font-bold">
+                  Quota Exhausted.
                 </p>
-                <p className="text-xs text-muted-foreground mt-1 text-pretty">
-                  Upgrade to Pro for unlimited generations + LinkedIn
-                  auto-drafting.
+                <p className="text-[11px] text-muted-foreground mt-1 text-pretty font-medium leading-relaxed">
+                  You've reached your free limit. Upgrade to Pro for 
+                  unlimited transformations and advanced AI roasting.
                 </p>
                 <button
                   onClick={handleUpgrade}
-                  className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500 text-white text-xs font-bold hover:opacity-90 transition shadow-lg shadow-blue-500/20"
+                  className="mt-5 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-blue-500 transition shadow-xl shadow-blue-500/20 active:scale-95"
                 >
-                  <Zap className="h-3.5 w-3.5" /> Upgrade to Pro — ₹999
+                  <Zap className="h-3.5 w-3.5" /> Unlock Pro — ₹999
                 </button>
               </div>
             </div>
           </div>
         )}
 
-        <div className="space-y-3">
-          <label className="text-xs font-medium text-muted-foreground uppercase tracking-widest">
-            PR URL
+        <div className="space-y-4">
+          <label className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.25em] ml-1">
+            Source Artifact (GitHub PR)
           </label>
-          <div className="relative">
-            <GitPullRequest className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <div className="relative group/input">
+            <GitPullRequest className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within/input:text-blue-500 transition-colors" />
             <input
               type="url"
               value={prUrl}
@@ -76,7 +78,7 @@ export const GenerateForm = React.memo(
               onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
               placeholder="https://github.com/org/repo/pull/123"
               disabled={isFreeLimitReached}
-              className="w-full pl-9 pr-4 py-2.5 rounded-lg bg-muted border border-border focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition outline-none text-sm disabled:opacity-40 font-mono"
+              className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white/[0.03] border border-white/5 focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/5 transition-all outline-none text-sm disabled:opacity-40 font-mono placeholder:text-muted-foreground/30 shadow-inner"
             />
           </div>
         </div>
@@ -84,32 +86,34 @@ export const GenerateForm = React.memo(
         <button
           onClick={handleGenerate}
           disabled={generating || !prUrl.trim() || isFreeLimitReached}
-          className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-foreground text-background font-bold text-sm hover:opacity-90 disabled:opacity-40 transition shadow-xl shadow-foreground/5"
+          className="w-full inline-flex items-center justify-center gap-2 px-6 py-4 rounded-2xl bg-foreground text-background font-black text-xs uppercase tracking-[0.15em] hover:opacity-90 disabled:opacity-40 transition-all shadow-2xl shadow-foreground/10 active:scale-[0.98] border border-white/10"
         >
           {generating ? (
             <>
-              <Loader2 className="h-4 w-4 animate-spin" /> Analyzing diff...
+              <Loader2 className="h-4 w-4 animate-spin" /> Neural Parse in progress...
             </>
           ) : (
             <>
-              <Sparkles className="h-4 w-4 text-blue-500" /> Generate impact
-              story
+              <Sparkles className="h-4 w-4 text-blue-500" /> Extract Impact Story
             </>
           )}
         </button>
 
         {error && (
-          <motion.p
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            className="text-xs text-destructive font-medium"
+          <motion.div
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-4 rounded-xl bg-red-500/5 border border-red-500/10 flex items-center gap-3"
           >
-            {error === "limit"
-              ? "Monthly limit reached. Upgrade to Pro for more."
-              : error === "ai"
-                ? "AI returned an unexpected format. Please try again."
-                : "Something went wrong. Check that the PR URL is public."}
-          </motion.p>
+            <div className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
+            <span className="text-[11px] text-red-500 font-bold uppercase tracking-widest">
+              {error === "limit"
+                ? "Monthly limit reached. Upgrade to Pro."
+                : error === "ai"
+                  ? "Neural Engine failed. Retrying..."
+                  : "Validation Error: Link must be public."}
+            </span>
+          </motion.div>
         )}
       </motion.div>
     );

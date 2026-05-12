@@ -33,31 +33,31 @@ export const GenerateResult = React.memo(
         initial="initial"
         animate="animate"
         exit="exit"
-        className="space-y-4"
+        className="space-y-6"
       >
-        <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-muted/20 glass-morphism">
-          <div className="flex gap-6 text-sm">
-            <Stat label="Impact" value={`${result.impactScore}/100`} />
-            <Stat label="Category" value={result.category} />
-            <Stat label="Level" value={result.complexityLevel} />
+        <div className="flex items-center justify-between p-6 rounded-[2rem] border border-white/5 bg-white/[0.02] glass-morphism relative overflow-hidden">
+          <div className="flex gap-8 text-sm">
+            <Stat label="Impact" value={`${result.impactScore}/100`} color="text-blue-500" />
+            <Stat label="Complexity" value={result.complexityLevel} color="text-purple-500" />
+            <Stat label="Category" value={result.category} color="text-green-500" />
           </div>
           <a
             href={`/t/${result.slug}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs text-blue-500 flex items-center gap-1 hover:underline font-bold"
+            className="h-10 w-10 rounded-full bg-white/5 border border-white/10 grid place-items-center hover:bg-white/10 transition-colors group"
           >
-            Share <ExternalLink className="h-3 w-3" />
+            <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
           </a>
         </div>
 
-        <div className="flex gap-2 relative bg-muted/30 p-1 rounded-xl border border-border">
+        <div className="flex gap-2 relative bg-white/[0.03] p-1.5 rounded-2xl border border-white/5">
           {postLabels.map((label, i) => (
             <button
               key={i}
               onClick={() => setSelectedPost(i)}
               className={cn(
-                "flex-1 py-2 rounded-lg text-xs font-bold transition-all relative z-10",
+                "flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.15em] transition-all relative z-10",
                 selectedPost === i
                   ? "text-background"
                   : "text-muted-foreground hover:text-foreground",
@@ -66,8 +66,8 @@ export const GenerateResult = React.memo(
               {selectedPost === i && (
                 <motion.div
                   layoutId="post-tab-indicator"
-                  className="absolute inset-0 bg-foreground rounded-lg -z-10 shadow-lg shadow-foreground/5"
-                  transition={springs.snappy}
+                  className="absolute inset-0 bg-foreground rounded-xl -z-10 shadow-2xl shadow-foreground/20"
+                  transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                 />
               )}
               {label}
@@ -75,77 +75,73 @@ export const GenerateResult = React.memo(
           ))}
         </div>
 
-        <div className="rounded-xl border border-border bg-muted/20 p-5 relative group/card glow-small">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">
-                LinkedIn post
-              </span>
-              <div className="h-1 w-1 rounded-full bg-muted-foreground/30" />
-              <span className="text-[10px] font-mono text-muted-foreground opacity-60 italic">
-                {postLabels[selectedPost]}
-              </span>
+        <div className="rounded-[2.5rem] border border-white/5 bg-white/[0.02] p-1 glass-morphism border-glow">
+          <div className="bg-background/80 rounded-[2.4rem] p-8">
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-3">
+                <div className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
+                <span className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-black">
+                  Neural Draft Output
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() =>
+                    handleCopy(
+                      [
+                        result.linkedinPost1,
+                        result.linkedinPost2,
+                        result.linkedinPost3,
+                      ][selectedPost],
+                      `post-${selectedPost}`,
+                    )
+                  }
+                  className="h-9 w-9 rounded-xl bg-white/5 border border-white/10 grid place-items-center hover:bg-white/10 transition-all"
+                >
+                  {copied === `post-${selectedPost}` ? (
+                    <Check className="h-4 w-4 text-green-500" />
+                  ) : (
+                    <ClipboardCopy className="h-4 w-4 text-muted-foreground" />
+                  )}
+                </button>
+                <button
+                  onClick={() => {
+                    handleCopy(
+                      [
+                        result.linkedinPost1,
+                        result.linkedinPost2,
+                        result.linkedinPost3,
+                      ][selectedPost],
+                      `post-${selectedPost}`,
+                    );
+                    if (user?.plan !== "pro") return handleUpgrade();
+                    setTimeout(() => {
+                      window.open(
+                        `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(`${window.location.origin}/t/${result.slug}`)}`,
+                        "_blank",
+                      );
+                    }, 500);
+                  }}
+                  className={cn(
+                    "h-9 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border",
+                    user?.plan === "pro"
+                      ? "bg-[#0077b5] text-white border-[#0077b5] hover:brightness-110"
+                      : "bg-white/5 text-muted-foreground border-white/10"
+                  )}
+                >
+                  {user?.plan === "pro" ? "Copy & Post" : "Unlock Pro"}
+                </button>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() =>
-                  handleCopy(
-                    [
-                      result.linkedinPost1,
-                      result.linkedinPost2,
-                      result.linkedinPost3,
-                    ][selectedPost],
-                    `post-${selectedPost}`,
-                  )
-                }
-                className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition px-2.5 py-1.5 rounded-lg border border-border hover:border-border-strong bg-background/50"
-              >
-                {copied === `post-${selectedPost}` ? (
-                  <>
-                    <Check className="h-3 w-3 text-green-500" /> Copied
-                  </>
-                ) : (
-                  <>
-                    <ClipboardCopy className="h-3 w-3" /> Copy Text
-                  </>
-                )}
-              </button>
-              <button
-                onClick={() => {
-                  if (user?.plan !== "pro") return handleUpgrade();
-                  window.open(
-                    `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(`${window.location.origin}/t/${result.slug}`)}`,
-                    "_blank",
-                  );
-                }}
-                className={cn(
-                  "inline-flex items-center gap-1.5 text-xs font-bold transition px-3 py-1.5 rounded-lg border",
-                  user?.plan === "pro"
-                    ? "bg-[#0077b5] text-white border-[#0077b5] hover:brightness-110"
-                    : "bg-muted text-muted-foreground border-border cursor-not-allowed",
-                )}
-              >
-                {user?.plan === "pro" ? (
-                  <>
-                    <ExternalLink className="h-3 w-3" /> Post to LinkedIn
-                  </>
-                ) : (
-                  <>
-                    <Lock className="h-3 w-3" /> Draft to LinkedIn
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-          <div className="relative overflow-hidden p-4 rounded-xl bg-background/40 border border-border/50">
+            
             <AnimatePresence mode="wait">
-              <motion.p
+              <motion.div
                 key={selectedPost}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-                className="text-sm leading-7 text-pretty whitespace-pre-line font-medium text-foreground/90"
+                initial={{ opacity: 0, filter: "blur(8px)" }}
+                animate={{ opacity: 1, filter: "blur(0px)" }}
+                exit={{ opacity: 0, filter: "blur(8px)" }}
+                transition={{ duration: 0.4 }}
+                className="text-[15px] leading-[1.8] text-pretty whitespace-pre-line font-medium text-foreground/90 selection:bg-blue-500/30"
               >
                 {
                   [
@@ -154,59 +150,45 @@ export const GenerateResult = React.memo(
                     result.linkedinPost3,
                   ][selectedPost]
                 }
-              </motion.p>
+              </motion.div>
             </AnimatePresence>
           </div>
         </div>
 
-        <div className="rounded-xl border border-border bg-muted/20 p-5">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">
-              Resume bullet
-            </span>
-            <button
-              onClick={() => handleCopy(result.resumeBullet, "resume")}
-              className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition px-2 py-1 rounded-md border border-transparent hover:border-border"
-            >
-              {copied === "resume" ? (
-                <>
-                  <Check className="h-3 w-3 text-green-500" /> Copied
-                </>
-              ) : (
-                <>
-                  <ClipboardCopy className="h-3 w-3" /> Copy
-                </>
-              )}
-            </button>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="rounded-[2rem] border border-white/5 bg-white/[0.02] p-8 glass-morphism">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-black">
+                Resume Artifact
+              </span>
+              <button
+                onClick={() => handleCopy(result.resumeBullet, "resume")}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {copied === "resume" ? <Check className="h-3.5 w-3.5 text-green-500" /> : <ClipboardCopy className="h-3.5 w-3.5" />}
+              </button>
+            </div>
+            <p className="text-[13px] font-mono leading-relaxed text-foreground/70">
+              {result.resumeBullet}
+            </p>
           </div>
-          <p className="text-sm font-mono leading-6 text-foreground/80 text-pretty">
-            {result.resumeBullet}
-          </p>
-        </div>
 
-        <div className="rounded-xl border border-border bg-muted/20 p-5">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">
-              Interview hook
-            </span>
-            <button
-              onClick={() => handleCopy(result.interviewHook, "hook")}
-              className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition px-2 py-1 rounded-md border border-transparent hover:border-border"
-            >
-              {copied === "hook" ? (
-                <>
-                  <Check className="h-3 w-3 text-green-500" /> Copied
-                </>
-              ) : (
-                <>
-                  <ClipboardCopy className="h-3 w-3" /> Copy
-                </>
-              )}
-            </button>
+          <div className="rounded-[2rem] border border-white/5 bg-white/[0.02] p-8 glass-morphism">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-black">
+                Interview Anchor
+              </span>
+              <button
+                onClick={() => handleCopy(result.interviewHook, "hook")}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {copied === "hook" ? <Check className="h-3.5 w-3.5 text-green-500" /> : <ClipboardCopy className="h-3.5 w-3.5" />}
+              </button>
+            </div>
+            <p className="text-[13px] italic leading-relaxed text-muted-foreground font-medium">
+              "{result.interviewHook}"
+            </p>
           </div>
-          <p className="text-sm leading-6 italic text-muted-foreground/80 text-pretty">
-            {result.interviewHook}
-          </p>
         </div>
       </motion.div>
     );

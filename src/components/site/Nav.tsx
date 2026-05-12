@@ -1,15 +1,15 @@
 "use client";
 
-import { Link } from "@tanstack/react-router";
+import { Link, useMatches } from "@tanstack/react-router";
 import { Github, Menu, LayoutDashboard } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Route } from "@/routes/__root";
 
 export function Nav() {
   const [scrolled, setScrolled] = useState(false);
-  const { session } = Route.useRouteContext() as { session: any };
+  const matches = useMatches();
+  const session = (matches.find((m) => m.id === "__root")?.context as any)?.session;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50);
@@ -20,16 +20,16 @@ export function Nav() {
   return (
     <nav
       className={cn(
-        "fixed left-0 right-0 z-50 transition-all duration-500",
-        scrolled ? "top-4 mx-auto max-w-fit px-4" : "top-0 w-full",
+        "fixed left-0 right-0 z-[100] transition-all duration-700 ease-[0.22,1,0.36,1]",
+        scrolled ? "top-6 mx-auto max-w-fit px-4" : "top-0 w-full",
       )}
     >
       <div
         className={cn(
-          "mx-auto transition-all duration-500 flex items-center justify-between gap-12",
+          "mx-auto transition-all duration-700 ease-[0.22,1,0.36,1] flex items-center justify-between gap-12",
           scrolled
-            ? "bg-background/80 backdrop-blur-lg border border-border/60 shadow-xl shadow-black/20 py-2 px-6 rounded-2xl"
-            : "max-w-7xl px-6 py-6 border-b border-transparent",
+            ? "glass-morphism py-2.5 px-8 rounded-full shadow-2xl shadow-black/40 border-white/10"
+            : "max-w-7xl px-8 py-8 border-b border-transparent",
         )}
       >
         <Link to="/" className="flex items-center gap-2.5 group shrink-0">

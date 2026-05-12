@@ -1,108 +1,93 @@
-# <p align="center"><img src="devbrand_readme_hero_1778456364222.png" width="100%" alt="DevBrand Hero" /></p>
+# DevBrand 🚀
+### Make the invisible labor of engineering visible. Deniable no more.
 
-<p align="center">
-  <b>Verifiable Career Leverage for Engineers.</b><br>
-  Turn invisible engineering work into high-impact narratives.
-</p>
+DevBrand is an elite engineering reputation platform that transforms raw technical output into high-fidelity, verifiable career leverage. By analyzing PRs, architectural shifts, and complex refactors using neural signal processing (AI), DevBrand generates "Systems of Proof" that speak the language of impact.
 
-<p align="center">
-  <a href="https://tanstack.com/start"><img src="https://img.shields.io/badge/Stack-TanStack_Start-FF4154?style=for-the-badge&logo=react" alt="Stack" /></a>
-  <a href="https://workers.cloudflare.com/"><img src="https://img.shields.io/badge/Arch-Edge--First-00ADD8?style=for-the-badge&logo=cloudflare" alt="Architecture" /></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License" /></a>
-  <a href="https://github.com/bansalbhunesh/devbrand/actions"><img src="https://img.shields.io/badge/CI-Passing-brightgreen?style=for-the-badge&logo=github-actions" alt="CI Status" /></a>
-</p>
-
----
+![DevBrand Hero](./docs/assets/hero.png)
 
 ## ⚡ The Problem
+Traditional resumes and LinkedIn profiles are built on hype and buzzwords. They fail to capture:
+- **Architectural Depth**: The subtle shift from cookie-based auth to stateless JWT pipelines.
+- **Reliability Wins**: Implementing exponential backoff with jitter that saved a production cluster.
+- **Engineering Rigor**: The thousands of lines of "invisible" refactoring that enabled a new feature.
 
-Engineering impact is often locked inside cryptic PR descriptions and massive diffs. Most developers struggle to communicate the **strategic value** of their technical work to recruiters and managers. DevBrand solves this by extracting the "signal" from your "noise."
+## 💎 The Solution: Systems of Proof
+DevBrand analyzed your GitHub activity and generates narrative-driven impact stories, **strictly backed by code citations**.
 
-## 🧠 The 7-Layer Intelligence Engine
+### Key Features:
+- **Neural Impact Analysis**: AI that understands *intent*, not just line counts.
+- **Evidence Citations**: Every claim links directly to specific files and commit SHAs.
+- **Elite Aesthetic**: A cinematic, high-contrast UI designed for the staff-plus engineering tier.
+- **Radar Feed**: A global stream of verifiable architectural transformations across the industry.
 
-<p align="center"><img src="devbrand_engine_graph_1778456381551.png" width="80%" alt="Engine Graph" /></p>
+![Intelligence Section](./docs/assets/intelligence.png)
 
-DevBrand doesn't just "summarize" code; it performs deep architectural analysis:
+## 🛠️ Tech Stack
+- **Framework**: [TanStack Start](https://tanstack.com/router/v1/docs/start/overview) (Full-stack React)
+- **Routing**: [TanStack Router](https://tanstack.com/router)
+- **State & Data**: [TanStack Query](https://tanstack.com/query)
+- **Styling**: Vanilla CSS + Tailwind (Custom Tokens)
+- **Animation**: [Framer Motion](https://www.framer.com/motion/) (Physics-based)
+- **Database**: Drizzle ORM + PostgreSQL
+- **Real-time**: Upstash Redis (Job Queues & Rate Limiting)
 
-1.  **AST Ingestion**: Genuine symbol extraction via `@babel/parser` to identify structural changes.
-2.  **Static Metrics**: Computes McCabe Complexity, Halstead Volume, and decay-weighted churn.
-3.  **Graph Centrality**: Uses **Brandes' Algorithm** for Betweenness Centrality and PageRank to identify "load-bearing" architectural nodes.
-4.  **Invisible Work Detection**: Heuristic detection of refactoring, tech debt elimination, and performance bottlenecks.
-5.  **Multi-Draft Synthesis**: Self-Consistency Voting (3 parallel drafts) using Claude 3.5 Sonnet.
-6.  **NLI Verification**: Natural Language Inference checks verify AI claims against raw diff content.
-7.  **Career Calibration**: Modulates narratives based on historical user correction rates and market velocity.
+## 🚀 Getting Started
 
----
+### Prerequisites
+- Node.js 18+
+- PostgreSQL
+- Redis (Upstash recommended)
 
-## 🚀 Production Scorecard
+### Installation
 
-| Pillar             | Status | Metric         | Description                                                |
-| :----------------- | :----- | :------------- | :--------------------------------------------------------- |
-| **Intelligence**   | 🟢     | **9.5/10**     | AST-based analysis + NLI verification engine.              |
-| **Performance**    | 🟢     | **< 100ms**    | Edge-native runtime with TanStack Start + Cloudflare.      |
-| **Infrastructure** | 🟢     | **Serverless** | Zero-cold-start architecture with Neon & Upstash.          |
-| **Security**       | 🟢     | **Hardened**   | HMAC-Signed sessions, CSRF protection, and AES encryption. |
-| **Test Coverage**  | 🟡     | **78%**        | Robust integration tests for the 7-layer engine.           |
+1. **Clone and Install**
+   ```bash
+   git clone https://github.com/bansalbhunesh/devbrand.git
+   cd devbrand
+   npm install
+   ```
 
-> [!IMPORTANT]
-> **Every generated claim is anchored.** DevBrand provides file-level and commit-SHA citations for every bullet point it generates. Your reputation is backed by immutable git history.
+2. **Environment Setup**
+   Create a `.env` file based on the environment requirements:
+   ```env
+   DATABASE_URL=postgres://...
+   UPSTASH_REDIS_REST_URL=...
+   UPSTASH_REDIS_REST_TOKEN=...
+   GITHUB_CLIENT_ID=...
+   GITHUB_CLIENT_SECRET=...
+   SESSION_SECRET=...
+   APP_URL=http://localhost:5173
+   ```
 
----
+3. **Database Migration**
+   ```bash
+   npm run db:push
+   ```
 
-## ✨ Features
+4. **Run Development Server**
+   ```bash
+   npm run dev
+   ```
 
-- **PR Narrative Engine**: Transform any GitHub PR URL into 3 LinkedIn-ready variations (Problem/Outcome, Tradeoffs, Learnings).
-- **Architectural Roast**: A high-fidelity, technically accurate analysis of your repository's health.
-- **Verified Impact Feed**: A professional public profile showcasing your most significant (and verified) technical contributions.
-- **Privacy Core**: SOC2-ready encryption by default. You choose exactly what becomes public.
-
-## 🏗️ The Modern Stack
-
-| Layer             | Technology             | Why?                                                 |
-| :---------------- | :--------------------- | :--------------------------------------------------- |
-| **Engine**        | **TypeScript**         | End-to-end type safety for complex AST traversals.   |
-| **Framework**     | **TanStack Start**     | Full-stack React with the performance of Vite.       |
-| **Compute**       | **Cloudflare Workers** | Global low-latency execution at the edge.            |
-| **Storage**       | **Neon Postgres**      | Autoscaling storage for high-throughput analysis.    |
-| **Consistency**   | **Drizzle ORM**        | Schema-first development with zero runtime overhead. |
-| **Orchestration** | **Upstash Redis**      | Atomic rate limiting and distributed caching.        |
-
----
-
-## 🛠️ Getting Started
-
-### 1. Clone & Configure
-
-```bash
-git clone https://github.com/bansalbhunesh/devbrand.git
-cd devbrand
-cp .env.example .env
-```
-
-### 2. Install & Sync
-
-```bash
-npm install
-npm run db:push
-```
-
-### 3. Launch
-
-```bash
-npm run dev
-```
+## 🗺️ Product Roadmap
+- [x] **Cinematic Landing Page**: High-fidelity interactive hero and neural background.
+- [x] **Evidence Engine**: Verifiable PR-to-Narrative transformation.
+- [x] **Engineering Radar**: Public feed of architectural wins.
+- [ ] **Voice-over Walkthroughs**: AI-generated audio explainers for complex PRs.
+- [ ] **Multi-Repo Context**: Cross-repository impact analysis.
 
 ---
 
-## 🛡️ Hardened for the Enterprise
+### **Visual Walkthrough**
 
-- **CSRF Protection**: Verified OAuth state tokens.
-- **Secure Cookies**: `__Secure-` prefixed, `HttpOnly`, `SameSite=Strict`.
-- **Idempotent Webhooks**: Secure Stripe integration with event tracking.
-- **AI Resilience**: Automatic retries and token-budgeting for extreme diff sizes.
+#### **The Radar (Explore Feed)**
+Stay ahead of the industry by observing how elite teams are refactoring their core services.
+![Explore Feed](./docs/assets/explore.png)
+
+#### **The Forge (Dashboard)**
+Drop a PR link, select your tone, and watch DevBrand forge a System of Proof.
+![Dashboard](./docs/assets/dashboard.png)
 
 ---
-
-## 📜 License
-
-MIT © [DevBrand](https://devbrand.ai) — Built by Engineers, for Engineers.
+*Built for engineers who care about the craft.*
+**DevBrand — deniable no more.**

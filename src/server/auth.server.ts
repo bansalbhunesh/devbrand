@@ -58,6 +58,30 @@ async function getKey(): Promise<CryptoKey> {
     ["sign", "verify"],
   );
 }
+async function signState(state: string): Promise<string> {
+  const key = await getKey();
+  const enc = new TextEncoder();
+  const sig = await crypto.subtle.sign("HMAC", key, enc.encode(state));
+  const sigB64 = btoa(String.fromCharCode(...new Uint8Array(sig)))
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=/g, "");
+  return `${state}.${sigB64}`;
+}
+
+async function verifyState(signedState: string): Promise<string | null> {
+  const parts = signedState.split(".");
+  if (parts.length !== 2) return null;
+  const [state, sigB64] = parts;
+  const key = await getKey();
+  const enc = new TextEncoder();
+  
+  const normalizedSig = sigB64.replace(/-/g, "+").replace(/_/g, "/");
+  const sig = Uint8Array.from(atob(normalizedSig), (c) => c.charCodeAt(0));
+  
+  const valid = await crypto.subtle.verify("HMAC", key, sig, enc.encode(state));
+  return valid ? state : null;
+}
 
 function getOAuthRedirectUri(): string {
   const base = env.APP_URL.replace(/\/+$/, "");
@@ -172,6 +196,17 @@ export async function loadSessionUser() {
 }
 
 /**
+ * Higher-order guard for admin-only server functions.
+ */
+export async function ensureAdmin() {
+  const user = await loadSessionUser();
+  if (!user || user.role !== "admin") {
+    throw new Error("ADMIN_REQUIRED");
+  }
+  return user;
+}
+
+/**
  * GitHub redirects with GET ?code=&state= — use this from the HTTP callback route.
  */
 export async function completeGithubOAuth(data: {
@@ -203,8 +238,9 @@ export async function completeGithubOAuth(data: {
     throw new Error("Invalid state format.");
   }
 
-  if (!timingSafeEqual(state, stateData.value)) {
-    throw new Error("Invalid OAuth state.");
+  const verifiedState = await verifyState(stateData.value);
+  if (!verifiedState || !timingSafeEqual(state, verifiedState)) {
+    throw new Error("Invalid OAuth state signature.");
   }
 
   if (Date.now() - stateData.createdAt > 10 * 60 * 1000) {
@@ -363,8 +399,9 @@ export async function signInWithGithubFn() {
   const codeChallenge = await sha256Base64Url(codeVerifier);
 
   const stateBase = crypto.randomUUID();
+  const signedState = await signState(stateBase);
   const stateData = {
-    value: stateBase,
+    value: signedState,
     ip,
     ua: userAgent.slice(0, 100),
     createdAt: Date.now(),

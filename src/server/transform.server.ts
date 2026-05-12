@@ -25,70 +25,97 @@ export async function transformPRFn(data: {
   if (!user) throw new Error("UNAUTHORIZED");
   const userId = user.id;
 
-  const { checkAndResetLimits } = await import("./limits.server");
-  const freshUser = await checkAndResetLimits(userId);
+  const { createJobFn, updateJobStatusFn } = await import("./jobs.server");
+  
+  // Create the job immediately
+  const job = await createJobFn({
+    type: "transform_pr",
+    payload: { prUrl },
+  });
 
-  const isFreeLimitReached =
-    freshUser?.plan === "free" && (freshUser?.generationsThisMonth ?? 0) >= 3;
-  if (isFreeLimitReached) throw new Error("LIMIT_REACHED");
+  // Simulation of Async processing
+  // In a real env, we'd trigger an edge function or queue here.
+  (async () => {
+    try {
+      await updateJobStatusFn(job.id, { status: "PROCESSING" });
 
-  // Run the 7-Layer Core Engine
-  const context: UserContext = {
-    seniority: user.seniority as any,
-    tone: user.tone as any,
-    targetAudience: user.targetAudience as any,
-  };
+      const { checkAndResetLimits } = await import("./limits.server");
+      const freshUser = await checkAndResetLimits(userId);
 
-  const output = await runEngine(prUrl, userId, context);
+      const isFreeLimitReached =
+        freshUser?.plan === "free" && (freshUser?.generationsThisMonth ?? 0) >= 3;
+      if (isFreeLimitReached) {
+        throw new Error("LIMIT_REACHED");
+      }
 
-  const slug = generateSlug(prUrl, userId);
-  const [inserted] = await db
-    .insert(outputs)
-    .values({
-      slug,
-      userId,
-      prTitle: output.commitMessageSummary,
-      prUrl,
-      prCommitMessage: output.commitMessageSummary,
-      prSignals: output.citations.map((c) => c.evidenceType),
-      stack: [],
-      linkedinPost1: output.linkedinPost1,
-      linkedinPost2: output.linkedinPost2,
-      linkedinPost3: output.linkedinPost3,
-      resumeBullet: output.resumeBullet,
-      interviewHook: output.interviewHook,
-      citations: output.citations.map((c) => ({
-        claim: c.claim,
-        ref: c.ref,
-        sha: c.sha,
-        evidenceType: c.evidenceType,
-      })),
-      impactScore: output.impactScore,
-      category: output.category,
-      complexityLevel: output.complexityLevel,
-      metadata: output as any,
-    })
-    .returning();
+      const context: UserContext = {
+        seniority: user.seniority as any,
+        tone: user.tone as any,
+        targetAudience: user.targetAudience as any,
+      };
 
-  await Promise.all([
-    db
-      .update(users)
-      .set({ generationsThisMonth: sql`${users.generationsThisMonth} + 1` })
-      .where(eq(users.id, userId)),
-    db.insert(userEvents).values({
-      userId,
-      eventType: "generate",
-      payload: {
-        outputId: inserted.id,
-        slug,
-        prUrl,
-        impactScore: output.impactScore,
-        category: output.category,
-      } as any,
-    }),
-  ]);
+      const output = await runEngine(prUrl, userId, context);
 
-  return inserted;
+      const slug = generateSlug(prUrl, userId);
+      const [inserted] = await db
+        .insert(outputs)
+        .values({
+          slug,
+          userId,
+          prTitle: output.commitMessageSummary,
+          prUrl,
+          prCommitMessage: output.commitMessageSummary,
+          prSignals: output.citations.map((c) => c.evidenceType),
+          stack: [],
+          linkedinPost1: output.linkedinPost1,
+          linkedinPost2: output.linkedinPost2,
+          linkedinPost3: output.linkedinPost3,
+          resumeBullet: output.resumeBullet,
+          interviewHook: output.interviewHook,
+          citations: output.citations.map((c) => ({
+            claim: c.claim,
+            ref: c.ref,
+            sha: c.sha,
+            evidenceType: c.evidenceType,
+          })),
+          impactScore: output.impactScore,
+          category: output.category,
+          complexityLevel: output.complexityLevel,
+          metadata: output as any,
+        })
+        .returning();
+
+      await Promise.all([
+        db
+          .update(users)
+          .set({ generationsThisMonth: sql`${users.generationsThisMonth} + 1` })
+          .where(eq(users.id, userId)),
+        db.insert(userEvents).values({
+          userId,
+          eventType: "generate",
+          payload: {
+            outputId: inserted.id,
+            slug,
+            prUrl,
+            impactScore: output.impactScore,
+            category: output.category,
+          } as any,
+        }),
+        updateJobStatusFn(job.id, { 
+          status: "COMPLETED", 
+          result: { slug, outputId: inserted.id } 
+        }),
+      ]);
+    } catch (err: any) {
+      console.error("Job Failed:", err);
+      await updateJobStatusFn(job.id, { 
+        status: "FAILED", 
+        error: err.message || "Unknown Error" 
+      });
+    }
+  })();
+
+  return { jobId: job.id };
 }
 
 export async function getUserOutputsFn() {

@@ -48,6 +48,10 @@
   --gradient-mesh:
     radial-gradient(at 100% 100%, oklch(30% 0.1 300 / 0.1), transparent 50%),
     radial-gradient(at 0% 0%, oklch(20% 0.1 200 / 0.1), transparent 50%);
+    
+  --mesh-1: radial-gradient(at 0% 0%, oklch(40% 0.15 250 / 0.15), transparent 50%);
+  --mesh-2: radial-gradient(at 100% 0%, oklch(40% 0.15 300 / 0.15), transparent 50%);
+  --mesh-3: radial-gradient(at 50% 100%, oklch(40% 0.15 150 / 0.15), transparent 50%);
 }
 
 @theme {
@@ -85,6 +89,8 @@
 
   --shadow-soft: 0 8px 30px rgba(0, 0, 0, 0.3);
   --ring-soft: 0 0 0 1px var(--border-strong), 0 0 0 4px oklch(100% 0 0 / 0.03);
+  
+  --animate-shimmer: shimmer 2s linear infinite;
 }
 
 @layer base {
@@ -92,12 +98,33 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground antialiased selection:bg-blue/20 selection:text-blue;
+    @apply bg-background text-foreground antialiased selection:bg-blue/20 selection:text-blue overflow-x-hidden;
     font-feature-settings: "ss01", "ss03", "cv01", "cv11";
+  }
+  
+  /* Premium Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-white/10 rounded-full hover:bg-white/20 transition-colors;
   }
 }
 
 @layer utilities {
+  .bg-noise {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    opacity: 0.03;
+    pointer-events: none;
+  }
+
+  .bg-mesh-complex {
+    background-image: var(--mesh-1), var(--mesh-2), var(--mesh-3);
+  }
+
   .bg-grid {
     background-image:
       linear-gradient(to right, oklch(100% 0 0 / 0.03) 1px, transparent 1px),
@@ -106,75 +133,50 @@
     mask-image: radial-gradient(ellipse at center, black, transparent 80%);
   }
 
-  .bg-grid-small {
-    background-image:
-      linear-gradient(to right, oklch(100% 0 0 / 0.02) 1px, transparent 1px),
-      linear-gradient(to bottom, oklch(100% 0 0 / 0.02) 1px, transparent 1px);
-    background-size: 20px 20px;
-  }
-
   .gradient-text {
-    @apply bg-clip-text text-transparent bg-gradient-to-br from-foreground via-foreground to-muted-foreground;
+    @apply bg-clip-text text-transparent bg-gradient-to-br from-white via-white/90 to-white/30;
+    filter: drop-shadow(0 0 30px oklch(100% 0 0 / 0.1));
   }
 
-  .divider-soft {
-    background: linear-gradient(
-      to right,
-      transparent,
-      var(--border-strong),
-      transparent
-    );
-  }
-
-  .glow-blue {
-    box-shadow: 0 0 20px oklch(65% 0.2 250 / 0.15);
-  }
-
-  .glow-purple {
-    box-shadow: 0 0 20px oklch(65% 0.2 300 / 0.15);
-  }
-
-  .glow-small {
-    box-shadow: 0 0 10px oklch(100% 0 0 / 0.05);
+  .neural-glow {
+    box-shadow: 0 0 80px -10px var(--blue);
   }
 
   .glass-morphism {
-    @apply bg-background/60 backdrop-blur-md border border-white/5;
+    @apply bg-background/40 backdrop-blur-3xl border border-white/5;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
   }
 
-  .text-balance {
-    text-wrap: balance;
+  .border-glow {
+    position: relative;
   }
+  .border-glow::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    background: linear-gradient(
+      45deg,
+      transparent,
+      var(--blue),
+      var(--purple),
+      transparent
+    );
+    background-size: 200% 200%;
+    animation: shimmer 4s linear infinite;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    pointer-events: none;
+    border-radius: inherit;
+    opacity: 0.5;
+  }
+}
 
-  .text-pretty {
-    text-wrap: pretty;
-  }
-
-  main > section {
-    contain: layout style;
-  }
-  nav {
-    will-change: transform;
-  }
+@keyframes shimmer {
+  from { background-position: 0% 0%; }
+  to { background-position: 200% 0%; }
 }
 
 @keyframes float {
-  from {
-    transform: translateY(0px) translateX(0px);
-    opacity: 0.3;
-  }
-  to {
-    transform: translateY(-20px) translateX(8px);
-    opacity: 0.7;
-  }
-}
-
-@keyframes pulse-glow {
-  0%,
-  100% {
-    opacity: 0.4;
-  }
-  50% {
-    opacity: 0.8;
-  }
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
 }

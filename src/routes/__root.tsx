@@ -137,11 +137,26 @@ const STRUCTURED_DATA = {
   },
 };
 
+import { motion, AnimatePresence } from "framer-motion";
+import { useLocation } from "@tanstack/react-router";
+
 function RootComponent() {
+  const location = useLocation();
+  
   return (
     <RootDocument>
       <QueryClientProvider client={queryClient}>
-        <Outlet />
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={location.pathname}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <Outlet />
+          </motion.div>
+        </AnimatePresence>
       </QueryClientProvider>
     </RootDocument>
   );
@@ -159,7 +174,11 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <script src="https://checkout.razorpay.com/v1/checkout.js" async />
       </head>
 
-      <body className="antialiased selection:bg-blue-500/30 selection:text-blue-200">
+      <body className="antialiased selection:bg-blue-500/30 selection:text-blue-200 relative">
+        {/* Global Cinematic Overlays */}
+        <div className="fixed inset-0 bg-noise pointer-events-none z-[9999]" />
+        <div className="fixed inset-0 bg-mesh-complex pointer-events-none -z-10" />
+        
         {children}
         <ScrollRestoration />
         <Scripts />

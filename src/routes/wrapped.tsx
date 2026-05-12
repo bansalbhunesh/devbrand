@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useMatches } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { getWrappedStats } from "@/rpc";
 import {
@@ -16,12 +16,15 @@ import { cn } from "@/lib/utils";
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
+import { Nav } from "@/components/site/Nav";
+
 export const Route = createFileRoute("/wrapped")({
   component: WrappedPage,
 });
 
 function WrappedPage() {
-  const { session } = Route.useRouteContext() as { session: any };
+  const matches = useMatches();
+  const session = (matches.find((m) => m.id === "__root")?.context as any)?.session;
   const [slide, setSlide] = React.useState(0);
 
   const { data: stats, isLoading } = useQuery({
@@ -257,6 +260,7 @@ function WrappedPage() {
 
   return (
     <div className="min-h-screen bg-[#050505] text-white selection:bg-blue-500/30 overflow-hidden relative flex items-center justify-center">
+      <Nav />
       {/* Background Orbs */}
       <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-blue-500/5 rounded-full blur-[140px] -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
       <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-purple-500/5 rounded-full blur-[140px] translate-x-1/2 translate-y-1/2 pointer-events-none" />
@@ -309,20 +313,6 @@ function WrappedPage() {
         </button>
       </div>
 
-      <header className="absolute top-12 left-12 flex items-center gap-3">
-        <Link
-          to="/"
-          className="h-10 w-10 rounded-xl bg-white text-black grid place-items-center shadow-2xl hover:scale-110 transition-transform"
-        >
-          <Sparkles className="h-5 w-5" />
-        </Link>
-        <div className="flex flex-col">
-          <span className="text-xs font-black tracking-tighter">DevBrand</span>
-          <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-50">
-            Verified Recaps
-          </span>
-        </div>
-      </header>
 
       <div className="absolute top-12 right-12 flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-[9px] font-black uppercase tracking-widest text-white/40">
         <ShieldCheck className="h-3.5 w-3.5" /> Immutable Engineering Signal

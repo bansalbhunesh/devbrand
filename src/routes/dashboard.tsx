@@ -1,4 +1,4 @@
-import { createFileRoute, redirect, Link } from "@tanstack/react-router";
+import { createFileRoute, redirect, Link, useMatches } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -19,6 +19,8 @@ import {
   createCheckoutSession,
   createBillingPortal,
   verifyPayment,
+  getJobStatus,
+  getOutputBySlug,
 } from "@/rpc";
 import { cn } from "@/lib/utils";
 
@@ -63,7 +65,8 @@ const SecurityTab = lazy(() =>
 );
 
 function Dashboard() {
-  const { session: user } = Route.useRouteContext() as { session: any };
+  const matches = useMatches();
+  const user = (matches.find((m) => m.id === "__root")?.context as any)?.session;
   const [tab, setTab] = useState<Tab>("generate");
   const [prUrl, setPrUrl] = useState("");
   const [result, setResult] = useState<any>(null);
@@ -95,20 +98,42 @@ function Dashboard() {
     setResult(null);
     setGenerating(true);
     try {
-      const out = await transformPR({
+      const { jobId } = (await transformPR({
         data: { prUrl: prUrl.trim(), userId: user.id },
-      });
-      setResult(out);
-      setSelectedPost(0);
-      qc.invalidateQueries({ queryKey: ["outputs", user.id] });
-      toast.success("Impact story generated!");
+      })) as any;
+
+      // Start Polling
+      const poll = async () => {
+        try {
+          const job = (await getJobStatus(jobId)) as any;
+          if (job.status === "COMPLETED") {
+            const out = await getOutputBySlug(job.result.slug);
+            setResult(out);
+            setSelectedPost(0);
+            qc.invalidateQueries({ queryKey: ["outputs", user.id] });
+            toast.success("Impact story generated!");
+            setGenerating(false);
+          } else if (job.status === "FAILED") {
+            setError(job.error?.includes("LIMIT") ? "limit" : "generic");
+            toast.error("Generation failed");
+            setGenerating(false);
+          } else {
+            // Keep polling
+            setTimeout(poll, 2000);
+          }
+        } catch (e) {
+          setError("generic");
+          setGenerating(false);
+        }
+      };
+
+      setTimeout(poll, 2000);
     } catch (e: any) {
       const msg = e?.message ?? "";
       if (msg.includes("LIMIT_REACHED")) setError("limit");
       else if (msg.includes("AI_PARSE_ERROR")) setError("ai");
       else setError("generic");
       toast.error("Generation failed");
-    } finally {
       setGenerating(false);
     }
   };
@@ -178,16 +203,16 @@ function Dashboard() {
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col md:flex-row">
       {/* Sidebar - Desktop */}
-      <aside className="hidden md:flex w-64 flex-col border-r border-border bg-muted/10 sticky top-0 h-screen overflow-y-auto">
-        <div className="p-6">
-          <Link to="/" className="flex items-center gap-3 mb-10">
-            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 grid place-items-center shadow-lg shadow-blue-500/20">
-              <span className="text-[12px] font-bold text-white">DB</span>
+      <aside className="hidden md:flex w-72 flex-col glass-morphism border-r border-white/5 sticky top-0 h-screen overflow-y-auto z-50">
+        <div className="p-8">
+          <Link to="/" className="flex items-center gap-3 mb-12 group">
+            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 grid place-items-center shadow-2xl shadow-blue-500/40 group-hover:scale-110 transition-transform duration-500">
+              <span className="text-[14px] font-black text-white">DB</span>
             </div>
-            <span className="font-bold tracking-tighter text-lg">DevBrand</span>
+            <span className="font-black tracking-tighter text-xl gradient-text">DevBrand</span>
           </Link>
 
-          <nav className="space-y-1">
+          <nav className="space-y-2">
             {(
               ["generate", "history", "teams", "settings", "security"] as Tab[]
             ).map((t) => (
@@ -195,10 +220,10 @@ function Dashboard() {
                 key={t}
                 onClick={() => setTab(t)}
                 className={cn(
-                  "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all",
+                  "w-full flex items-center gap-3 px-5 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300",
                   tab === t
-                    ? "bg-foreground text-background shadow-lg shadow-foreground/10"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                    ? "bg-foreground text-background shadow-2xl shadow-foreground/20 scale-[1.02]"
+                    : "text-muted-foreground hover:bg-white/5 hover:text-foreground",
                 )}
               >
                 {t === "generate" && <Sparkles className="h-4 w-4" />}
@@ -212,19 +237,20 @@ function Dashboard() {
           </nav>
         </div>
 
-        <div className="mt-auto p-6 space-y-6">
-          <div className="p-4 rounded-2xl bg-blue-500/5 border border-blue-500/10">
-            <div className="flex justify-between text-[9px] uppercase font-black tracking-widest text-blue-500/60 mb-2">
-              <span>Monthly Quota</span>
+        <div className="mt-auto p-8 space-y-8">
+          <div className="p-6 rounded-[2rem] bg-white/[0.03] border border-white/5 relative overflow-hidden group/quota">
+            <div className="absolute inset-0 bg-blue-500/5 opacity-0 group-hover/quota:opacity-100 transition-opacity" />
+            <div className="flex justify-between text-[10px] uppercase font-black tracking-widest text-blue-400 mb-3 relative z-10">
+              <span>Quota Usage</span>
               <span>
                 {user?.plan === "free"
                   ? `${user.generationsThisMonth ?? 0}/3`
-                  : "∞"}
+                  : "PRO"}
               </span>
             </div>
-            <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+            <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden relative z-10">
               <div
-                className="h-full bg-blue-500 transition-all duration-1000"
+                className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-[2s] ease-out"
                 style={{
                   width:
                     user?.plan === "pro"
@@ -236,36 +262,39 @@ function Dashboard() {
             {user?.plan === "free" && (
               <button
                 onClick={handleUpgrade}
-                className="w-full mt-4 py-2 rounded-lg bg-blue-500 text-white text-[10px] font-black uppercase tracking-widest hover:brightness-110 transition shadow-lg shadow-blue-500/20"
+                className="w-full mt-5 py-3 rounded-xl bg-blue-600 text-white text-[10px] font-black uppercase tracking-[0.15em] hover:bg-blue-500 transition-all shadow-xl shadow-blue-500/20 active:scale-95"
               >
-                Upgrade to Pro
+                Unlock Pro
               </button>
             )}
           </div>
 
-          <div className="flex items-center gap-3 px-2">
-            {user?.avatarUrl ? (
-              <img
-                src={user.avatarUrl}
-                className="h-8 w-8 rounded-full border border-border"
-                alt=""
-              />
-            ) : (
-              <div className="h-8 w-8 rounded-full bg-muted border border-border grid place-items-center text-[10px] font-bold">
-                {user?.githubLogin?.slice(0, 1).toUpperCase()}
-              </div>
-            )}
+          <div className="flex items-center gap-4 px-2">
+            <div className="relative">
+              {user?.avatarUrl ? (
+                <img
+                  src={user.avatarUrl}
+                  className="h-10 w-10 rounded-full border border-white/10"
+                  alt=""
+                />
+              ) : (
+                <div className="h-10 w-10 rounded-full bg-white/5 border border-white/10 grid place-items-center text-[12px] font-black">
+                  {user?.githubLogin?.slice(0, 1).toUpperCase()}
+                </div>
+              )}
+              <div className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 bg-green-500 border-2 border-background rounded-full" />
+            </div>
             <div className="flex-1 min-w-0">
-              <div className="text-[11px] font-bold truncate">
-                @{user?.githubLogin}
+              <div className="text-[12px] font-black truncate">
+                {user?.githubLogin}
               </div>
-              <div className="text-[9px] text-muted-foreground font-medium uppercase tracking-widest">
-                {user?.plan} plan
+              <div className="text-[9px] text-muted-foreground font-bold uppercase tracking-widest">
+                {user?.plan}
               </div>
             </div>
             <button
               onClick={handleLogout}
-              className="p-2 text-muted-foreground hover:text-foreground transition"
+              className="p-2.5 text-muted-foreground hover:text-red-400 hover:bg-red-400/5 rounded-xl transition-all"
             >
               <LogOut className="h-4 w-4" />
             </button>

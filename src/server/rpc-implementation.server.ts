@@ -79,3 +79,22 @@ export async function getReferralDataImpl(userId: string) {
   const [referredCountRes] = await db.select({ count: count() }).from(users).where(eq(users.referredBy, userId));
   return { referralCode: user.referralCode, referredCount: referredCountRes.count, generationsBonus: referredCountRes.count * 5 };
 }
+
+export async function getDemoOutputsImpl() {
+  return db.query.outputs.findMany({
+    where: eq(outputs.isPublic, true),
+    orderBy: [desc(outputs.impactScore)],
+    limit: 3,
+    with: { user: true }
+  });
+}
+
+export async function getWrappedStatsImpl() {
+  const { getWrappedStatsInternal } = await import("./wrapped.server");
+  return getWrappedStatsInternal();
+}
+
+export async function getSecurityEventsImpl(limit: number = 50) {
+  const { readSecurityEvents } = await import("./redis");
+  return readSecurityEvents(limit);
+}
