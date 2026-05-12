@@ -18,6 +18,8 @@ import {
   subscriptions,
   roasts,
   backgroundJobs,
+  trackedRepos,
+  webhookDeliveries,
 } from "../src/server/schema.server";
 import { getTableConfig } from "drizzle-orm/pg-core";
 
@@ -39,6 +41,8 @@ const CODE_TABLES = [
   subscriptions,
   roasts,
   backgroundJobs,
+  trackedRepos,
+  webhookDeliveries,
 ];
 
 async function main() {

@@ -16,5 +16,11 @@
       "source": "/((?!api/|assets/|favicon|robots\\.txt|sitemap\\.xml).*)",
       "destination": "/api/index"
     }
+  ],
+  "crons": [
+    {
+      "path": "/internal/cron/drain",
+      "schedule": "* * * * *"
+    }
   ]
 }

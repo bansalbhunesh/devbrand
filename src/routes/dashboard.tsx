@@ -15,6 +15,7 @@ import {
   Loader2,
   LogOut,
   Shield,
+  Github,
 } from "lucide-react";
 import {
   getSession,
@@ -40,7 +41,7 @@ export const Route = createFileRoute("/dashboard")({
   component: Dashboard,
 });
 
-type Tab = "generate" | "history" | "teams" | "settings" | "security";
+type Tab = "generate" | "history" | "repos" | "teams" | "settings" | "security";
 
 import { Suspense, lazy } from "react";
 
@@ -67,6 +68,11 @@ const SettingsTab = lazy(() =>
 const SecurityTab = lazy(() =>
   import("@/components/dashboard/SecurityTab").then((m) => ({
     default: m.SecurityTab,
+  })),
+);
+const TrackedReposTab = lazy(() =>
+  import("@/components/dashboard/TrackedReposTab").then((m) => ({
+    default: m.TrackedReposTab,
   })),
 );
 
@@ -277,7 +283,14 @@ function Dashboard() {
 
           <nav className="space-y-1 relative">
             {(
-              ["generate", "history", "teams", "settings", "security"] as Tab[]
+              [
+                "generate",
+                "history",
+                "repos",
+                "teams",
+                "settings",
+                "security",
+              ] as Tab[]
             ).map((t) => {
               const active = tab === t;
               return (
@@ -307,6 +320,7 @@ function Dashboard() {
                   )}
                   {t === "generate" && <Sparkles className="h-4 w-4" />}
                   {t === "history" && <GitPullRequest className="h-4 w-4" />}
+                  {t === "repos" && <Github className="h-4 w-4" />}
                   {t === "teams" && <Users className="h-4 w-4" />}
                   {t === "settings" && <BarChart3 className="h-4 w-4" />}
                   {t === "security" && <Shield className="h-4 w-4" />}
@@ -393,7 +407,14 @@ function Dashboard() {
           </Link>
           <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-1">
             {(
-              ["generate", "history", "teams", "settings", "security"] as Tab[]
+              [
+                "generate",
+                "history",
+                "repos",
+                "teams",
+                "settings",
+                "security",
+              ] as Tab[]
             ).map((t) => {
               const active = tab === t;
               return (
@@ -470,6 +491,8 @@ function Dashboard() {
                     qc={qc}
                   />
                 )}
+
+                {tab === "repos" && <TrackedReposTab />}
 
                 {tab === "teams" && (
                   <TeamsTab user={user} handleUpgrade={handleUpgrade} />

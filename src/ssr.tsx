@@ -32,6 +32,13 @@ export default async (request: Request) => {
     }
   }
 
-  // Fallback to standard TanStack Start handler
+  // GitHub webhook + cron drain are handled by file routes at:
+  //   src/routes/webhooks.github.tsx
+  //   src/routes/internal.cron.drain.tsx
+  // (using @tanstack/react-start/api's createAPIFileRoute). File routes fire
+  // in both vite dev and Vercel prod identically — the default-export
+  // wrapper used here for Razorpay only runs in prod, which is a footgun
+  // worth migrating away from when that webhook is next touched.
+
   return handler(request);
 };

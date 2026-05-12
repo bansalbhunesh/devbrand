@@ -320,3 +320,43 @@ export const roasts = pgTable(
     index("roasts_public_idx").on(t.isPublic),
   ],
 );
+
+export const trackedRepos = pgTable(
+  "tracked_repos",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    owner: text("owner").notNull(),
+    repo: text("repo").notNull(),
+    webhookSecret: text("webhook_secret").notNull(),
+    autoPublish: boolean("auto_publish").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("tracked_repos_user_owner_repo_idx").on(
+      t.userId,
+      t.owner,
+      t.repo,
+    ),
+    index("tracked_repos_owner_repo_idx").on(t.owner, t.repo),
+  ],
+);
+
+export const trackedReposRelations = relations(trackedRepos, ({ one }) => ({
+  user: one(users, { fields: [trackedRepos.userId], references: [users.id] }),
+}));
+
+export const webhookDeliveries = pgTable("webhook_deliveries", {
+  // X-GitHub-Delivery UUID — used as idempotency key against retries.
+  id: text("id").primaryKey(),
+  receivedAt: timestamp("received_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  status: text("status").notNull(), // accepted | duplicate | invalid_sig | filtered | enqueued
+});

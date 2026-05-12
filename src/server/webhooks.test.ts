@@ -80,3 +80,50 @@ describe("processRazorpayWebhookRaw", () => {
     expect(result.status).toBe("already_processed");
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GitHub webhook signature verification — pure function, no DB
+
+import { verifyGithubSignature } from "./webhooks.server";
+
+describe("verifyGithubSignature", () => {
+  const secret = "ghs_test_secret_abcdef";
+  const body = JSON.stringify({ action: "closed", number: 42 });
+  const validSig =
+    "sha256=" + crypto.createHmac("sha256", secret).update(body).digest("hex");
+
+  it("accepts a correctly-signed body", () => {
+    expect(verifyGithubSignature(body, validSig, secret)).toBe(true);
+  });
+
+  it("accepts the hex form without the sha256= prefix", () => {
+    const bare = validSig.slice("sha256=".length);
+    expect(verifyGithubSignature(body, bare, secret)).toBe(true);
+  });
+
+  it("rejects null / undefined signature", () => {
+    expect(verifyGithubSignature(body, null, secret)).toBe(false);
+    expect(verifyGithubSignature(body, undefined, secret)).toBe(false);
+  });
+
+  it("rejects a signature signed with the wrong secret", () => {
+    const wrong =
+      "sha256=" +
+      crypto.createHmac("sha256", "other_secret").update(body).digest("hex");
+    expect(verifyGithubSignature(body, wrong, secret)).toBe(false);
+  });
+
+  it("rejects when the body was tampered with after signing", () => {
+    const tamperedBody = body.replace("42", "9999");
+    expect(verifyGithubSignature(tamperedBody, validSig, secret)).toBe(false);
+  });
+
+  it("rejects truncated signatures", () => {
+    const truncated = validSig.slice(0, -4);
+    expect(verifyGithubSignature(body, truncated, secret)).toBe(false);
+  });
+
+  it("rejects signatures of the wrong length without throwing", () => {
+    expect(verifyGithubSignature(body, "sha256=abcd", secret)).toBe(false);
+  });
+});

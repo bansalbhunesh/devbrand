@@ -65,6 +65,26 @@ export const postToXSchema = z.object({
   content: z.string().min(1).max(4000),
 });
 
+// GitHub login/repo character set per GitHub's own rules: login allows
+// alphanumerics + hyphens (no leading/trailing hyphen); repo allows dots,
+// underscores, hyphens, alphanumerics. Same regexes used in roastSchema.
+export const trackedRepoInputSchema = z.object({
+  owner: z
+    .string()
+    .min(1)
+    .max(39)
+    .regex(/^[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?$/),
+  repo: z
+    .string()
+    .min(1)
+    .max(100)
+    .regex(/^[a-zA-Z0-9._-]+$/),
+});
+
+export const trackedRepoIdSchema = z.object({
+  id: z.string().uuid(),
+});
+
 // ── Auth ─────────────────────────────────────────────────────────────────────
 
 export const getSession = createServerFn({ method: "GET" }).handler(
@@ -294,6 +314,42 @@ export const postToX = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { postToXFn } = await import("@/server/roast.server");
     return postToXFn(data);
+  });
+
+// ── Tracked Repos ────────────────────────────────────────────────────────────
+
+export const listTrackedRepos = createServerFn({ method: "GET" }).handler(
+  async () => {
+    const { listTrackedReposFn } =
+      await import("@/server/tracked-repos.server");
+    return listTrackedReposFn();
+  },
+);
+
+export const registerTrackedRepo = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => trackedRepoInputSchema.parse(data))
+  .handler(async ({ data }) => {
+    await checkRateLimit("register_repo", 20, 3600);
+    const { registerTrackedRepoFn } =
+      await import("@/server/tracked-repos.server");
+    return registerTrackedRepoFn(data);
+  });
+
+export const rotateWebhookSecret = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => trackedRepoIdSchema.parse(data))
+  .handler(async ({ data }) => {
+    await checkRateLimit("rotate_webhook_secret", 10, 3600);
+    const { rotateWebhookSecretFn } =
+      await import("@/server/tracked-repos.server");
+    return rotateWebhookSecretFn(data);
+  });
+
+export const deleteTrackedRepo = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => trackedRepoIdSchema.parse(data))
+  .handler(async ({ data }) => {
+    const { deleteTrackedRepoFn } =
+      await import("@/server/tracked-repos.server");
+    return deleteTrackedRepoFn(data);
   });
 
 export const getWrappedStats = createServerFn({ method: "GET" }).handler(

@@ -17,10 +17,12 @@ import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as WebhooksGithubRouteImport } from './routes/webhooks.github'
 import { Route as ULoginRouteImport } from './routes/u.$login'
 import { Route as TeamIdRouteImport } from './routes/team.$id'
 import { Route as TSlugRouteImport } from './routes/t.$slug'
 import { Route as RIdRouteImport } from './routes/r.$id'
+import { Route as InternalCronDrainRouteImport } from './routes/internal.cron.drain'
 import { Route as ApiAuthCallbackGithubRouteImport } from './routes/api.auth.callback.github'
 
 const WrappedRoute = WrappedRouteImport.update({
@@ -63,6 +65,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WebhooksGithubRoute = WebhooksGithubRouteImport.update({
+  id: '/webhooks/github',
+  path: '/webhooks/github',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ULoginRoute = ULoginRouteImport.update({
   id: '/u/$login',
   path: '/u/$login',
@@ -81,6 +88,11 @@ const TSlugRoute = TSlugRouteImport.update({
 const RIdRoute = RIdRouteImport.update({
   id: '/r/$id',
   path: '/r/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InternalCronDrainRoute = InternalCronDrainRouteImport.update({
+  id: '/internal/cron/drain',
+  path: '/internal/cron/drain',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAuthCallbackGithubRoute = ApiAuthCallbackGithubRouteImport.update({
@@ -102,6 +114,8 @@ export interface FileRoutesByFullPath {
   '/t/$slug': typeof TSlugRoute
   '/team/$id': typeof TeamIdRoute
   '/u/$login': typeof ULoginRoute
+  '/webhooks/github': typeof WebhooksGithubRoute
+  '/internal/cron/drain': typeof InternalCronDrainRoute
   '/api/auth/callback/github': typeof ApiAuthCallbackGithubRoute
 }
 export interface FileRoutesByTo {
@@ -117,6 +131,8 @@ export interface FileRoutesByTo {
   '/t/$slug': typeof TSlugRoute
   '/team/$id': typeof TeamIdRoute
   '/u/$login': typeof ULoginRoute
+  '/webhooks/github': typeof WebhooksGithubRoute
+  '/internal/cron/drain': typeof InternalCronDrainRoute
   '/api/auth/callback/github': typeof ApiAuthCallbackGithubRoute
 }
 export interface FileRoutesById {
@@ -133,6 +149,8 @@ export interface FileRoutesById {
   '/t/$slug': typeof TSlugRoute
   '/team/$id': typeof TeamIdRoute
   '/u/$login': typeof ULoginRoute
+  '/webhooks/github': typeof WebhooksGithubRoute
+  '/internal/cron/drain': typeof InternalCronDrainRoute
   '/api/auth/callback/github': typeof ApiAuthCallbackGithubRoute
 }
 export interface FileRouteTypes {
@@ -150,6 +168,8 @@ export interface FileRouteTypes {
     | '/t/$slug'
     | '/team/$id'
     | '/u/$login'
+    | '/webhooks/github'
+    | '/internal/cron/drain'
     | '/api/auth/callback/github'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -165,6 +185,8 @@ export interface FileRouteTypes {
     | '/t/$slug'
     | '/team/$id'
     | '/u/$login'
+    | '/webhooks/github'
+    | '/internal/cron/drain'
     | '/api/auth/callback/github'
   id:
     | '__root__'
@@ -180,6 +202,8 @@ export interface FileRouteTypes {
     | '/t/$slug'
     | '/team/$id'
     | '/u/$login'
+    | '/webhooks/github'
+    | '/internal/cron/drain'
     | '/api/auth/callback/github'
   fileRoutesById: FileRoutesById
 }
@@ -196,6 +220,8 @@ export interface RootRouteChildren {
   TSlugRoute: typeof TSlugRoute
   TeamIdRoute: typeof TeamIdRoute
   ULoginRoute: typeof ULoginRoute
+  WebhooksGithubRoute: typeof WebhooksGithubRoute
+  InternalCronDrainRoute: typeof InternalCronDrainRoute
   ApiAuthCallbackGithubRoute: typeof ApiAuthCallbackGithubRoute
 }
 
@@ -257,6 +283,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/webhooks/github': {
+      id: '/webhooks/github'
+      path: '/webhooks/github'
+      fullPath: '/webhooks/github'
+      preLoaderRoute: typeof WebhooksGithubRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/u/$login': {
       id: '/u/$login'
       path: '/u/$login'
@@ -285,6 +318,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/internal/cron/drain': {
+      id: '/internal/cron/drain'
+      path: '/internal/cron/drain'
+      fullPath: '/internal/cron/drain'
+      preLoaderRoute: typeof InternalCronDrainRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/callback/github': {
       id: '/api/auth/callback/github'
       path: '/api/auth/callback/github'
@@ -308,6 +348,8 @@ const rootRouteChildren: RootRouteChildren = {
   TSlugRoute: TSlugRoute,
   TeamIdRoute: TeamIdRoute,
   ULoginRoute: ULoginRoute,
+  WebhooksGithubRoute: WebhooksGithubRoute,
+  InternalCronDrainRoute: InternalCronDrainRoute,
   ApiAuthCallbackGithubRoute: ApiAuthCallbackGithubRoute,
 }
 export const routeTree = rootRouteImport
