@@ -1,12 +1,12 @@
-import { ingestAndPreprocessPR } from "./layer0";
-import { analyzeStaticMetrics } from "./layer1";
-import { analyzeDependencyGraph } from "./layer2";
-import { computeImpactProfile } from "./layer3";
-import { analyzeInvisibleWork } from "./layer4";
-import { generateNarrative, consumeLayer5Usage } from "./layer5";
-import { runLayer6 } from "./layer6";
-import { consumeLayer6Usage } from "./layer6";
-import { runLayer7 } from "./layer7";
+import { ingestAndPreprocessPR } from "./layer0.server";
+import { analyzeStaticMetrics } from "./layer1.server";
+import { analyzeDependencyGraph } from "./layer2.server";
+import { computeImpactProfile } from "./layer3.server";
+import { analyzeInvisibleWork } from "./layer4.server";
+import { generateNarrative, consumeLayer5Usage } from "./layer5.server";
+import { runLayer6 } from "./layer6.server";
+import { consumeLayer6Usage } from "./layer6.server";
+import { runLayer7 } from "./layer7.server";
 import { sumUsage, ZeroUsage, type TokenUsage } from "../llm/client";
 import type { NarrativeDraft, UserContext, GraphImpactReport } from "./types";
 
@@ -60,7 +60,7 @@ export async function runEngine(
     );
 
     // NEW: Extract User Preferences (Layer 7 Active Learning)
-    const { extractUserPreferences } = await import("./layer7");
+    const { extractUserPreferences } = await import("./layer7.server");
     const userPreferences = await extractUserPreferences(userId);
 
     // Layer 5: Narrative Generation

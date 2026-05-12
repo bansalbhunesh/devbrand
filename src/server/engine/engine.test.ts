@@ -1,5 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
-import { calculateCyclomaticComplexity, calculateChurnScore } from "./layer1";
+import {
+  calculateCyclomaticComplexity,
+  calculateChurnScore,
+} from "./layer1.server";
 
 // Mock the db module before importing layer2 (which now imports db for caching)
 vi.mock("../db.server", () => ({
@@ -14,7 +17,11 @@ vi.mock("../schema.server", () => ({
   repoGraphs: { owner: "owner", repo: "repo", computedAt: "computed_at" },
 }));
 
-import { computeGraphMetrics, resolvePath, resolveAlias } from "./layer2";
+import {
+  computeGraphMetrics,
+  resolvePath,
+  resolveAlias,
+} from "./layer2.server";
 import type { DependencyGraph } from "./types";
 
 describe("Layer 1: Static Metrics", () => {

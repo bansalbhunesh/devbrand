@@ -3,7 +3,7 @@ import { z } from "zod";
 import { db } from "./db.server";
 import { outputs, users, userEvents } from "./schema.server";
 import { eq, sql, and, desc } from "drizzle-orm";
-import { runEngine } from "./engine";
+import { runEngine } from "./engine/index.server";
 import type { UserContext } from "./engine/types";
 import { loadSessionUser } from "./auth.server";
 
