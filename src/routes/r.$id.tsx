@@ -128,7 +128,8 @@ function RoastPage() {
             no record.
           </p>
           <Link
-            to="/#roast"
+            to="/"
+            hash="roast"
             className="group inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-red-500 text-white font-black text-sm transition-all duration-300 shadow-[0_18px_40px_-12px_rgba(239,68,68,0.5)] hover:-translate-y-0.5 hover:shadow-[0_24px_60px_-12px_rgba(239,68,68,0.65)]"
           >
             Roast Someone Else
@@ -257,7 +258,8 @@ function RoastPage() {
           <div className="flex flex-col items-center gap-6">
             <div className="h-px w-20 bg-white/10" />
             <Link
-              to="/#roast"
+              to="/"
+            hash="roast"
               className="group text-xs font-black uppercase tracking-[0.3em] text-muted-foreground hover:text-red-500 transition-all flex items-center gap-3"
             >
               Get Roasted Yourself{" "}
