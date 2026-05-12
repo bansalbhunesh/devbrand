@@ -48,10 +48,22 @@
   --gradient-mesh:
     radial-gradient(at 100% 100%, oklch(30% 0.1 300 / 0.1), transparent 50%),
     radial-gradient(at 0% 0%, oklch(20% 0.1 200 / 0.1), transparent 50%);
-    
-  --mesh-1: radial-gradient(at 0% 0%, oklch(40% 0.15 250 / 0.15), transparent 50%);
-  --mesh-2: radial-gradient(at 100% 0%, oklch(40% 0.15 300 / 0.15), transparent 50%);
-  --mesh-3: radial-gradient(at 50% 100%, oklch(40% 0.15 150 / 0.15), transparent 50%);
+
+  --mesh-1: radial-gradient(
+    at 0% 0%,
+    oklch(40% 0.15 250 / 0.15),
+    transparent 50%
+  );
+  --mesh-2: radial-gradient(
+    at 100% 0%,
+    oklch(40% 0.15 300 / 0.15),
+    transparent 50%
+  );
+  --mesh-3: radial-gradient(
+    at 50% 100%,
+    oklch(40% 0.15 150 / 0.15),
+    transparent 50%
+  );
 }
 
 @theme {
@@ -89,7 +101,7 @@
 
   --shadow-soft: 0 8px 30px rgba(0, 0, 0, 0.3);
   --ring-soft: 0 0 0 1px var(--border-strong), 0 0 0 4px oklch(100% 0 0 / 0.03);
-  
+
   --animate-shimmer: shimmer 2s linear infinite;
 }
 
@@ -101,7 +113,7 @@
     @apply bg-background text-foreground antialiased selection:bg-blue/20 selection:text-blue overflow-x-hidden;
     font-feature-settings: "ss01", "ss03", "cv01", "cv11";
   }
-  
+
   /* Premium Scrollbar */
   ::-webkit-scrollbar {
     width: 6px;
@@ -163,7 +175,9 @@
     );
     background-size: 200% 200%;
     animation: shimmer 4s linear infinite;
-    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
     mask-composite: exclude;
     pointer-events: none;
     border-radius: inherit;
@@ -172,11 +186,20 @@
 }
 
 @keyframes shimmer {
-  from { background-position: 0% 0%; }
-  to { background-position: 200% 0%; }
+  from {
+    background-position: 0% 0%;
+  }
+  to {
+    background-position: 200% 0%;
+  }
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
 }

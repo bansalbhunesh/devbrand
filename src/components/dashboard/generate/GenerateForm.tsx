@@ -35,7 +35,7 @@ export const GenerateForm = React.memo(
             Transform Impact
           </h2>
           <p className="text-[13px] text-muted-foreground/80 text-pretty font-medium leading-relaxed">
-            Paste a GitHub PR URL. Our AI extracts the architectural shifts, 
+            Paste a GitHub PR URL. Our AI extracts the architectural shifts,
             performance gains, and complexity to build your reputation.
           </p>
         </div>
@@ -47,12 +47,10 @@ export const GenerateForm = React.memo(
                 <Lock className="h-5 w-5 text-blue-500" />
               </div>
               <div className="flex-1">
-                <p className="text-sm font-bold">
-                  Quota Exhausted.
-                </p>
+                <p className="text-sm font-bold">Quota Exhausted.</p>
                 <p className="text-[11px] text-muted-foreground mt-1 text-pretty font-medium leading-relaxed">
-                  You've reached your free limit. Upgrade to Pro for 
-                  unlimited transformations and advanced AI roasting.
+                  You've reached your free limit. Upgrade to Pro for unlimited
+                  transformations and advanced AI roasting.
                 </p>
                 <button
                   onClick={handleUpgrade}
@@ -90,11 +88,13 @@ export const GenerateForm = React.memo(
         >
           {generating ? (
             <>
-              <Loader2 className="h-4 w-4 animate-spin" /> Neural Parse in progress...
+              <Loader2 className="h-4 w-4 animate-spin" /> Neural Parse in
+              progress...
             </>
           ) : (
             <>
-              <Sparkles className="h-4 w-4 text-blue-500" /> Extract Impact Story
+              <Sparkles className="h-4 w-4 text-blue-500" /> Extract Impact
+              Story
             </>
           )}
         </button>

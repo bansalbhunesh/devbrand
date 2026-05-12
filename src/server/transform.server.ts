@@ -16,17 +16,14 @@ function generateSlug(prUrl: string, userId: string): string {
 
 // ── Plain Functions (Server-Only) ─────────────────────────────────────────────
 
-export async function transformPRFn(data: {
-  prUrl: string;
-  userId?: string;
-}) {
+export async function transformPRFn(data: { prUrl: string; userId?: string }) {
   const { prUrl } = data;
   const user = await loadSessionUser();
   if (!user) throw new Error("UNAUTHORIZED");
   const userId = user.id;
 
   const { createJobFn, updateJobStatusFn } = await import("./jobs.server");
-  
+
   // Create the job immediately
   const job = await createJobFn({
     type: "transform_pr",
@@ -43,7 +40,8 @@ export async function transformPRFn(data: {
       const freshUser = await checkAndResetLimits(userId);
 
       const isFreeLimitReached =
-        freshUser?.plan === "free" && (freshUser?.generationsThisMonth ?? 0) >= 3;
+        freshUser?.plan === "free" &&
+        (freshUser?.generationsThisMonth ?? 0) >= 3;
       if (isFreeLimitReached) {
         throw new Error("LIMIT_REACHED");
       }
@@ -101,16 +99,16 @@ export async function transformPRFn(data: {
             category: output.category,
           } as any,
         }),
-        updateJobStatusFn(job.id, { 
-          status: "COMPLETED", 
-          result: { slug, outputId: inserted.id } 
+        updateJobStatusFn(job.id, {
+          status: "COMPLETED",
+          result: { slug, outputId: inserted.id },
         }),
       ]);
     } catch (err: any) {
       console.error("Job Failed:", err);
-      await updateJobStatusFn(job.id, { 
-        status: "FAILED", 
-        error: err.message || "Unknown Error" 
+      await updateJobStatusFn(job.id, {
+        status: "FAILED",
+        error: err.message || "Unknown Error",
       });
     }
   })();
@@ -130,7 +128,10 @@ export async function getUserOutputsFn() {
   });
 }
 
-export async function toggleOutputVisibilityFn(data: { outputId: string; isPublic: boolean }) {
+export async function toggleOutputVisibilityFn(data: {
+  outputId: string;
+  isPublic: boolean;
+}) {
   const { outputId, isPublic } = data;
   const user = await loadSessionUser();
   if (!user) throw new Error("UNAUTHORIZED");

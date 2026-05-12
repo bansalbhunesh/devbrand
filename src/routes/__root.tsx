@@ -142,7 +142,7 @@ import { useLocation } from "@tanstack/react-router";
 
 function RootComponent() {
   const location = useLocation();
-  
+
   return (
     <RootDocument>
       <QueryClientProvider client={queryClient}>
@@ -178,7 +178,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         {/* Global Cinematic Overlays */}
         <div className="fixed inset-0 bg-noise pointer-events-none z-[9999]" />
         <div className="fixed inset-0 bg-mesh-complex pointer-events-none -z-10" />
-        
+
         {children}
         <ScrollRestoration />
         <Scripts />

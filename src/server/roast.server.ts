@@ -99,8 +99,7 @@ export async function generateRoastFn(data: {
   const commitMessages = pushEvents
     .flatMap(
       (e) =>
-        ((e.payload as any).commits as any[])?.map((c: any) => c.message) ??
-        [],
+        ((e.payload as any).commits as any[])?.map((c: any) => c.message) ?? [],
     )
     .filter(Boolean)
     .slice(0, 20);
@@ -206,8 +205,10 @@ export async function postToXFn(data: { id: string; content: string }) {
   const user = await loadSessionUser();
   if (!user) throw new Error("UNAUTHORIZED");
 
-  console.log(`[X_BROADCAST] User ${user.githubLogin} posted roast ${data.id}: ${data.content}`);
-  
+  console.log(
+    `[X_BROADCAST] User ${user.githubLogin} posted roast ${data.id}: ${data.content}`,
+  );
+
   await db.insert(userEvents).values({
     userId: user.id,
     eventType: "social_share",

@@ -23,16 +23,20 @@ import {
 export function Stat({
   label,
   value,
+  color,
 }: {
   label: string;
   value: string | number;
+  color?: string;
 }) {
   return (
     <div>
       <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">
         {label}
       </div>
-      <div className="text-sm font-semibold mt-0.5">{value}</div>
+      <div className={`text-sm font-semibold mt-0.5 ${color ?? ""}`}>
+        {value}
+      </div>
     </div>
   );
 }

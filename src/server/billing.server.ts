@@ -28,7 +28,6 @@ function getRazorpay(): Razorpay {
 
 const PRO_PLAN_AMOUNT_PAISE = 99900;
 
-
 // ── Plain Functions (Server-Only) ─────────────────────────────────────────────
 
 export async function createCheckoutSessionFn() {
@@ -68,7 +67,9 @@ export async function createCheckoutSessionFn() {
   };
 }
 
-export async function verifyPaymentFn(data: z.infer<typeof verifyPaymentSchema>) {
+export async function verifyPaymentFn(
+  data: z.infer<typeof verifyPaymentSchema>,
+) {
   const sessionUser = await loadSessionUser();
   if (!sessionUser) throw new Error("UNAUTHORIZED");
 
@@ -129,9 +130,8 @@ export async function verifyPaymentFn(data: z.infer<typeof verifyPaymentSchema>)
 export async function createBillingPortalFn() {
   const sessionUser = await loadSessionUser();
   if (!sessionUser) throw new Error("UNAUTHORIZED");
-  
-  // Razorpay handles billing differently, so we just return a success signal 
-  // or redirect to a local billing management page if we had one.
-  return { url: "/dashboard" }; 
-}
 
+  // Razorpay handles billing differently, so we just return a success signal
+  // or redirect to a local billing management page if we had one.
+  return { url: "/dashboard" };
+}

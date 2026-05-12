@@ -1,5 +1,5 @@
-import { db } from "./db";
-import { users, outputs, roasts } from "./schema";
+import { db } from "./db.server";
+import { users, outputs, roasts } from "./schema.server";
 
 async function seed() {
   console.log("Seeding database...");

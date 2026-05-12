@@ -7,7 +7,7 @@ import tsconfigPaths from "vite-tsconfig-paths";
 export default defineConfig({
   plugins: [
     tanstackStart({
-      // @ts-ignore
+      // @ts-expect-error preset key isn't surfaced in current Start types but is accepted at runtime
       preset: "vercel",
     }),
     react(),
@@ -20,7 +20,12 @@ export default defineConfig({
       compress: {
         drop_console: true,
         drop_debugger: true,
-        pure_funcs: ["console.log", "console.info", "console.debug", "console.trace"],
+        pure_funcs: [
+          "console.log",
+          "console.info",
+          "console.debug",
+          "console.trace",
+        ],
       },
       mangle: {
         safari10: true,

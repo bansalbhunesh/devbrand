@@ -52,7 +52,9 @@ export async function updateJobStatusFn(
   if (data.status === "FAILED" && nextRetryCount < (job.maxRetries ?? 3)) {
     nextStatus = "PENDING"; // Self-heal: put back in queue
     nextRetryCount += 1;
-    console.log(`Job ${jobId} failed. Retrying (${nextRetryCount}/${job.maxRetries})`);
+    console.log(
+      `Job ${jobId} failed. Retrying (${nextRetryCount}/${job.maxRetries})`,
+    );
   }
 
   await db

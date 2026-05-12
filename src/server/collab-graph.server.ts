@@ -1,6 +1,6 @@
 import { Octokit } from "octokit";
-import { db } from "./db";
-import { users, profiles } from "./schema";
+import { db } from "./db.server";
+import { users, profiles } from "./schema.server";
 import { eq } from "drizzle-orm";
 
 const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });

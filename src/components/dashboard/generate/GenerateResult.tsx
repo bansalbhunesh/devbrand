@@ -37,9 +37,21 @@ export const GenerateResult = React.memo(
       >
         <div className="flex items-center justify-between p-6 rounded-[2rem] border border-white/5 bg-white/[0.02] glass-morphism relative overflow-hidden">
           <div className="flex gap-8 text-sm">
-            <Stat label="Impact" value={`${result.impactScore}/100`} color="text-blue-500" />
-            <Stat label="Complexity" value={result.complexityLevel} color="text-purple-500" />
-            <Stat label="Category" value={result.category} color="text-green-500" />
+            <Stat
+              label="Impact"
+              value={`${result.impactScore}/100`}
+              color="text-blue-500"
+            />
+            <Stat
+              label="Complexity"
+              value={result.complexityLevel}
+              color="text-purple-500"
+            />
+            <Stat
+              label="Category"
+              value={result.category}
+              color="text-green-500"
+            />
           </div>
           <a
             href={`/t/${result.slug}`}
@@ -126,14 +138,14 @@ export const GenerateResult = React.memo(
                     "h-9 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border",
                     user?.plan === "pro"
                       ? "bg-[#0077b5] text-white border-[#0077b5] hover:brightness-110"
-                      : "bg-white/5 text-muted-foreground border-white/10"
+                      : "bg-white/5 text-muted-foreground border-white/10",
                   )}
                 >
                   {user?.plan === "pro" ? "Copy & Post" : "Unlock Pro"}
                 </button>
               </div>
             </div>
-            
+
             <AnimatePresence mode="wait">
               <motion.div
                 key={selectedPost}
@@ -165,7 +177,11 @@ export const GenerateResult = React.memo(
                 onClick={() => handleCopy(result.resumeBullet, "resume")}
                 className="text-muted-foreground hover:text-foreground transition-colors"
               >
-                {copied === "resume" ? <Check className="h-3.5 w-3.5 text-green-500" /> : <ClipboardCopy className="h-3.5 w-3.5" />}
+                {copied === "resume" ? (
+                  <Check className="h-3.5 w-3.5 text-green-500" />
+                ) : (
+                  <ClipboardCopy className="h-3.5 w-3.5" />
+                )}
               </button>
             </div>
             <p className="text-[13px] font-mono leading-relaxed text-foreground/70">
@@ -182,7 +198,11 @@ export const GenerateResult = React.memo(
                 onClick={() => handleCopy(result.interviewHook, "hook")}
                 className="text-muted-foreground hover:text-foreground transition-colors"
               >
-                {copied === "hook" ? <Check className="h-3.5 w-3.5 text-green-500" /> : <ClipboardCopy className="h-3.5 w-3.5" />}
+                {copied === "hook" ? (
+                  <Check className="h-3.5 w-3.5 text-green-500" />
+                ) : (
+                  <ClipboardCopy className="h-3.5 w-3.5" />
+                )}
               </button>
             </div>
             <p className="text-[13px] italic leading-relaxed text-muted-foreground font-medium">

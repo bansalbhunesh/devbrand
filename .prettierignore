@@ -1,0 +1,20 @@
+node_modules
+dist
+.tanstack
+.wrangler
+.vercel
+coverage
+*.tsbuildinfo
+lint_results.json
+src/routeTree.gen.ts
+
+# Generated / external — do not reformat
+.github
+.specify
+specs
+docs
+scratch
+README.md
+LAUNCH.md
+CONSTITUTION.md
+

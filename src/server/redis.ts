@@ -29,7 +29,9 @@ function getRedis(): Redis | null {
 }
 
 /**
- * Atomic rate limiting with a graceful "allow" fallback if Redis is down.
+ * Atomic rate limiting. Fails CLOSED when Redis is unavailable so a Redis
+ * outage can't uncap the Anthropic/Razorpay surface. Set RATE_LIMIT_FAIL_OPEN=true
+ * in local dev only if you need to bypass.
  */
 export async function rateLimit(
   key: string,
@@ -37,14 +39,14 @@ export async function rateLimit(
   windowSeconds: number,
 ): Promise<{ success: boolean; remaining: number; resetAt: number }> {
   const redis = getRedis();
+  const failOpen = env.RATE_LIMIT_FAIL_OPEN === true;
+  const onFailure = () => ({
+    success: failOpen,
+    remaining: failOpen ? limit : 0,
+    resetAt: Date.now() + windowSeconds * 1000,
+  });
 
-  if (!redis) {
-    return {
-      success: true,
-      remaining: limit,
-      resetAt: Date.now() + windowSeconds * 1000,
-    };
-  }
+  if (!redis) return onFailure();
 
   try {
     const identifier = `ratelimit:${key}`;
@@ -62,8 +64,8 @@ export async function rateLimit(
       resetAt,
     };
   } catch (e) {
-    console.error("Rate limiting error (failing open):", e);
-    return { success: true, remaining: 1, resetAt: Date.now() };
+    console.error("Rate limiting error:", e);
+    return onFailure();
   }
 }
 
