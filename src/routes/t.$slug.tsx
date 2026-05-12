@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Reveal, RevealItem } from "@/components/site/Reveal";
 
 export const Route = createFileRoute("/t/$slug")({
   component: OutputPage,
@@ -146,37 +147,45 @@ function OutputPage() {
                 </div>
               </div>
 
-              <div className="p-8 sm:p-12 space-y-12">
-                <section>
-                  <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-muted-foreground mb-6">
-                    Strategic Impact Narrative
-                  </h3>
-                  <p className="text-xl sm:text-2xl leading-[1.6] font-medium text-foreground/90 whitespace-pre-line decoration-blue-500/10 underline-offset-8 decoration-2">
-                    {output.linkedinPost1}
-                  </p>
-                </section>
-
-                <div className="h-px bg-gradient-to-r from-border to-transparent" />
-
-                <section className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-blue-500">
-                      Resume-Ready Signal
+              <Reveal stagger={0.1} className="p-8 sm:p-12 space-y-12">
+                <RevealItem>
+                  <section>
+                    <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-muted-foreground mb-6">
+                      Strategic Impact Narrative
                     </h3>
-                    <button
-                      onClick={() => handleCopy(output.resumeBullet, "bullet")}
-                      className="text-[10px] font-bold text-blue-500 hover:underline flex items-center gap-1.5"
-                    >
-                      {copiedBullet ? "Copied" : "Copy Bullet"}
-                    </button>
-                  </div>
-                  <div className="p-6 rounded-2xl bg-blue-500/[0.03] border border-blue-500/10">
-                    <p className="text-sm font-mono text-blue-500/80 leading-relaxed">
-                      • {output.resumeBullet}
+                    <p className="text-xl sm:text-2xl leading-[1.6] font-medium text-foreground/90 whitespace-pre-line decoration-blue-500/10 underline-offset-8 decoration-2">
+                      {output.linkedinPost1}
                     </p>
-                  </div>
-                </section>
-              </div>
+                  </section>
+                </RevealItem>
+
+                <RevealItem>
+                  <div className="h-px bg-gradient-to-r from-border to-transparent" />
+                </RevealItem>
+
+                <RevealItem>
+                  <section className="space-y-6">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-blue-500">
+                        Resume-Ready Signal
+                      </h3>
+                      <button
+                        onClick={() =>
+                          handleCopy(output.resumeBullet, "bullet")
+                        }
+                        className="text-[10px] font-bold text-blue-500 hover:underline flex items-center gap-1.5 transition"
+                      >
+                        {copiedBullet ? "Copied" : "Copy Bullet"}
+                      </button>
+                    </div>
+                    <div className="p-6 rounded-2xl bg-blue-500/[0.03] border border-blue-500/10 hover:border-blue-500/25 transition-colors duration-300">
+                      <p className="text-sm font-mono text-blue-500/80 leading-relaxed">
+                        • {output.resumeBullet}
+                      </p>
+                    </div>
+                  </section>
+                </RevealItem>
+              </Reveal>
             </div>
 
             <div className="flex flex-wrap gap-4 items-center justify-between p-8 rounded-[2rem] border border-border bg-background/40">
@@ -197,9 +206,10 @@ function OutputPage() {
                 href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "")}`}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-[#0077b5] text-white text-[13px] font-black hover:scale-105 transition-all shadow-xl shadow-blue-900/20"
+                className="group inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-[#0077b5] text-white text-[13px] font-black transition-all duration-300 shadow-[0_18px_40px_-12px_rgba(0,119,181,0.5)] hover:-translate-y-0.5 hover:shadow-[0_24px_60px_-12px_rgba(0,119,181,0.7)]"
               >
-                Endorse Impact <ArrowRight className="h-4 w-4" />
+                Endorse Impact{" "}
+                <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
               </a>
             </div>
           </div>
@@ -274,11 +284,15 @@ function OutputPage() {
               <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-muted-foreground ml-4">
                 Source Evidence
               </h3>
-              <div className="space-y-3">
+              <Reveal
+                stagger={0.06}
+                rootMargin="-5% 0px -5% 0px"
+                className="space-y-3"
+              >
                 {citations.map((cite: any, i: number) => (
-                  <div
+                  <RevealItem
                     key={i}
-                    className="p-5 rounded-2xl border border-border bg-background/40 hover:border-blue-500/30 transition-all group/cite"
+                    className="p-5 rounded-2xl border border-border bg-background/40 hover:border-blue-500/30 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_-20px_rgba(59,130,246,0.25)] transition-all duration-300 group/cite"
                   >
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-[10px] font-mono font-bold text-blue-500">
@@ -296,9 +310,9 @@ function OutputPage() {
                         "Optimized concurrent load handling"}
                       "
                     </p>
-                  </div>
+                  </RevealItem>
                 ))}
-              </div>
+              </Reveal>
             </div>
           </div>
         </div>

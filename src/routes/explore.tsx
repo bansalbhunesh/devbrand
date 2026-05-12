@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Nav } from "@/components/site/Nav";
+import { Reveal, RevealItem } from "@/components/site/Reveal";
 
 export const Route = createFileRoute("/explore")({
   component: ExplorePage,
@@ -112,8 +113,25 @@ function ExplorePage() {
             </div>
 
             {!filteredFeed.length && !isLoading ? (
-              <div className="py-32 rounded-[2.5rem] border-2 border-dashed border-border bg-muted/10 text-center">
-                <Compass className="h-12 w-12 text-muted-foreground mx-auto mb-6 opacity-20" />
+              <div className="py-32 rounded-[2.5rem] border-2 border-dashed border-border bg-muted/10 text-center relative overflow-hidden">
+                {/* Breathing accent ring around the empty-state icon — keeps
+                    the silence intentional rather than dead. */}
+                <div className="relative w-fit mx-auto mb-6">
+                  <motion.span
+                    aria-hidden
+                    className="absolute inset-0 rounded-full border border-blue-500/25"
+                    animate={{
+                      scale: [1, 1.35, 1.7],
+                      opacity: [0.4, 0.1, 0],
+                    }}
+                    transition={{
+                      duration: 3.2,
+                      repeat: Infinity,
+                      ease: "easeOut",
+                    }}
+                  />
+                  <Compass className="h-12 w-12 text-muted-foreground opacity-30 relative" />
+                </div>
                 <h3 className="text-xl font-bold mb-2">Signal Silence</h3>
                 <p className="text-sm text-muted-foreground max-w-xs mx-auto leading-relaxed">
                   No public engineering transformations found in this sector
@@ -121,20 +139,19 @@ function ExplorePage() {
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <Reveal
+                key={tab}
+                stagger={0.05}
+                rootMargin="-10% 0px -10% 0px"
+                className="grid grid-cols-1 md:grid-cols-2 gap-8"
+              >
                 <AnimatePresence mode="popLayout">
-                  {filteredFeed.map((item, idx) => (
-                    <motion.div
-                      key={item.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      transition={{ delay: idx * 0.05 }}
-                    >
+                  {filteredFeed.map((item) => (
+                    <RevealItem key={item.id}>
                       <Link
                         to="/t/$slug"
                         params={{ slug: item.slug }}
-                        className="group relative flex flex-col h-full p-8 rounded-[2rem] border border-border bg-muted/20 hover:border-blue-500/50 hover:bg-muted/40 transition-all duration-500 overflow-hidden"
+                        className="group relative flex flex-col h-full p-8 rounded-[2rem] border border-border bg-muted/20 hover:border-blue-500/50 hover:bg-muted/40 hover:-translate-y-0.5 hover:shadow-[0_24px_60px_-24px_rgba(59,130,246,0.25)] transition-all duration-500 overflow-hidden"
                       >
                         <div className="flex items-center justify-between mb-6">
                           <div className="flex items-center gap-3">
@@ -177,10 +194,10 @@ function ExplorePage() {
                           </div>
                         </div>
                       </Link>
-                    </motion.div>
+                    </RevealItem>
                   ))}
                 </AnimatePresence>
-              </div>
+              </Reveal>
             )}
           </div>
 
@@ -200,7 +217,7 @@ function ExplorePage() {
                     key={eng.id}
                     to="/u/$login"
                     params={{ login: eng.githubLogin }}
-                    className="flex items-center justify-between p-4 rounded-2xl border border-border bg-muted/20 hover:border-blue-500/30 hover:bg-muted/40 transition group"
+                    className="flex items-center justify-between p-4 rounded-2xl border border-border bg-muted/20 hover:border-blue-500/30 hover:bg-muted/40 hover:-translate-y-0.5 hover:shadow-[0_12px_30px_-16px_rgba(59,130,246,0.3)] transition-all duration-300 group"
                   >
                     <div className="flex items-center gap-4">
                       <div className="h-8 w-8 rounded-lg bg-background border border-border grid place-items-center text-[11px] font-black text-muted-foreground group-hover:text-blue-500 transition">
