@@ -92,10 +92,6 @@ export default async function handler(
     const response = await handler(request);
 
     res.statusCode = response.status;
-    // Debug header so we can see what URL the SSR handler actually got.
-    // Remove once the redirect bug is diagnosed.
-    res.setHeader("x-debug-incoming-url", req.url ?? "(none)");
-    res.setHeader("x-debug-request-url", request.url);
     response.headers.forEach((value, key) => {
       // `set-cookie` may appear multiple times; Headers.forEach gives a
       // comma-joined string in some runtimes. Split it back out so each
