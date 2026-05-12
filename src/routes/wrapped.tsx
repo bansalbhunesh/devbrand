@@ -17,6 +17,7 @@ import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { Nav } from "@/components/site/Nav";
+import { REVEAL_EASE } from "@/components/site/Reveal";
 
 export const Route = createFileRoute("/wrapped")({
   component: WrappedPage,
@@ -40,8 +41,38 @@ function WrappedPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen grid place-items-center bg-[#050505]">
-        <div className="flex flex-col items-center gap-6">
-          <div className="h-16 w-16 rounded-full border-t-2 border-blue-500 animate-spin" />
+        <div className="flex flex-col items-center gap-8">
+          {/* Concentric breathing rings around a center node — replaces the
+              border-spinner. Reads as "the engine is reconstructing your
+              year" instead of a generic loading state. */}
+          <div className="relative h-20 w-20 grid place-items-center">
+            <motion.span
+              aria-hidden
+              className="absolute inset-0 rounded-full border border-blue-500/40"
+              animate={{
+                scale: [1, 1.4, 1.8],
+                opacity: [0.5, 0.2, 0],
+              }}
+              transition={{ duration: 2.8, repeat: Infinity, ease: "easeOut" }}
+            />
+            <motion.span
+              aria-hidden
+              className="absolute inset-0 rounded-full border border-blue-500/40"
+              animate={{
+                scale: [1, 1.4, 1.8],
+                opacity: [0.5, 0.2, 0],
+              }}
+              transition={{
+                duration: 2.8,
+                delay: 1.4,
+                repeat: Infinity,
+                ease: "easeOut",
+              }}
+            />
+            <div className="relative h-12 w-12 rounded-full bg-blue-500/10 border border-blue-500/30 grid place-items-center">
+              <Sparkles className="h-5 w-5 text-blue-500/80" />
+            </div>
+          </div>
           <span className="text-[10px] font-black tracking-[0.4em] text-muted-foreground uppercase">
             Reconstructing your technical year...
           </span>
@@ -54,26 +85,65 @@ function WrappedPage() {
     return (
       <div className="min-h-screen grid place-items-center bg-[#050505] p-6">
         <div className="max-w-md text-center">
+          <div className="relative h-16 w-16 mx-auto mb-6 grid place-items-center">
+            <motion.span
+              aria-hidden
+              className="absolute inset-0 rounded-full border border-white/15"
+              animate={{
+                scale: [1, 1.35, 1.7],
+                opacity: [0.4, 0.15, 0],
+              }}
+              transition={{ duration: 3.2, repeat: Infinity, ease: "easeOut" }}
+            />
+            <div className="relative h-14 w-14 rounded-full bg-white/5 border border-white/15 grid place-items-center">
+              <Trophy className="h-5 w-5 text-white/60" />
+            </div>
+          </div>
           <h1 className="text-4xl font-black mb-4 tracking-tighter">
             Nothing to wrap.
           </h1>
-          <p className="text-muted-foreground mb-8 font-medium">
-            Start using DevBrand today to capture your impact for next year's
-            recap.
+          <p className="text-muted-foreground mb-8 font-medium leading-relaxed">
+            Generate a few impact stories on DevBrand to capture your year.
+            We'll have something for you here when you're back.
           </p>
           <Link
             to="/dashboard"
-            className="px-8 py-4 rounded-2xl bg-white text-black font-black text-sm hover:brightness-90 transition inline-block"
+            className="group inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-white text-black font-black text-sm transition-all duration-300 shadow-[0_18px_40px_-12px_rgba(255,255,255,0.2)] hover:-translate-y-0.5 hover:shadow-[0_24px_60px_-12px_rgba(255,255,255,0.3)]"
           >
             Back to Dashboard
+            <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
           </Link>
         </div>
       </div>
     );
   }
 
-  const nextSlide = () => setSlide((s) => Math.min(s + 1, 5));
-  const prevSlide = () => setSlide((s) => Math.max(s - 1, 0));
+  const nextSlide = React.useCallback(
+    () => setSlide((s) => Math.min(s + 1, 5)),
+    [],
+  );
+  const prevSlide = React.useCallback(
+    () => setSlide((s) => Math.max(s - 1, 0)),
+    [],
+  );
+
+  // Keyboard navigation. Arrow keys advance; Home/End jump to bookends.
+  // Doesn't interfere with form fields (no inputs on this page).
+  React.useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowRight" || e.key === " ") {
+        nextSlide();
+      } else if (e.key === "ArrowLeft") {
+        prevSlide();
+      } else if (e.key === "Home") {
+        setSlide(0);
+      } else if (e.key === "End") {
+        setSlide(5);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [nextSlide, prevSlide]);
 
   const slides = [
     // Slide 0: Intro
@@ -241,11 +311,13 @@ function WrappedPage() {
       </div>
 
       <div className="flex flex-wrap items-center justify-center gap-4">
-        <button className="flex items-center gap-3 px-10 py-5 rounded-2xl bg-white text-black font-black text-sm hover:brightness-90 transition shadow-2xl shadow-white/10 active:scale-95">
-          <Twitter className="h-5 w-5" /> Broadcast Year
+        <button className="group flex items-center gap-3 px-10 py-5 rounded-2xl bg-white text-black font-black text-sm transition-all duration-300 shadow-[0_24px_60px_-16px_rgba(255,255,255,0.25)] hover:-translate-y-0.5 hover:shadow-[0_32px_80px_-16px_rgba(255,255,255,0.4)]">
+          <Twitter className="h-5 w-5 transition-transform duration-300 group-hover:-rotate-6" />{" "}
+          Broadcast Year
         </button>
-        <button className="flex items-center gap-3 px-10 py-5 rounded-2xl bg-[#0077b5] text-white font-black text-sm hover:brightness-110 transition shadow-2xl shadow-blue-500/20 active:scale-95">
-          <Linkedin className="h-5 w-5" /> Post Impact
+        <button className="group flex items-center gap-3 px-10 py-5 rounded-2xl bg-[#0077b5] text-white font-black text-sm transition-all duration-300 shadow-[0_24px_60px_-16px_rgba(0,119,181,0.5)] hover:-translate-y-0.5 hover:shadow-[0_32px_80px_-16px_rgba(0,119,181,0.7)]">
+          <Linkedin className="h-5 w-5 transition-transform duration-300 group-hover:-rotate-6" />{" "}
+          Post Impact
         </button>
       </div>
 
@@ -270,10 +342,10 @@ function WrappedPage() {
         <AnimatePresence mode="wait">
           <motion.div
             key={slide}
-            initial={{ opacity: 0, x: 20 }}
+            initial={{ opacity: 0, x: 24 }}
             animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.5, ease: "circOut" }}
+            exit={{ opacity: 0, x: -24 }}
+            transition={{ duration: 0.5, ease: REVEAL_EASE }}
             className="w-full"
           >
             {slides[slide]}
@@ -291,12 +363,14 @@ function WrappedPage() {
           <ChevronLeft className="h-6 w-6" />
         </button>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 pointer-events-auto">
           {slides.map((_, i) => (
-            <div
+            <button
               key={i}
+              onClick={() => setSlide(i)}
+              aria-label={`Go to slide ${i + 1}`}
               className={cn(
-                "h-1 rounded-full transition-all duration-500",
+                "h-1 rounded-full transition-all duration-500 hover:bg-blue-500/60",
                 i === slide
                   ? "w-8 bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]"
                   : "w-2 bg-white/10",
