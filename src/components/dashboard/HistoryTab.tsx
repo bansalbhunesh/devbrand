@@ -1,5 +1,6 @@
 import * as React from "react";
 import { Loader2, ClipboardCopy, Filter } from "lucide-react";
+import { motion } from "framer-motion";
 import { HistoryCard } from "./HistoryCard";
 import { cn } from "@/lib/utils";
 
@@ -73,15 +74,25 @@ export function HistoryTab({
         </div>
       ) : outputs && outputs.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredOutputs?.map((o: any) => (
-            <HistoryCard
+          {filteredOutputs?.map((o: any, i: number) => (
+            <motion.div
               key={o.id}
-              output={o}
-              _userId={user.id}
-              onQueryInvalidate={() =>
-                qc.invalidateQueries({ queryKey: ["outputs", user.id] })
-              }
-            />
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{
+                duration: 0.45,
+                delay: Math.min(i * 0.05, 0.4),
+                ease: [0.16, 1, 0.3, 1],
+              }}
+            >
+              <HistoryCard
+                output={o}
+                _userId={user.id}
+                onQueryInvalidate={() =>
+                  qc.invalidateQueries({ queryKey: ["outputs", user.id] })
+                }
+              />
+            </motion.div>
           ))}
           {filteredOutputs?.length === 0 && (
             <div className="col-span-full py-20 text-center rounded-3xl border-2 border-dashed border-border bg-muted/10">

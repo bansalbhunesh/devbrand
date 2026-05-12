@@ -90,7 +90,7 @@ export function HistoryCard({
       : [];
 
   return (
-    <div className="group rounded-2xl border border-border bg-muted/20 hover:border-border-strong transition p-6 relative overflow-hidden flex flex-col">
+    <div className="group rounded-2xl border border-border bg-muted/20 hover:border-border-strong hover:-translate-y-0.5 hover:shadow-[0_24px_60px_-24px_rgba(59,130,246,0.18)] transition-all duration-300 p-6 relative overflow-hidden flex flex-col">
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
           <span className="text-[10px] uppercase tracking-[0.2em] text-blue-500 font-black">

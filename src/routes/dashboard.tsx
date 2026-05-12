@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Sparkles,
   GitPullRequest,
@@ -220,28 +221,45 @@ function Dashboard() {
             </span>
           </Link>
 
-          <nav className="space-y-2">
+          <nav className="space-y-1 relative">
             {(
               ["generate", "history", "teams", "settings", "security"] as Tab[]
-            ).map((t) => (
-              <button
-                key={t}
-                onClick={() => setTab(t)}
-                className={cn(
-                  "w-full flex items-center gap-3 px-5 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300",
-                  tab === t
-                    ? "bg-foreground text-background shadow-2xl shadow-foreground/20 scale-[1.02]"
-                    : "text-muted-foreground hover:bg-white/5 hover:text-foreground",
-                )}
-              >
-                {t === "generate" && <Sparkles className="h-4 w-4" />}
-                {t === "history" && <GitPullRequest className="h-4 w-4" />}
-                {t === "teams" && <Users className="h-4 w-4" />}
-                {t === "settings" && <BarChart3 className="h-4 w-4" />}
-                {t === "security" && <Shield className="h-4 w-4" />}
-                {t}
-              </button>
-            ))}
+            ).map((t) => {
+              const active = tab === t;
+              return (
+                <button
+                  key={t}
+                  onClick={() => setTab(t)}
+                  className={cn(
+                    "relative w-full flex items-center gap-3 px-5 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-colors duration-200 z-10",
+                    active
+                      ? "text-background"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {/* Shared layout pill: slides between tabs instead of
+                      hard-swapping. The pill sits behind via z-0 so the
+                      label/icon inherit the contrast on top. */}
+                  {active && (
+                    <motion.span
+                      layoutId="dashboard-tab-pill"
+                      transition={{
+                        type: "spring",
+                        bounce: 0.18,
+                        duration: 0.55,
+                      }}
+                      className="absolute inset-0 -z-10 bg-foreground rounded-2xl shadow-2xl shadow-foreground/20"
+                    />
+                  )}
+                  {t === "generate" && <Sparkles className="h-4 w-4" />}
+                  {t === "history" && <GitPullRequest className="h-4 w-4" />}
+                  {t === "teams" && <Users className="h-4 w-4" />}
+                  {t === "settings" && <BarChart3 className="h-4 w-4" />}
+                  {t === "security" && <Shield className="h-4 w-4" />}
+                  {t}
+                </button>
+              );
+            })}
           </nav>
         </div>
 
@@ -319,23 +337,35 @@ function Dashboard() {
               <span className="text-[10px] font-bold text-white">DB</span>
             </div>
           </Link>
-          <div className="flex items-center gap-4 overflow-x-auto no-scrollbar py-1">
+          <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-1">
             {(
               ["generate", "history", "teams", "settings", "security"] as Tab[]
-            ).map((t) => (
-              <button
-                key={t}
-                onClick={() => setTab(t)}
-                className={cn(
-                  "text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-md transition",
-                  tab === t
-                    ? "bg-muted text-foreground"
-                    : "text-muted-foreground",
-                )}
-              >
-                {t}
-              </button>
-            ))}
+            ).map((t) => {
+              const active = tab === t;
+              return (
+                <button
+                  key={t}
+                  onClick={() => setTab(t)}
+                  className={cn(
+                    "relative text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-md transition-colors duration-200",
+                    active ? "text-foreground" : "text-muted-foreground",
+                  )}
+                >
+                  {active && (
+                    <motion.span
+                      layoutId="dashboard-mobile-tab-pill"
+                      transition={{
+                        type: "spring",
+                        bounce: 0.2,
+                        duration: 0.5,
+                      }}
+                      className="absolute inset-0 -z-10 bg-muted rounded-md"
+                    />
+                  )}
+                  <span className="relative z-10">{t}</span>
+                </button>
+              );
+            })}
           </div>
           <button onClick={handleLogout} className="p-2 text-muted-foreground">
             <LogOut className="h-4 w-4" />
@@ -350,54 +380,64 @@ function Dashboard() {
               </div>
             }
           >
-            {tab === "generate" && (
-              <GenerateTab
-                user={user}
-                prUrl={prUrl}
-                setPrUrl={setPrUrl}
-                handleGenerate={handleGenerate}
-                generating={generating}
-                isFreeLimitReached={isFreeLimitReached}
-                handleUpgrade={handleUpgrade}
-                error={error}
-                result={result}
-                selectedPost={selectedPost}
-                setSelectedPost={setSelectedPost}
-                handleCopy={handleCopy}
-                copied={copied}
-                setTab={setTab}
-              />
-            )}
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={tab}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+              >
+                {tab === "generate" && (
+                  <GenerateTab
+                    user={user}
+                    prUrl={prUrl}
+                    setPrUrl={setPrUrl}
+                    handleGenerate={handleGenerate}
+                    generating={generating}
+                    isFreeLimitReached={isFreeLimitReached}
+                    handleUpgrade={handleUpgrade}
+                    error={error}
+                    result={result}
+                    selectedPost={selectedPost}
+                    setSelectedPost={setSelectedPost}
+                    handleCopy={handleCopy}
+                    copied={copied}
+                    setTab={setTab}
+                  />
+                )}
 
-            {tab === "history" && (
-              <HistoryTab
-                outputsLoading={outputsLoading}
-                outputs={outputs}
-                user={user}
-                setTab={setTab}
-                qc={qc}
-              />
-            )}
+                {tab === "history" && (
+                  <HistoryTab
+                    outputsLoading={outputsLoading}
+                    outputs={outputs}
+                    user={user}
+                    setTab={setTab}
+                    qc={qc}
+                  />
+                )}
 
-            {tab === "teams" && (
-              <TeamsTab user={user} handleUpgrade={handleUpgrade} />
-            )}
+                {tab === "teams" && (
+                  <TeamsTab user={user} handleUpgrade={handleUpgrade} />
+                )}
 
-            {tab === "settings" && (
-              <SettingsTab
-                user={user}
-                seniority={seniority}
-                setSeniority={setSeniority}
-                tone={tone}
-                setTone={setTone}
-                handleSaveSettings={handleSaveSettings}
-                settingsSaving={settingsSaving}
-                handleUpgrade={handleUpgrade}
-                handlePortal={handlePortal}
-              />
-            )}
+                {tab === "settings" && (
+                  <SettingsTab
+                    user={user}
+                    seniority={seniority}
+                    setSeniority={setSeniority}
+                    tone={tone}
+                    setTone={setTone}
+                    handleSaveSettings={handleSaveSettings}
+                    settingsSaving={settingsSaving}
+                    handleUpgrade={handleUpgrade}
+                    handlePortal={handlePortal}
+                  />
+                )}
 
-            {tab === "security" && <SecurityTab />}
+                {tab === "security" && <SecurityTab />}
+              </motion.div>
+            </AnimatePresence>
           </Suspense>
         </div>
       </main>
