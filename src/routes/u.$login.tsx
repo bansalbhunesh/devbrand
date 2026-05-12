@@ -11,10 +11,12 @@ import {
   Link2,
   Check,
   Sparkles,
+  UserX,
 } from "lucide-react";
 import * as React from "react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+import { Reveal, RevealItem, REVEAL_EASE } from "@/components/site/Reveal";
 
 export const Route = createFileRoute("/u/$login")({
   component: UserProfile,
@@ -31,18 +33,77 @@ function UserProfile() {
 
   if (isLoading)
     return (
-      <div className="min-h-screen grid place-items-center bg-background text-muted-foreground font-mono uppercase tracking-[0.3em] text-[10px]">
-        <div className="flex flex-col items-center gap-4">
-          <Activity className="h-6 w-6 text-blue-500 animate-pulse" />
-          Analyzing credentials...
+      <div className="min-h-screen grid place-items-center bg-background">
+        <div className="flex flex-col items-center gap-8">
+          <div className="relative h-20 w-20 grid place-items-center">
+            <motion.span
+              aria-hidden
+              className="absolute inset-0 rounded-full border border-blue-500/40"
+              animate={{
+                scale: [1, 1.4, 1.8],
+                opacity: [0.5, 0.2, 0],
+              }}
+              transition={{ duration: 2.8, repeat: Infinity, ease: "easeOut" }}
+            />
+            <motion.span
+              aria-hidden
+              className="absolute inset-0 rounded-full border border-blue-500/40"
+              animate={{
+                scale: [1, 1.4, 1.8],
+                opacity: [0.5, 0.2, 0],
+              }}
+              transition={{
+                duration: 2.8,
+                delay: 1.4,
+                repeat: Infinity,
+                ease: "easeOut",
+              }}
+            />
+            <div className="relative h-12 w-12 rounded-full bg-blue-500/10 border border-blue-500/30 grid place-items-center">
+              <Activity className="h-5 w-5 text-blue-500/80" />
+            </div>
+          </div>
+          <span className="text-[10px] font-black tracking-[0.4em] text-muted-foreground uppercase">
+            Analyzing credentials...
+          </span>
         </div>
       </div>
     );
 
   if (!profile)
     return (
-      <div className="min-h-screen grid place-items-center bg-background text-destructive font-mono text-sm">
-        Engineer not found in DevBrand registry.
+      <div className="min-h-screen grid place-items-center bg-background p-6">
+        <div className="max-w-md text-center">
+          <div className="relative h-16 w-16 mx-auto mb-6 grid place-items-center">
+            <motion.span
+              aria-hidden
+              className="absolute inset-0 rounded-full border border-white/15"
+              animate={{
+                scale: [1, 1.35, 1.7],
+                opacity: [0.4, 0.15, 0],
+              }}
+              transition={{ duration: 3.2, repeat: Infinity, ease: "easeOut" }}
+            />
+            <div className="relative h-14 w-14 rounded-full bg-muted border border-border grid place-items-center">
+              <UserX className="h-5 w-5 text-muted-foreground" />
+            </div>
+          </div>
+          <h1 className="text-3xl font-black mb-3 tracking-tighter">
+            Engineer not in registry.
+          </h1>
+          <p className="text-muted-foreground mb-8 font-medium leading-relaxed">
+            We couldn't find a verified DevBrand profile for{" "}
+            <span className="text-foreground font-bold">@{login}</span>. Their
+            impact stories may be private, or they haven't connected GitHub yet.
+          </p>
+          <Link
+            to="/"
+            className="group inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-foreground text-background font-black text-sm transition-all duration-300 shadow-[0_18px_40px_-12px_rgba(0,0,0,0.4)] hover:-translate-y-0.5 hover:shadow-[0_24px_60px_-12px_rgba(0,0,0,0.5)]"
+          >
+            Back to Registry
+            <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+          </Link>
+        </div>
       </div>
     );
 
@@ -101,12 +162,14 @@ function UserProfile() {
               href={`https://github.com/${user.githubLogin}`}
               target="_blank"
               rel="noreferrer"
-              className="px-8 py-4 rounded-2xl border border-border bg-background hover:bg-muted transition-all font-black text-xs uppercase tracking-widest flex items-center gap-3 active:scale-95 shadow-xl shadow-black/5"
+              className="group px-8 py-4 rounded-2xl border border-border bg-background hover:bg-muted hover:border-border-strong transition-all duration-300 font-black text-xs uppercase tracking-widest flex items-center gap-3 shadow-[0_12px_30px_-18px_rgba(0,0,0,0.4)] hover:-translate-y-0.5"
             >
-              <Github className="h-4 w-4" /> Source
+              <Github className="h-4 w-4 transition-transform duration-300 group-hover:rotate-[-8deg]" />{" "}
+              Source
             </a>
-            <button className="px-10 py-4 rounded-2xl bg-foreground text-background font-black text-xs uppercase tracking-[0.2em] hover:opacity-90 transition-all shadow-2xl shadow-foreground/10 active:scale-95">
+            <button className="group px-10 py-4 rounded-2xl bg-foreground text-background font-black text-xs uppercase tracking-[0.2em] transition-all duration-300 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.5)] hover:-translate-y-0.5 hover:shadow-[0_28px_70px_-12px_rgba(0,0,0,0.6)] flex items-center gap-3">
               Connect
+              <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
             </button>
           </div>
         </div>
@@ -121,71 +184,98 @@ function UserProfile() {
               <div className="h-px flex-1 bg-gradient-to-r from-border to-transparent ml-8" />
             </div>
 
-            <div className="grid gap-10">
+            <Reveal
+              stagger={0.08}
+              rootMargin="-10% 0px -10% 0px"
+              className="grid gap-10"
+            >
               {publicOutputs.map((o) => (
-                <Link
-                  key={o.id}
-                  to="/t/$slug"
-                  params={{ slug: o.slug }}
-                  className="group block p-10 rounded-[3rem] border border-border bg-muted/20 hover:border-blue-500/40 hover:bg-muted/40 transition-all duration-500 shadow-2xl shadow-black/5 relative overflow-hidden"
-                >
-                  <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity pointer-events-none">
-                    <Activity className="h-32 w-32" />
-                  </div>
+                <RevealItem key={o.id}>
+                  <Link
+                    to="/t/$slug"
+                    params={{ slug: o.slug }}
+                    className="group block p-10 rounded-[3rem] border border-border bg-muted/20 hover:border-blue-500/40 hover:bg-muted/40 hover:-translate-y-0.5 hover:shadow-[0_32px_80px_-32px_rgba(59,130,246,0.25)] transition-all duration-500 shadow-2xl shadow-black/5 relative overflow-hidden"
+                  >
+                    <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity pointer-events-none">
+                      <Activity className="h-32 w-32" />
+                    </div>
 
-                  <div className="flex items-center justify-between mb-8">
-                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-500 px-3 py-1 rounded-full bg-blue-500/5 border border-blue-500/10">
-                      {o.category}
-                    </span>
-                    <div className="flex items-center gap-3">
-                      <div className="h-1.5 w-24 bg-muted rounded-full overflow-hidden">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          whileInView={{ width: `${o.impactScore}%` }}
-                          className="h-full bg-blue-500"
-                        />
-                      </div>
-                      <span className="text-[10px] font-black text-blue-500/60 uppercase">
-                        {o.impactScore} IMPACT
+                    <div className="flex items-center justify-between mb-8">
+                      <span className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-500 px-3 py-1 rounded-full bg-blue-500/5 border border-blue-500/10">
+                        {o.category}
                       </span>
-                    </div>
-                  </div>
-
-                  <h3 className="text-2xl md:text-3xl font-black mb-6 group-hover:text-blue-500 transition-colors leading-tight tracking-tight">
-                    {o.prTitle}
-                  </h3>
-
-                  <p className="text-lg text-muted-foreground leading-relaxed italic line-clamp-3 mb-10 decoration-blue-500/10 underline-offset-8 decoration-2 underline">
-                    "{o.linkedinPost1}"
-                  </p>
-
-                  <div className="flex items-center justify-between pt-8 border-t border-border/50">
-                    <div className="flex flex-wrap gap-2">
-                      {o.stack?.slice(0, 3).map((s) => (
-                        <span
-                          key={s}
-                          className="px-2.5 py-1 rounded-lg bg-background border border-border text-[9px] font-mono font-black uppercase tracking-tighter text-muted-foreground"
-                        >
-                          {s}
+                      <div className="flex items-center gap-3">
+                        <div className="h-1.5 w-24 bg-muted rounded-full overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            whileInView={{ width: `${o.impactScore}%` }}
+                            transition={{
+                              duration: 0.9,
+                              ease: REVEAL_EASE,
+                            }}
+                            viewport={{ once: true }}
+                            className="h-full bg-blue-500"
+                          />
+                        </div>
+                        <span className="text-[10px] font-black text-blue-500/60 uppercase">
+                          {o.impactScore} IMPACT
                         </span>
-                      ))}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-40 group-hover:opacity-100 transition-all group-hover:translate-x-1">
-                      Full Audit{" "}
-                      <ArrowRight className="h-3.5 w-3.5 text-blue-500" />
+
+                    <h3 className="text-2xl md:text-3xl font-black mb-6 group-hover:text-blue-500 transition-colors leading-tight tracking-tight">
+                      {o.prTitle}
+                    </h3>
+
+                    <p className="text-lg text-muted-foreground leading-relaxed italic line-clamp-3 mb-10 decoration-blue-500/10 underline-offset-8 decoration-2 underline">
+                      "{o.linkedinPost1}"
+                    </p>
+
+                    <div className="flex items-center justify-between pt-8 border-t border-border/50">
+                      <div className="flex flex-wrap gap-2">
+                        {o.stack?.slice(0, 3).map((s) => (
+                          <span
+                            key={s}
+                            className="px-2.5 py-1 rounded-lg bg-background border border-border text-[9px] font-mono font-black uppercase tracking-tighter text-muted-foreground"
+                          >
+                            {s}
+                          </span>
+                        ))}
+                      </div>
+                      <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-40 group-hover:opacity-100 transition-all group-hover:translate-x-1">
+                        Full Audit{" "}
+                        <ArrowRight className="h-3.5 w-3.5 text-blue-500" />
+                      </div>
                     </div>
-                  </div>
-                </Link>
+                  </Link>
+                </RevealItem>
               ))}
 
               {publicOutputs.length === 0 && (
-                <div className="py-32 text-center border-2 border-dashed border-border rounded-[3rem] bg-muted/10">
-                  <p className="text-muted-foreground italic font-medium text-sm">
-                    No impact stories have been cleared for the public registry.
+                <div className="py-32 text-center border-2 border-dashed border-border rounded-[3rem] bg-muted/10 relative overflow-hidden">
+                  <div className="relative w-fit mx-auto mb-6">
+                    <motion.span
+                      aria-hidden
+                      className="absolute inset-0 rounded-full border border-blue-500/25"
+                      animate={{
+                        scale: [1, 1.35, 1.7],
+                        opacity: [0.4, 0.1, 0],
+                      }}
+                      transition={{
+                        duration: 3.2,
+                        repeat: Infinity,
+                        ease: "easeOut",
+                      }}
+                    />
+                    <Activity className="h-10 w-10 text-muted-foreground opacity-30 relative" />
+                  </div>
+                  <p className="text-muted-foreground italic font-medium text-sm max-w-sm mx-auto leading-relaxed">
+                    No impact stories have been cleared for the public registry
+                    yet.
                   </p>
                 </div>
               )}
-            </div>
+            </Reveal>
           </div>
 
           {/* Sidebar */}
@@ -237,12 +327,12 @@ function UserProfile() {
                 </div>
                 <button
                   onClick={handleCopyBadge}
-                  className="w-full py-5 rounded-[1.5rem] bg-background border border-border text-[10px] font-black uppercase tracking-[0.3em] hover:bg-muted transition-all active:scale-95 flex items-center justify-center gap-3"
+                  className="group w-full py-5 rounded-[1.5rem] bg-background border border-border text-[10px] font-black uppercase tracking-[0.3em] hover:bg-muted hover:border-border-strong hover:-translate-y-0.5 hover:shadow-[0_18px_40px_-20px_rgba(0,0,0,0.5)] transition-all duration-300 flex items-center justify-center gap-3"
                 >
                   {copiedBadge ? (
                     <Check className="h-4 w-4 text-green-500" />
                   ) : (
-                    <Link2 className="h-4 w-4" />
+                    <Link2 className="h-4 w-4 transition-transform duration-300 group-hover:rotate-[-8deg]" />
                   )}
                   {copiedBadge ? "COPIED" : "COPY MARKDOWN"}
                 </button>
