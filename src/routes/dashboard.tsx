@@ -16,6 +16,7 @@ import {
   LogOut,
   Shield,
   Github,
+  CalendarClock,
 } from "lucide-react";
 import {
   getSession,
@@ -28,6 +29,7 @@ import {
   verifyPayment,
   getJobStatus,
   getOutputBySlug,
+  listScheduledPosts,
 } from "@/rpc";
 import { cn } from "@/lib/utils";
 
@@ -41,7 +43,14 @@ export const Route = createFileRoute("/dashboard")({
   component: Dashboard,
 });
 
-type Tab = "generate" | "history" | "repos" | "teams" | "settings" | "security";
+type Tab =
+  | "generate"
+  | "history"
+  | "scheduled"
+  | "repos"
+  | "teams"
+  | "settings"
+  | "security";
 
 import { Suspense, lazy } from "react";
 
@@ -73,6 +82,11 @@ const SecurityTab = lazy(() =>
 const TrackedReposTab = lazy(() =>
   import("@/components/dashboard/TrackedReposTab").then((m) => ({
     default: m.TrackedReposTab,
+  })),
+);
+const ScheduledTab = lazy(() =>
+  import("@/components/dashboard/ScheduledTab").then((m) => ({
+    default: m.ScheduledTab,
   })),
 );
 
@@ -116,6 +130,56 @@ function Dashboard() {
       if (pollAbortRef.current) pollAbortRef.current.cancelled = true;
     };
   }, []);
+
+  // Surface "post is ready to share" notifications on dashboard load. Each
+  // ready post is tracked once per browser via localStorage so re-mounts
+  // (router navigation) don't keep re-toasting the same item.
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = (await listScheduledPosts()) as any;
+        if (cancelled) return;
+        const ready: any[] = (res?.posts ?? []).filter(
+          (p: any) => p.status === "READY",
+        );
+        if (ready.length === 0) return;
+        const storageKey = `devbrand:seen-ready:${user.id}`;
+        let seen = new Set<string>();
+        try {
+          const raw = window.localStorage.getItem(storageKey);
+          if (raw) seen = new Set(JSON.parse(raw));
+        } catch {
+          // fall through with empty set — corrupt localStorage shouldn't
+          // suppress the toast forever.
+        }
+        const fresh = ready.filter((p) => !seen.has(p.id));
+        if (fresh.length === 0) return;
+        toast.success(
+          fresh.length === 1
+            ? "1 post ready to share"
+            : `${fresh.length} posts ready to share`,
+          { action: { label: "View", onClick: () => setTab("scheduled") } },
+        );
+        for (const p of fresh) seen.add(p.id);
+        try {
+          window.localStorage.setItem(
+            storageKey,
+            JSON.stringify([...seen].slice(-200)),
+          );
+        } catch {
+          // localStorage full / disabled — swallow; worst case is a repeat toast.
+        }
+      } catch {
+        // Unauthorized / network glitch — silently skip; the user will see
+        // their ready list inside the Scheduled tab anyway.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   const handleGenerate = async () => {
     if (!prUrl.trim() || !user) return;
@@ -286,6 +350,7 @@ function Dashboard() {
               [
                 "generate",
                 "history",
+                "scheduled",
                 "repos",
                 "teams",
                 "settings",
@@ -320,6 +385,7 @@ function Dashboard() {
                   )}
                   {t === "generate" && <Sparkles className="h-4 w-4" />}
                   {t === "history" && <GitPullRequest className="h-4 w-4" />}
+                  {t === "scheduled" && <CalendarClock className="h-4 w-4" />}
                   {t === "repos" && <Github className="h-4 w-4" />}
                   {t === "teams" && <Users className="h-4 w-4" />}
                   {t === "settings" && <BarChart3 className="h-4 w-4" />}
@@ -410,6 +476,7 @@ function Dashboard() {
               [
                 "generate",
                 "history",
+                "scheduled",
                 "repos",
                 "teams",
                 "settings",
@@ -491,6 +558,8 @@ function Dashboard() {
                     qc={qc}
                   />
                 )}
+
+                {tab === "scheduled" && <ScheduledTab />}
 
                 {tab === "repos" && <TrackedReposTab />}
 

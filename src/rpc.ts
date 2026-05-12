@@ -85,6 +85,28 @@ export const trackedRepoIdSchema = z.object({
   id: z.string().uuid(),
 });
 
+export const schedulePostSchema = z.object({
+  outputId: z.string().uuid(),
+  channel: z.enum(["linkedin", "twitter"]),
+  postKind: z.enum([
+    "linkedinPost1",
+    "linkedinPost2",
+    "linkedinPost3",
+    "twitterThread",
+  ]),
+  scheduledFor: z
+    .string()
+    .datetime({ offset: true })
+    .refine(
+      (s) => !Number.isNaN(new Date(s).getTime()),
+      "Must be a parseable ISO datetime",
+    ),
+});
+
+export const scheduledPostIdSchema = z.object({
+  id: z.string().uuid(),
+});
+
 // ── Auth ─────────────────────────────────────────────────────────────────────
 
 export const getSession = createServerFn({ method: "GET" }).handler(
@@ -359,6 +381,33 @@ export const getWrappedStats = createServerFn({ method: "GET" }).handler(
     return getWrappedStatsImpl();
   },
 );
+
+// ── Scheduled Posts ──────────────────────────────────────────────────────────
+
+export const schedulePost = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => schedulePostSchema.parse(data))
+  .handler(async ({ data }) => {
+    await checkRateLimit("schedule_post", 30, 3600);
+    const { schedulePostFn } = await import("@/server/scheduled-posts.server");
+    return schedulePostFn(data);
+  });
+
+export const listScheduledPosts = createServerFn({ method: "GET" }).handler(
+  async () => {
+    const { listScheduledPostsFn } =
+      await import("@/server/scheduled-posts.server");
+    return listScheduledPostsFn();
+  },
+);
+
+export const cancelScheduledPost = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => scheduledPostIdSchema.parse(data))
+  .handler(async ({ data }) => {
+    const { cancelScheduledPostFn } =
+      await import("@/server/scheduled-posts.server");
+    return cancelScheduledPostFn(data);
+  });
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 async function checkRateLimit(

@@ -1,9 +1,19 @@
 import * as React from "react";
-import { ExternalLink, ClipboardCopy, Check, Lock } from "lucide-react";
+import {
+  ExternalLink,
+  ClipboardCopy,
+  Check,
+  Lock,
+  CalendarClock,
+  Loader2,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Stat } from "../HistoryCard";
 import { scaleIn, springs } from "@/lib/animations";
+import { schedulePost } from "@/rpc";
 
 interface GenerateResultProps {
   result: any;
@@ -17,6 +27,21 @@ interface GenerateResultProps {
 
 const postLabels = ["Problem / Outcome", "Tradeoff / Decision", "Learnings"];
 
+type Channel = "linkedin" | "twitter";
+type PostKind =
+  | "linkedinPost1"
+  | "linkedinPost2"
+  | "linkedinPost3"
+  | "twitterThread";
+
+function defaultScheduleValue(): string {
+  // datetime-local inputs need "YYYY-MM-DDTHH:MM" in local time, no Z.
+  // Default to one hour from now to nudge the user toward a sensible delay.
+  const d = new Date(Date.now() + 60 * 60 * 1000);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 export const GenerateResult = React.memo(
   ({
     result,
@@ -27,6 +52,53 @@ export const GenerateResult = React.memo(
     user,
     handleUpgrade,
   }: GenerateResultProps) => {
+    const qc = useQueryClient();
+    const [scheduleOpen, setScheduleOpen] = React.useState(false);
+    const [channel, setChannel] = React.useState<Channel>("linkedin");
+    const [postKind, setPostKind] = React.useState<PostKind>("linkedinPost1");
+    const [when, setWhen] = React.useState<string>(defaultScheduleValue());
+
+    React.useEffect(() => {
+      const kinds: PostKind[] = [
+        "linkedinPost1",
+        "linkedinPost2",
+        "linkedinPost3",
+      ];
+      if (channel === "linkedin") {
+        setPostKind(kinds[selectedPost] ?? "linkedinPost1");
+      } else {
+        setPostKind("twitterThread");
+      }
+    }, [channel, selectedPost]);
+
+    const schedule = useMutation({
+      mutationFn: async () =>
+        schedulePost({
+          data: {
+            outputId: result.id,
+            channel,
+            postKind,
+            scheduledFor: new Date(when).toISOString(),
+          },
+        }),
+      onSuccess: () => {
+        toast.success(
+          "Scheduled — we'll surface the share URL when it's ready",
+        );
+        setScheduleOpen(false);
+        qc.invalidateQueries({ queryKey: ["scheduled-posts"] });
+      },
+      onError: (e: any) => {
+        const msg = e?.message ?? "";
+        if (msg.includes("SCHEDULED_FOR_TOO_SOON")) {
+          toast.error("Pick a time at least a minute from now");
+        } else if (msg.includes("RATE_LIMIT")) {
+          toast.error("You've scheduled a lot recently — try again in a bit");
+        } else {
+          toast.error("Couldn't schedule that post");
+        }
+      },
+    });
     return (
       <motion.div
         variants={scaleIn}
@@ -119,6 +191,18 @@ export const GenerateResult = React.memo(
                   )}
                 </button>
                 <button
+                  onClick={() => setScheduleOpen((v) => !v)}
+                  aria-label="Schedule this post"
+                  className={cn(
+                    "group/sched h-9 w-9 rounded-xl border grid place-items-center transition-all duration-300",
+                    scheduleOpen
+                      ? "bg-blue-500/15 border-blue-500/40 text-blue-300"
+                      : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20 hover:-translate-y-0.5 text-muted-foreground",
+                  )}
+                >
+                  <CalendarClock className="h-4 w-4 transition-transform duration-300 group-hover/sched:rotate-[-8deg]" />
+                </button>
+                <button
                   onClick={() => {
                     handleCopy(
                       [
@@ -165,6 +249,96 @@ export const GenerateResult = React.memo(
                   ][selectedPost]
                 }
               </motion.div>
+            </AnimatePresence>
+
+            <AnimatePresence>
+              {scheduleOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8, height: 0 }}
+                  animate={{ opacity: 1, y: 0, height: "auto" }}
+                  exit={{ opacity: 0, y: -8, height: 0 }}
+                  transition={{ duration: 0.25 }}
+                  className="mt-6 rounded-2xl border border-white/10 bg-black/30 overflow-hidden"
+                >
+                  <div className="p-5 space-y-4">
+                    <div className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-400">
+                      Schedule for later
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <label className="flex flex-col gap-1.5">
+                        <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">
+                          Channel
+                        </span>
+                        <select
+                          value={channel}
+                          onChange={(e) =>
+                            setChannel(e.target.value as Channel)
+                          }
+                          className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm focus:outline-none focus:border-blue-500/40"
+                        >
+                          <option value="linkedin">LinkedIn</option>
+                          <option value="twitter">Twitter / X</option>
+                        </select>
+                      </label>
+                      <label className="flex flex-col gap-1.5">
+                        <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">
+                          Variant
+                        </span>
+                        <select
+                          value={postKind}
+                          onChange={(e) =>
+                            setPostKind(e.target.value as PostKind)
+                          }
+                          className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm focus:outline-none focus:border-blue-500/40"
+                        >
+                          {channel === "linkedin" ? (
+                            <>
+                              <option value="linkedinPost1">
+                                Problem / Outcome
+                              </option>
+                              <option value="linkedinPost2">
+                                Tradeoff / Decision
+                              </option>
+                              <option value="linkedinPost3">Learnings</option>
+                            </>
+                          ) : (
+                            <option value="twitterThread">Thread</option>
+                          )}
+                        </select>
+                      </label>
+                      <label className="flex flex-col gap-1.5">
+                        <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">
+                          When
+                        </span>
+                        <input
+                          type="datetime-local"
+                          value={when}
+                          onChange={(e) => setWhen(e.target.value)}
+                          className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm focus:outline-none focus:border-blue-500/40"
+                        />
+                      </label>
+                    </div>
+                    <div className="flex items-center justify-end gap-2 pt-1">
+                      <button
+                        onClick={() => setScheduleOpen(false)}
+                        className="px-4 py-2 rounded-lg text-[11px] font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={() => schedule.mutate()}
+                        disabled={schedule.isPending}
+                        className="px-5 py-2 rounded-lg bg-blue-600 text-white text-[11px] font-black uppercase tracking-widest hover:bg-blue-500 disabled:opacity-50 transition flex items-center gap-2"
+                      >
+                        {schedule.isPending && (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        )}
+                        Schedule
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
             </AnimatePresence>
           </div>
         </div>
