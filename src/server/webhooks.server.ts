@@ -1,6 +1,6 @@
 import crypto from "crypto";
-import { db } from "./db";
-import { users, userEvents } from "./schema";
+import { db } from "./db.server";
+import { users, userEvents } from "./schema.server";
 import { and, eq, sql } from "drizzle-orm";
 import { env } from "../lib/env";
 
