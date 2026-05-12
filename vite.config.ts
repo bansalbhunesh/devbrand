@@ -14,11 +14,6 @@ export default defineConfig({
     tailwindcss(),
     tsconfigPaths(),
   ],
-  resolve: {
-    alias: {
-      "@tanstack/react-start/api": "@tanstack/react-start",
-    },
-  },
   build: {
     minify: "terser",
     terserOptions: {
