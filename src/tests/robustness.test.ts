@@ -16,9 +16,9 @@ vi.mock("../server/schema", () => ({
   repoGraphs: { owner: "owner", repo: "repo", computedAt: "computed_at" },
 }));
 
-import { analyzeStaticMetrics } from "../server/engine/layer1";
-import { computeGraphMetrics } from "../server/engine/layer2";
-import { analyzeInvisibleWork } from "../server/engine/layer4";
+import { analyzeStaticMetrics } from "../server/engine/layer1.server";
+import { computeGraphMetrics } from "../server/engine/layer2.server";
+import { analyzeInvisibleWork } from "../server/engine/layer4.server";
 import type { EnrichedPR, DependencyGraph } from "../server/engine/types";
 
 describe("Engine Robustness & Edge Cases", () => {

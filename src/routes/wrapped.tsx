@@ -24,7 +24,8 @@ export const Route = createFileRoute("/wrapped")({
 
 function WrappedPage() {
   const matches = useMatches();
-  const session = (matches.find((m) => m.id === "__root")?.context as any)?.session;
+  const session = (matches.find((m) => m.id === "__root")?.context as any)
+    ?.session;
   const [slide, setSlide] = React.useState(0);
 
   const { data: stats, isLoading } = useQuery({
@@ -312,7 +313,6 @@ function WrappedPage() {
           <ChevronRight className="h-6 w-6" />
         </button>
       </div>
-
 
       <div className="absolute top-12 right-12 flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-[9px] font-black uppercase tracking-widest text-white/40">
         <ShieldCheck className="h-3.5 w-3.5" /> Immutable Engineering Signal

@@ -9,7 +9,8 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 export function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const matches = useMatches();
-  const session = (matches.find((m) => m.id === "__root")?.context as any)?.session;
+  const session = (matches.find((m) => m.id === "__root")?.context as any)
+    ?.session;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50);

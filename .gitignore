@@ -37,3 +37,6 @@ next-env.d.ts
 /dist
 /.wrangler
 /.tanstack
+
+# tool output
+lint_results.json

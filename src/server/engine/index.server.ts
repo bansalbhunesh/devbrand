@@ -1,20 +1,30 @@
-import { ingestAndPreprocessPR } from "./layer0";
-import { analyzeStaticMetrics } from "./layer1";
-import { analyzeDependencyGraph } from "./layer2";
-import { computeImpactProfile } from "./layer3";
-import { analyzeInvisibleWork } from "./layer4";
-import { generateNarrative } from "./layer5";
-import { runLayer6 } from "./layer6";
-import { runLayer7 } from "./layer7";
+import { ingestAndPreprocessPR } from "./layer0.server";
+import { analyzeStaticMetrics } from "./layer1.server";
+import { analyzeDependencyGraph } from "./layer2.server";
+import { computeImpactProfile } from "./layer3.server";
+import { analyzeInvisibleWork } from "./layer4.server";
+import { generateNarrative, consumeLayer5Usage } from "./layer5.server";
+import { runLayer6 } from "./layer6.server";
+import { consumeLayer6Usage } from "./layer6.server";
+import { runLayer7 } from "./layer7.server";
+import { sumUsage, ZeroUsage, type TokenUsage } from "../llm/client";
 import type { NarrativeDraft, UserContext, GraphImpactReport } from "./types";
 
 import { logger } from "@/lib/logger";
+
+export type EngineResult = {
+  narrative: NarrativeDraft;
+  usage: TokenUsage;
+};
 
 export async function runEngine(
   prUrl: string,
   userId: string,
   context: UserContext,
-): Promise<NarrativeDraft> {
+): Promise<EngineResult> {
+  // Reset accumulators so prior runs in the same process don't leak.
+  consumeLayer5Usage();
+  consumeLayer6Usage();
   try {
     logger.info("Engine start", { userId, prUrl });
 
@@ -50,7 +60,7 @@ export async function runEngine(
     );
 
     // NEW: Extract User Preferences (Layer 7 Active Learning)
-    const { extractUserPreferences } = await import("./layer7");
+    const { extractUserPreferences } = await import("./layer7.server");
     const userPreferences = await extractUserPreferences(userId);
 
     // Layer 5: Narrative Generation
@@ -75,14 +85,26 @@ export async function runEngine(
     // Layer 7: Feedback Loop & Continuous Learning
     const finalNarrative = await runLayer7(userId, verifiedNarrative);
 
+    const usage = sumUsage([
+      consumeLayer5Usage(),
+      consumeLayer6Usage(),
+    ]) as TokenUsage;
+
     logger.info("Engine success", {
       userId,
       prUrl,
       impactScore: finalNarrative.impactScore,
+      usage,
     });
-    return finalNarrative;
+    return { narrative: finalNarrative, usage };
   } catch (err: any) {
     logger.error(err, { userId, prUrl });
+    // Drain accumulators on failure so a half-finished run doesn't poison the next.
+    consumeLayer5Usage();
+    consumeLayer6Usage();
     throw err;
   }
 }
+
+// Re-export so callers don't need to know which submodule defines the helper.
+export { ZeroUsage } from "../llm/client";

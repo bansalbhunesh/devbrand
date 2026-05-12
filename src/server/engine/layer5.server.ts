@@ -1,5 +1,20 @@
-import { completeText, normalizeLlmJsonText } from "../llm/client";
+import {
+  completeText,
+  normalizeLlmJsonText,
+  sumUsage,
+  ZeroUsage,
+  type TokenUsage,
+} from "../llm/client";
 import type { NarrativeRequest, NarrativeDraft } from "./types";
+
+// Module-scoped usage accumulator; reset by generateNarrative on entry.
+let _layer5Usage: TokenUsage = { ...ZeroUsage };
+
+export function consumeLayer5Usage(): TokenUsage {
+  const u = _layer5Usage;
+  _layer5Usage = { ...ZeroUsage };
+  return u;
+}
 
 async function generateSingleDraft(
   request: NarrativeRequest,
@@ -35,13 +50,15 @@ STRICT FORMATTING:
   let attempts = 0;
   while (attempts < 3) {
     try {
-      const rawContent = await completeText({
+      const result = await completeText({
         system: systemPrompt,
         user: userMessage,
         maxTokens: 2500,
         temperature,
+        cacheSystem: true,
       });
-      const cleaned = normalizeLlmJsonText(rawContent);
+      _layer5Usage = sumUsage([_layer5Usage, result.usage]);
+      const cleaned = normalizeLlmJsonText(result.text);
       return JSON.parse(cleaned);
     } catch (e) {
       attempts++;

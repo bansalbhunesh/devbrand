@@ -25,6 +25,13 @@ const envSchema = z.object({
   // Cache & Rate Limiting
   UPSTASH_REDIS_REST_URL: z.string().url(),
   UPSTASH_REDIS_REST_TOKEN: z.string().min(1),
+  // Dev-only escape hatch: when "true", rate limiting allows requests if Redis is
+  // unreachable. Never set this in production — Upstash incidents would uncap the
+  // Anthropic budget. Default is fail-closed.
+  RATE_LIMIT_FAIL_OPEN: z
+    .enum(["true", "false"])
+    .optional()
+    .transform((v) => v === "true"),
 
   // Auth
   GITHUB_CLIENT_ID: z.string().min(1),

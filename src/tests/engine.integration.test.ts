@@ -19,15 +19,18 @@ import {
   runLayer6,
   verifyCitations,
   computeSelfConsistency,
-} from "../server/engine/layer6";
+} from "../server/engine/layer6.server";
 import {
   analyzeStaticMetrics,
   calculateCyclomaticComplexity,
   calculateChurnScore,
-} from "../server/engine/layer1";
-import { computeGraphMetrics, resolvePath } from "../server/engine/layer2";
-import { computeImpactProfile } from "../server/engine/layer3";
-import { analyzeInvisibleWork } from "../server/engine/layer4";
+} from "../server/engine/layer1.server";
+import {
+  computeGraphMetrics,
+  resolvePath,
+} from "../server/engine/layer2.server";
+import { computeImpactProfile } from "../server/engine/layer3.server";
+import { analyzeInvisibleWork } from "../server/engine/layer4.server";
 import type {
   DependencyGraph,
   EnrichedPR,

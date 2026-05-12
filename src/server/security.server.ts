@@ -8,12 +8,12 @@ export interface AnomalyReport {
 export async function analyzeIPBehavior(): Promise<AnomalyReport> {
   const events = await readSecurityEvents(200);
   const ipCounts: Record<string, number> = {};
-  
+
   const now = Date.now();
   const fiveMinutesAgo = now - 5 * 60 * 1000;
 
   for (const event of events) {
-    if (event.timestamp > fiveMinutesAgo) {
+    if (event.timestamp.getTime() > fiveMinutesAgo) {
       ipCounts[event.ip] = (ipCounts[event.ip] || 0) + 1;
     }
   }

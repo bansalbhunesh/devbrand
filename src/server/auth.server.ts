@@ -58,7 +58,7 @@ async function getKey(): Promise<CryptoKey> {
     ["sign", "verify"],
   );
 }
-async function signState(state: string): Promise<string> {
+export async function signState(state: string): Promise<string> {
   const key = await getKey();
   const enc = new TextEncoder();
   const sig = await crypto.subtle.sign("HMAC", key, enc.encode(state));
@@ -69,16 +69,16 @@ async function signState(state: string): Promise<string> {
   return `${state}.${sigB64}`;
 }
 
-async function verifyState(signedState: string): Promise<string | null> {
+export async function verifyState(signedState: string): Promise<string | null> {
   const parts = signedState.split(".");
   if (parts.length !== 2) return null;
   const [state, sigB64] = parts;
   const key = await getKey();
   const enc = new TextEncoder();
-  
+
   const normalizedSig = sigB64.replace(/-/g, "+").replace(/_/g, "/");
   const sig = Uint8Array.from(atob(normalizedSig), (c) => c.charCodeAt(0));
-  
+
   const valid = await crypto.subtle.verify("HMAC", key, sig, enc.encode(state));
   return valid ? state : null;
 }
@@ -361,7 +361,9 @@ const settingsSchema = z.object({
   targetAudience: z.enum(["recruiter", "manager", "peer", "founder"]),
 });
 
-export async function updateUserSettingsFn(data: z.infer<typeof settingsSchema>) {
+export async function updateUserSettingsFn(
+  data: z.infer<typeof settingsSchema>,
+) {
   const user = await loadSessionUser();
   if (!user) throw new Error("UNAUTHORIZED");
   await db
@@ -438,6 +440,9 @@ export async function signInWithGithubFn() {
   };
 }
 
-export async function handleGithubCallbackFn(data: { code: string; state?: string }) {
+export async function handleGithubCallbackFn(data: {
+  code: string;
+  state?: string;
+}) {
   return completeGithubOAuth(data);
 }

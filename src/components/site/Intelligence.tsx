@@ -96,14 +96,23 @@ export function Intelligence() {
                   <div className="h-1.5 w-1.5 rounded-full bg-purple-500 animate-pulse" />
                 </div>
                 <div className="space-y-2 text-muted-foreground">
-                  <TypewriterText text='SET analyst_mode = PRECISE' delay={0} />
-                  <TypewriterText text='ENFORCE citation_model = TRUE' delay={1.5} />
-                  <TypewriterText text='FORBID buzzwords = ["game-changer", "revolutionary"]' delay={3} />
-                  <TypewriterText text='PRIORITIZE structural_impact = TRUE' delay={4.5} />
-                  
+                  <TypewriterText text="SET analyst_mode = PRECISE" delay={0} />
+                  <TypewriterText
+                    text="ENFORCE citation_model = TRUE"
+                    delay={1.5}
+                  />
+                  <TypewriterText
+                    text='FORBID buzzwords = ["game-changer", "revolutionary"]'
+                    delay={3}
+                  />
+                  <TypewriterText
+                    text="PRIORITIZE structural_impact = TRUE"
+                    delay={4.5}
+                  />
+
                   <div className="h-px bg-border my-6" />
-                  
-                  <motion.p 
+
+                  <motion.p
                     initial={{ opacity: 0 }}
                     whileInView={{ opacity: 1 }}
                     transition={{ delay: 6 }}

@@ -1,4 +1,10 @@
-import { completeText, normalizeLlmJsonText } from "../llm/client";
+import {
+  completeText,
+  normalizeLlmJsonText,
+  sumUsage,
+  ZeroUsage,
+  type TokenUsage,
+} from "../llm/client";
 import type {
   NarrativeDraft,
   EnrichedPR,
@@ -6,6 +12,14 @@ import type {
   ImpactProfile,
   Citation,
 } from "./types";
+
+let _layer6Usage: TokenUsage = { ...ZeroUsage };
+
+export function consumeLayer6Usage(): TokenUsage {
+  const u = _layer6Usage;
+  _layer6Usage = { ...ZeroUsage };
+  return u;
+}
 
 function normalizeSemanticResult(parsed: Record<string, unknown>): {
   verified: boolean;
@@ -32,14 +46,16 @@ async function verifySemanticClaim(
     // Step 1: Initial Verification
     const verifySystem =
       'You are a code verification agent. Determine if the technical CLAIM is supported by the provided DIFF PATCH. Respond ONLY in JSON: { "verified": boolean, "reason": "string", "confidence": number (0-1) }';
-    const content = await completeText({
+    const verifyResult = await completeText({
       system: verifySystem,
       user: `CLAIM: ${claim}\n\nDIFF:\n${patch}`,
       maxTokens: 300,
       temperature: 0,
+      cacheSystem: true,
     });
+    _layer6Usage = sumUsage([_layer6Usage, verifyResult.usage]);
     const initialResult = normalizeSemanticResult(
-      JSON.parse(normalizeLlmJsonText(content) || "{}"),
+      JSON.parse(normalizeLlmJsonText(verifyResult.text) || "{}"),
     );
 
     // Step 2: Self-Correction Loop (The "Adversarial" Check)
@@ -47,13 +63,17 @@ async function verifySemanticClaim(
     if (initialResult.verified && initialResult.confidence < 0.9) {
       const advSystem =
         'You are an adversarial code reviewer. Your goal is to find why the CLAIM might NOT be fully supported by the DIFF. If you find a flaw, explain it. Respond in JSON: { "flawFound": boolean, "explanation": "string" }';
-      const advRaw = await completeText({
+      const advResultRaw = await completeText({
         system: advSystem,
         user: `CLAIM: ${claim}\n\nDIFF:\n${patch}`,
         maxTokens: 300,
         temperature: 0,
+        cacheSystem: true,
       });
-      const advResult = JSON.parse(normalizeLlmJsonText(advRaw) || "{}");
+      _layer6Usage = sumUsage([_layer6Usage, advResultRaw.usage]);
+      const advResult = JSON.parse(
+        normalizeLlmJsonText(advResultRaw.text) || "{}",
+      );
 
       if (advResult.flawFound) {
         return {

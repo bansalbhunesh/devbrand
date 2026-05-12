@@ -1,5 +1,5 @@
-import { db } from "../db";
-import { userEvents, reputationHistory } from "../schema";
+import { db } from "../db.server";
+import { userEvents, reputationHistory } from "../schema.server";
 
 import { eq, desc } from "drizzle-orm";
 import type { NarrativeDraft } from "./types";
@@ -49,14 +49,18 @@ export function applyFeedbackLoop(
   draft: NarrativeDraft,
   feedback: GlobalFeedback,
 ): NarrativeDraft {
-  // If the user's average impact score is high, we might be over-indexing on hype.
-  // Apply a "Hype Score" based on the correction rate and average scores.
-  const hypeScore = feedback.avgImpactScore > 80 ? 0.8 : 0.4;
+  // Continuous hypeScore: scales with avgImpactScore and rises when the user
+  // rarely corrects (high acceptance = the model may be too generous).
+  // Replaces the two-state `> 80 ? 0.8 : 0.4` ladder.
+  const acceptance = 1 - Math.min(1, feedback.userCorrectionRate);
+  const hypeScore = Math.min(
+    1,
+    Math.max(0, (feedback.avgImpactScore || 0) / 100) * 0.7 + acceptance * 0.3,
+  );
 
   return {
     ...draft,
     hypeScore,
-    // Adjust draft content if needed (e.g., if correction rate is high, lower the confidence)
     selfConsistencyScore:
       draft.selfConsistencyScore * (1 - feedback.userCorrectionRate),
   };
@@ -108,27 +112,67 @@ export async function extractUserPreferences(
 
   const editEvents = events.filter((e) => e.eventType === "edit_output");
 
-  // Heuristic-based preference extraction
   let totalLengthDelta = 0;
-  const keywords = new Set<string>();
+  let totalBeforeLength = 0;
+  const keywordCounts = new Map<string, number>();
+  const STOP_WORDS = new Set([
+    "the",
+    "and",
+    "that",
+    "this",
+    "with",
+    "from",
+    "your",
+    "their",
+    "have",
+    "been",
+    "will",
+    "they",
+    "what",
+    "when",
+    "which",
+    "system",
+    "function",
+    "value",
+    "should",
+    "would",
+  ]);
 
   editEvents.forEach((e) => {
     const payload = e.payload as any;
     if (payload.before && payload.after) {
       totalLengthDelta += payload.after.length - payload.before.length;
-      // Extract added words as potential keywords
+      totalBeforeLength += payload.before.length;
       const words = payload.after.split(/\s+/);
       words.forEach((w: string) => {
-        if (w.length > 5) keywords.add(w.toLowerCase());
+        const lowered = w.toLowerCase().replace(/[^a-z0-9]/g, "");
+        if (lowered.length > 5 && !STOP_WORDS.has(lowered)) {
+          keywordCounts.set(lowered, (keywordCounts.get(lowered) || 0) + 1);
+        }
       });
     }
   });
 
+  // Continuous conciseness: ratio of net deletion to baseline length, clamped.
+  // Replaces the prior two-state `< 0 ? 0.8 : 0.4`.
+  const conciseness =
+    totalBeforeLength > 0
+      ? Math.min(
+          1,
+          Math.max(0, 0.5 - totalLengthDelta / (totalBeforeLength * 2)),
+        )
+      : 0.5;
+
+  const frequentKeywords = Array.from(keywordCounts.entries())
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 10)
+    .map(([k]) => k);
+
   return {
-    conciseness: totalLengthDelta < 0 ? 0.8 : 0.4,
+    conciseness,
     technicalDepth: 0.6, // Default
     tone: "professional",
-    frequentKeywords: Array.from(keywords).slice(0, 10),
+    frequentKeywords,
   };
 }
 
@@ -136,9 +180,12 @@ export async function runLayer7(
   userId: string,
   draft: NarrativeDraft,
 ): Promise<NarrativeDraft> {
-  const feedback = await getGlobalFeedback(userId);
-
-  const preferences = await extractUserPreferences(userId);
+  // Both helpers hit userEvents for the same user. Running them sequentially
+  // doubled DB round-trips. Independent — fan out and join.
+  const [feedback, preferences] = await Promise.all([
+    getGlobalFeedback(userId),
+    extractUserPreferences(userId),
+  ]);
 
   const finalDraft = applyFeedbackLoop(draft, feedback);
 

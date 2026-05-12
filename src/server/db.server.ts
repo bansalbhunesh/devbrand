@@ -18,12 +18,14 @@ function createDb() {
     console.warn("⚠️ DATABASE_URL is not set. Database operations will fail.");
     return new Proxy({} as any, {
       get() {
-        throw new Error("Database client accessed before DATABASE_URL was initialized.");
+        throw new Error(
+          "Database client accessed before DATABASE_URL was initialized.",
+        );
       },
     });
   }
 
-  const pool = new Pool({ 
+  const pool = new Pool({
     connectionString: databaseUrl,
     connectionTimeoutMillis: 10000, // 10s timeout
     max: 10, // Limit pool size for serverless
@@ -39,6 +41,10 @@ export const db = new Proxy({} as ReturnType<typeof createDb>, {
     if (!_db) {
       _db = createDb();
     }
-    return (Object.getOwnPropertyDescriptor(_db, prop)?.value || (_db as any)[prop])?.bind?.(_db) || (_db as any)[prop];
+    return (
+      (
+        Object.getOwnPropertyDescriptor(_db, prop)?.value || (_db as any)[prop]
+      )?.bind?.(_db) || (_db as any)[prop]
+    );
   },
 });

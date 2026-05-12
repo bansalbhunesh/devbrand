@@ -36,7 +36,8 @@ export function Hero() {
   const [loggingIn, setLoggingIn] = useState(false);
 
   const matches = useMatches();
-  const session = (matches.find((m) => m.id === "__root")?.context as any)?.session;
+  const session = (matches.find((m) => m.id === "__root")?.context as any)
+    ?.session;
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -51,14 +52,20 @@ export function Hero() {
   const cardY = useMotionValue(0);
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
-  
-  const rotateX = useSpring(useTransform(cardY, [-300, 300], [15, -15]), springConfig);
-  const rotateY = useSpring(useTransform(cardX, [-300, 300], [-15, 15]), springConfig);
+
+  const rotateX = useSpring(
+    useTransform(cardY, [-300, 300], [15, -15]),
+    springConfig,
+  );
+  const rotateY = useSpring(
+    useTransform(cardX, [-300, 300], [-15, 15]),
+    springConfig,
+  );
 
   useEffect(() => {
     const el = cardRef.current;
     if (!el) return;
-    
+
     const onMove = (e: MouseEvent) => {
       const r = el.getBoundingClientRect();
       const centerX = r.left + r.width / 2;
@@ -70,7 +77,7 @@ export function Hero() {
       const my = e.clientY - r.top;
       el.style.setProperty("--mx", `${mx}px`);
       el.style.setProperty("--my", `${my}px`);
-      
+
       mouseX.set(e.clientX);
       mouseY.set(e.clientY);
     };
@@ -108,26 +115,27 @@ export function Hero() {
   };
 
   return (
-    <section 
+    <section
       ref={containerRef}
       className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden pt-32 pb-20"
     >
       {/* Cinematic Overlays */}
       <NeuralBackground />
       <div className="absolute inset-0 bg-grid pointer-events-none opacity-[0.1]" />
-      
+
       {/* Cursor Spotlight */}
-      <motion.div 
+      <motion.div
         className="pointer-events-none absolute -inset-px opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-0"
         style={{
           background: useTransform(
             [mouseX, mouseY],
-            ([x, y]) => `radial-gradient(600px circle at ${x as number}px ${y as number}px, oklch(65% 0.2 250 / 0.05), transparent 80%)`
-          )
+            ([x, y]) =>
+              `radial-gradient(600px circle at ${x as number}px ${y as number}px, oklch(65% 0.2 250 / 0.05), transparent 80%)`,
+          ),
         }}
       />
 
-      <motion.div 
+      <motion.div
         style={{ opacity, scale, y }}
         className="relative z-10 mx-auto max-w-7xl px-6 w-full"
       >
@@ -138,7 +146,7 @@ export function Hero() {
             transition={{ duration: 1, ease: "easeOut" }}
             className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.4em] text-blue-500/80 border border-blue-500/20 rounded-full px-4 py-2 bg-blue-500/5 backdrop-blur-xl mb-12"
           >
-            <ShieldCheck className="h-3 w-3" /> 
+            <ShieldCheck className="h-3 w-3" />
             Verified Engineering Intelligence
           </motion.div>
 
@@ -146,7 +154,7 @@ export function Hero() {
             <h1 className="text-7xl md:text-9xl lg:text-[12rem] font-black tracking-[-0.08em] leading-[0.8] text-balance">
               <span className="inline-block relative">
                 <TextReveal text="SYSTEMS" delay={0.2} />
-                <motion.div 
+                <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: "100%" }}
                   transition={{ delay: 1, duration: 1, ease: "circOut" }}
@@ -159,14 +167,14 @@ export function Hero() {
               </span>
             </h1>
           </div>
-          
+
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 1.5, delay: 1.4 }}
             className="max-w-2xl text-[18px] md:text-[22px] leading-relaxed text-muted-foreground/50 text-pretty font-medium mb-16 tracking-tight"
           >
-            DevBrand transforms the invisible labor of engineering into 
+            DevBrand transforms the invisible labor of engineering into
             verifiable high-fidelity career leverage.
           </motion.p>
 
@@ -201,7 +209,7 @@ export function Hero() {
                 </button>
               )}
             </AnimatePresence>
-            
+
             <a
               href="#demo"
               className="inline-flex items-center gap-4 px-10 py-5 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-3xl hover:bg-white/10 text-foreground transition-all font-black text-xs uppercase tracking-[0.2em]"
@@ -233,7 +241,9 @@ export function Hero() {
               <div className="flex items-center gap-6">
                 <button
                   onClick={() => {
-                    navigator.clipboard?.writeText("https://devbrand.app/t/9f2c");
+                    navigator.clipboard?.writeText(
+                      "https://devbrand.app/t/9f2c",
+                    );
                     setCopied(true);
                     setTimeout(() => setCopied(false), 1400);
                   }}
@@ -258,16 +268,25 @@ export function Hero() {
                     commit: 9f2c7a1
                   </div>
                   <h3 className="text-2xl md:text-3xl font-bold leading-tight tracking-tight">
-                    "Optimized concurrent cache hydration with distributed mutex"
+                    "Optimized concurrent cache hydration with distributed
+                    mutex"
                   </h3>
                   <div className="flex items-center gap-6">
                     <div className="flex flex-col">
-                      <span className="text-[9px] font-black text-muted-foreground/30 uppercase tracking-widest mb-1">Delta</span>
-                      <span className="text-xs font-black text-green-500">+2,401</span>
+                      <span className="text-[9px] font-black text-muted-foreground/30 uppercase tracking-widest mb-1">
+                        Delta
+                      </span>
+                      <span className="text-xs font-black text-green-500">
+                        +2,401
+                      </span>
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-[9px] font-black text-muted-foreground/30 uppercase tracking-widest mb-1">Impact</span>
-                      <span className="text-xs font-black text-blue-500">Z-Tier</span>
+                      <span className="text-[9px] font-black text-muted-foreground/30 uppercase tracking-widest mb-1">
+                        Impact
+                      </span>
+                      <span className="text-xs font-black text-blue-500">
+                        Z-Tier
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -281,14 +300,14 @@ export function Hero() {
                 </div>
                 <div className="relative">
                   <p className="text-xl leading-relaxed text-foreground/90 font-medium italic">
-                    "Architected a resilient synchronization layer that eliminated 
-                    race conditions during global cache invalidation. Reduced 
-                    tail latency by 42% at peak load."
+                    "Architected a resilient synchronization layer that
+                    eliminated race conditions during global cache invalidation.
+                    Reduced tail latency by 42% at peak load."
                   </p>
                   <div className="mt-12 pt-12 border-t border-white/5 grid grid-cols-2 gap-8">
                     <div className="space-y-2">
                       <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
-                        <motion.div 
+                        <motion.div
                           initial={{ width: 0 }}
                           animate={{ width: "85%" }}
                           transition={{ delay: 3, duration: 1.5 }}
@@ -302,7 +321,7 @@ export function Hero() {
                     </div>
                     <div className="space-y-2">
                       <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
-                        <motion.div 
+                        <motion.div
                           initial={{ width: 0 }}
                           animate={{ width: "92%" }}
                           transition={{ delay: 3.2, duration: 1.5 }}
@@ -325,21 +344,31 @@ export function Hero() {
   );
 }
 
-function FloatingIcon({ icon, delay, top, left }: { icon: React.ReactNode; delay: number; top: string; left: string }) {
+function FloatingIcon({
+  icon,
+  delay,
+  top,
+  left,
+}: {
+  icon: React.ReactNode;
+  delay: number;
+  top: string;
+  left: string;
+}) {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0 }}
-      animate={{ 
-        opacity: [0.2, 0.5, 0.2], 
+      animate={{
+        opacity: [0.2, 0.5, 0.2],
         scale: 1,
         y: [0, -30, 0],
-        rotate: [0, 15, -15, 0]
+        rotate: [0, 15, -15, 0],
       }}
-      transition={{ 
-        duration: 10, 
-        delay, 
+      transition={{
+        duration: 10,
+        delay,
         repeat: Infinity,
-        ease: "easeInOut"
+        ease: "easeInOut",
       }}
       className="absolute text-blue-400/40"
       style={{ top, left }}

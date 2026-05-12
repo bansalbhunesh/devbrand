@@ -44,9 +44,10 @@ export function analyzeInvisibleWork(
     // 2. Code Cleanup / Tech Debt Elimination
     const isCodeCleanup =
       diff.deletions > diff.additions * 2 && diff.deletions > 20;
-    const hasTechDebtMarkers = ["todo", "fixme", "hack", "workaround"].some(
-      (m) => (diff.patch || "").toLowerCase().includes(m),
-    );
+    // Match as comment-style tokens, not substrings. Previously `"hack"`
+    // matched `hackathon`, `hack-week`, anything containing the substring.
+    const TECH_DEBT_RE = /\b(TODO|FIXME|HACK|XXX|WORKAROUND)\b/;
+    const hasTechDebtMarkers = TECH_DEBT_RE.test(diff.patch || "");
 
     if (
       isCodeCleanup ||
@@ -95,6 +96,44 @@ export function analyzeInvisibleWork(
     0,
   );
 
+  // overlookedIndicators: surface real signals that the engine noticed but
+  // didn't classify into a category. Replaces the prior hardcoded `[]`.
+  const overlookedIndicators: import("./types").OverlookedIndicator[] = [];
+  if (refactoredFiles.length > 0 && cleanupFiles.length === 0) {
+    overlookedIndicators.push({
+      indicator: "Refactor without cleanup",
+      evidence: `${refactoredFiles.length} files restructured but no deletion-heavy file detected.`,
+      impact: "Architectural improvement may be under-credited.",
+      category: "refactoring",
+    });
+  }
+  const pureDeletion = enrichedPR.diffs.filter(
+    (d) => d.deletions > 0 && d.additions === 0 && d.deletions > 30,
+  );
+  if (pureDeletion.length > 0) {
+    overlookedIndicators.push({
+      indicator: "Pure-deletion files present",
+      evidence: `${pureDeletion.length} file(s) with >30 lines removed and no additions.`,
+      impact: "Cleanup/tech-debt elimination may be under-credited.",
+      category: "tech_debt",
+    });
+  }
+
+  // detectionConfidence: derive from how much AST signal we actually got.
+  // Replaces the prior flat 0.9. When astDiffs are empty (large PR truncated
+  // or only binary files), we should be honest about lower confidence.
+  const nonEmptyAst = enrichedPR.astDiffs.filter(
+    (a) => a.beforeSymbols.length + a.afterSymbols.length > 0,
+  ).length;
+  const astCoverage =
+    enrichedPR.astDiffs.length > 0
+      ? nonEmptyAst / enrichedPR.astDiffs.length
+      : 0;
+  const detectionConfidence = Math.min(
+    0.95,
+    Math.max(0.4, 0.5 + astCoverage * 0.4),
+  );
+
   return {
     categories,
     totalInvisibleEffort: invisibleWorkScore,
@@ -105,7 +144,7 @@ export function analyzeInvisibleWork(
       ratio: invisibleWorkScore / (enrichedPR.diffs.length || 1),
       estimatedTotalHours: (enrichedPR.diffs.length + invisibleWorkScore) * 0.5,
     },
-    overlookedIndicators: [],
-    detectionConfidence: 0.9, // Upgraded from 0.75 due to AST usage
+    overlookedIndicators,
+    detectionConfidence,
   };
 }

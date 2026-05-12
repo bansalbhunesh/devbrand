@@ -1,4 +1,9 @@
-import { createFileRoute, redirect, Link, useMatches } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  redirect,
+  Link,
+  useMatches,
+} from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -66,7 +71,8 @@ const SecurityTab = lazy(() =>
 
 function Dashboard() {
   const matches = useMatches();
-  const user = (matches.find((m) => m.id === "__root")?.context as any)?.session;
+  const user = (matches.find((m) => m.id === "__root")?.context as any)
+    ?.session;
   const [tab, setTab] = useState<Tab>("generate");
   const [prUrl, setPrUrl] = useState("");
   const [result, setResult] = useState<any>(null);
@@ -209,7 +215,9 @@ function Dashboard() {
             <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 grid place-items-center shadow-2xl shadow-blue-500/40 group-hover:scale-110 transition-transform duration-500">
               <span className="text-[14px] font-black text-white">DB</span>
             </div>
-            <span className="font-black tracking-tighter text-xl gradient-text">DevBrand</span>
+            <span className="font-black tracking-tighter text-xl gradient-text">
+              DevBrand
+            </span>
           </Link>
 
           <nav className="space-y-2">

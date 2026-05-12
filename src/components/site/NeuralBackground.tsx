@@ -14,7 +14,7 @@ export function NeuralBackground() {
 
     let animationFrameId: number;
     let particles: Particle[] = [];
-    let mouse = { x: 0, y: 0, radius: 150 };
+    const mouse = { x: 0, y: 0, radius: 150 };
 
     const resize = () => {
       canvas.width = window.innerWidth;

@@ -21,7 +21,7 @@ export async function processRazorpayWebhookRaw(
 
   const sigBuffer = Buffer.from(signature);
   const expectedBuffer = Buffer.from(expectedSignature);
-  
+
   if (
     sigBuffer.length !== expectedBuffer.length ||
     !crypto.timingSafeEqual(sigBuffer, expectedBuffer)

@@ -99,8 +99,7 @@ export async function generateRoastFn(data: {
   const commitMessages = pushEvents
     .flatMap(
       (e) =>
-        ((e.payload as any).commits as any[])?.map((c: any) => c.message) ??
-        [],
+        ((e.payload as any).commits as any[])?.map((c: any) => c.message) ?? [],
     )
     .filter(Boolean)
     .slice(0, 20);
@@ -162,13 +161,14 @@ OUTPUT JSON SCHEMA:
 
 Return ONLY valid JSON. No preamble.`;
 
-  const rawContent = await completeText({
+  const llmResult = await completeText({
     system: systemPrompt,
     user: JSON.stringify(profileSummary, null, 2),
     maxTokens: 1000,
     temperature: 0.8,
+    cacheSystem: true,
   });
-  const cleaned = normalizeLlmJsonText(rawContent);
+  const cleaned = normalizeLlmJsonText(llmResult.text);
   const output = RoastOutputSchema.parse(JSON.parse(cleaned));
 
   const [inserted] = await db
@@ -193,6 +193,7 @@ Return ONLY valid JSON. No preamble.`;
           username,
           criticality: output.criticality,
           roastId: inserted.id,
+          usage: llmResult.usage,
         },
       }),
     ]);
@@ -206,8 +207,10 @@ export async function postToXFn(data: { id: string; content: string }) {
   const user = await loadSessionUser();
   if (!user) throw new Error("UNAUTHORIZED");
 
-  console.log(`[X_BROADCAST] User ${user.githubLogin} posted roast ${data.id}: ${data.content}`);
-  
+  console.log(
+    `[X_BROADCAST] User ${user.githubLogin} posted roast ${data.id}: ${data.content}`,
+  );
+
   await db.insert(userEvents).values({
     userId: user.id,
     eventType: "social_share",

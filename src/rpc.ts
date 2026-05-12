@@ -5,27 +5,96 @@ import { z } from "zod";
  * ELITE ARCHITECTURE: The RPC Bridge.
  * This file is now the ONLY place in the project where createServerFn is defined.
  * IT MUST NOT HAVE ANY TOP-LEVEL SERVER IMPORTS.
+ *
+ * Every mutating endpoint MUST validate input with a Zod schema. Pass-through
+ * validators (`(data: any) => data`) accept arbitrary JSON and break the
+ * type contract for downstream `.server.ts` handlers.
  */
+
+// ── Input Schemas ────────────────────────────────────────────────────────────
+// Exported so tests can target them directly without spinning up TanStack Start.
+
+export const githubCallbackSchema = z.object({
+  code: z.string().min(1).max(1024),
+  state: z.string().min(1).max(1024).optional(),
+});
+
+export const userSettingsSchema = z.object({
+  seniority: z.enum(["junior", "mid", "senior", "staff"]),
+  tone: z.enum(["direct", "storytelling", "technical"]),
+  targetAudience: z.enum(["recruiter", "manager", "peer", "founder"]),
+});
+
+export const transformPRSchema = z.object({
+  prUrl: z
+    .string()
+    .url()
+    .regex(
+      /^https:\/\/github\.com\/[^/]+\/[^/]+\/pull\/\d+/,
+      "Must be a GitHub PR URL",
+    ),
+  userId: z.string().uuid().optional(),
+});
+
+export const toggleVisibilitySchema = z.object({
+  outputId: z.string().uuid(),
+  isPublic: z.boolean(),
+});
+
+export const roastSchema = z.object({
+  username: z
+    .string()
+    .min(1)
+    .max(39)
+    .regex(
+      /^[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?$/,
+      "Invalid GitHub login",
+    ),
+  userId: z.string().uuid().optional(),
+  tone: z.enum(["salty", "helpful", "nuclear", "technical"]),
+});
+
+export const verifyPaymentSchema = z.object({
+  razorpay_order_id: z.string().min(1).max(128),
+  razorpay_payment_id: z.string().min(1).max(128),
+  razorpay_signature: z.string().min(1).max(256),
+});
+
+export const postToXSchema = z.object({
+  id: z.string().uuid(),
+  content: z.string().min(1).max(4000),
+});
 
 // ── Auth ─────────────────────────────────────────────────────────────────────
 
-export const getSession = createServerFn({ method: "GET" }).handler(async () => {
-  const { getSessionFn } = await import("@/server/auth.server");
-  return getSessionFn();
-});
+export const getSession = createServerFn({ method: "GET" }).handler(
+  async () => {
+    const { getSessionFn } = await import("@/server/auth.server");
+    return getSessionFn();
+  },
+);
 
 export const logout = createServerFn({ method: "POST" }).handler(async () => {
   const { logoutFn } = await import("@/server/auth.server");
   return logoutFn();
 });
 
-export const signInWithGithub = createServerFn({ method: "GET" }).handler(async () => {
-  const { signInWithGithubFn } = await import("@/server/auth.server");
-  return signInWithGithubFn();
-});
+export const logoutAllDevices = createServerFn({ method: "POST" }).handler(
+  async () => {
+    const { logoutAllDevicesFn } = await import("@/server/auth.server");
+    return logoutAllDevicesFn();
+  },
+);
+
+export const signInWithGithub = createServerFn({ method: "GET" }).handler(
+  async () => {
+    const { signInWithGithubFn } = await import("@/server/auth.server");
+    return signInWithGithubFn();
+  },
+);
 
 export const handleGithubCallback = createServerFn({ method: "POST" })
-  .inputValidator((data: any) => data)
+  .inputValidator((data: unknown) => githubCallbackSchema.parse(data))
   .handler(async ({ data }) => {
     await checkRateLimit("auth_callback", 10, 60);
     const { handleGithubCallbackFn } = await import("@/server/auth.server");
@@ -33,7 +102,7 @@ export const handleGithubCallback = createServerFn({ method: "POST" })
   });
 
 export const updateUserSettings = createServerFn({ method: "POST" })
-  .inputValidator((data: any) => data)
+  .inputValidator((data: unknown) => userSettingsSchema.parse(data))
   .handler(async ({ data }) => {
     await checkRateLimit("user_settings", 20, 60);
     const { updateUserSettingsFn } = await import("@/server/auth.server");
@@ -45,28 +114,34 @@ export const updateUserSettings = createServerFn({ method: "POST" })
 export const getBadgeData = createServerFn({ method: "GET" })
   .inputValidator((login: string) => login)
   .handler(async ({ data: login }) => {
-    const { getBadgeDataImpl } = await import("@/server/rpc-implementation.server");
+    const { getBadgeDataImpl } =
+      await import("@/server/rpc-implementation.server");
     return getBadgeDataImpl(login);
   });
 
 export const getProfileData = createServerFn({ method: "GET" })
   .inputValidator((login: string) => login)
   .handler(async ({ data: login }) => {
-    const { getProfileDataImpl } = await import("@/server/rpc-implementation.server");
+    const { getProfileDataImpl } =
+      await import("@/server/rpc-implementation.server");
     return getProfileDataImpl(login);
   });
 
 export const getTeamImpact = createServerFn({ method: "GET" })
   .inputValidator((teamId: string) => teamId)
   .handler(async ({ data: teamId }) => {
-    const { getTeamImpactImpl } = await import("@/server/rpc-implementation.server");
+    const { getTeamImpactImpl } =
+      await import("@/server/rpc-implementation.server");
     return getTeamImpactImpl(teamId);
   });
 
-export const getPublicFeed = createServerFn({ method: "GET" }).handler(async () => {
-  const { getPublicFeedImpl } = await import("@/server/rpc-implementation.server");
-  return getPublicFeedImpl();
-});
+export const getPublicFeed = createServerFn({ method: "GET" }).handler(
+  async () => {
+    const { getPublicFeedImpl } =
+      await import("@/server/rpc-implementation.server");
+    return getPublicFeedImpl();
+  },
+);
 
 export const getRoast = createServerFn({ method: "GET" })
   .inputValidator((id: string) => id)
@@ -85,31 +160,37 @@ export const getOutputBySlug = createServerFn({ method: "GET" })
     const { db } = await import("@/server/db.server");
     const { outputs } = await import("@/server/schema.server");
     const { eq } = await import("drizzle-orm");
-    return db.query.outputs.findFirst({ where: eq(outputs.slug, slug), with: { user: true } });
+    return db.query.outputs.findFirst({
+      where: eq(outputs.slug, slug),
+      with: { user: true },
+    });
   });
 
 export const transformPR = createServerFn({ method: "POST" })
-  .inputValidator((data: any) => data)
+  .inputValidator((data: unknown) => transformPRSchema.parse(data))
   .handler(async ({ data }) => {
     await checkRateLimit("transform_pr", 5, 3600); // Strict limit for heavy AI ops
     const { transformPRFn } = await import("@/server/transform.server");
     return transformPRFn(data);
   });
 
-export const getUserOutputs = createServerFn({ method: "GET" }).handler(async () => {
-  const { getUserOutputsFn } = await import("@/server/transform.server");
-  return getUserOutputsFn();
-});
+export const getUserOutputs = createServerFn({ method: "GET" }).handler(
+  async () => {
+    const { getUserOutputsFn } = await import("@/server/transform.server");
+    return getUserOutputsFn();
+  },
+);
 
 export const toggleOutputVisibility = createServerFn({ method: "POST" })
-  .inputValidator((data: any) => data)
+  .inputValidator((data: unknown) => toggleVisibilitySchema.parse(data))
   .handler(async ({ data }) => {
-    const { toggleOutputVisibilityFn } = await import("@/server/transform.server");
+    const { toggleOutputVisibilityFn } =
+      await import("@/server/transform.server");
     return toggleOutputVisibilityFn(data);
   });
 
 export const generateRoast = createServerFn({ method: "POST" })
-  .inputValidator((data: any) => data)
+  .inputValidator((data: unknown) => roastSchema.parse(data))
   .handler(async ({ data }) => {
     await checkRateLimit("generate_roast", 10, 3600); // Heavy AI ops
     const { generateRoastFn } = await import("@/server/roast.server");
@@ -118,26 +199,31 @@ export const generateRoast = createServerFn({ method: "POST" })
 
 // ── Billing ──────────────────────────────────────────────────────────────────
 
-export const createCheckoutSession = createServerFn({ method: "POST" }).handler(async () => {
-  await checkRateLimit("checkout", 5, 3600);
-  const { createCheckoutSessionFn } = await import("@/server/billing.server");
-  return createCheckoutSessionFn();
-});
+export const createCheckoutSession = createServerFn({ method: "POST" }).handler(
+  async () => {
+    await checkRateLimit("checkout", 5, 3600);
+    const { createCheckoutSessionFn } = await import("@/server/billing.server");
+    return createCheckoutSessionFn();
+  },
+);
 
 export const verifyPayment = createServerFn({ method: "POST" })
-  .inputValidator((data: any) => data)
+  .inputValidator((data: unknown) => verifyPaymentSchema.parse(data))
   .handler(async ({ data }) => {
     const { verifyPaymentFn } = await import("@/server/billing.server");
     return verifyPaymentFn(data);
   });
 
-export const getReferralData = createServerFn({ method: "GET" }).handler(async () => {
-  const { loadSessionUser } = await import("@/server/auth.server");
-  const session = await loadSessionUser();
-  if (!session) throw new Error("Unauthorized");
-  const { getReferralDataImpl } = await import("@/server/rpc-implementation.server");
-  return getReferralDataImpl(session.id);
-});
+export const getReferralData = createServerFn({ method: "GET" }).handler(
+  async () => {
+    const { loadSessionUser } = await import("@/server/auth.server");
+    const session = await loadSessionUser();
+    if (!session) throw new Error("Unauthorized");
+    const { getReferralDataImpl } =
+      await import("@/server/rpc-implementation.server");
+    return getReferralDataImpl(session.id);
+  },
+);
 
 export const getJobStatus = createServerFn({ method: "GET" })
   .inputValidator((jobId: string) => jobId)
@@ -146,74 +232,92 @@ export const getJobStatus = createServerFn({ method: "GET" })
     return getJobStatusFn(jobId);
   });
 
-export const getAdminStats = createServerFn({ method: "GET" }).handler(async () => {
-  const { ensureAdmin } = await import("@/server/auth.server");
-  await ensureAdmin();
+export const getAdminStats = createServerFn({ method: "GET" }).handler(
+  async () => {
+    const { ensureAdmin } = await import("@/server/auth.server");
+    await ensureAdmin();
 
-  const { listAllJobsFn } = await import("@/server/jobs.server");
-  const { readSecurityEvents } = await import("@/server/redis");
-  const { analyzeIPBehavior } = await import("@/server/security.server");
-  const { db } = await import("@/server/db.server");
-  const { users } = await import("@/server/schema.server");
-  const { count } = await import("drizzle-orm");
+    const { listAllJobsFn } = await import("@/server/jobs.server");
+    const { readSecurityEvents } = await import("@/server/redis");
+    const { analyzeIPBehavior } = await import("@/server/security.server");
+    const { db } = await import("@/server/db.server");
+    const { users } = await import("@/server/schema.server");
+    const { count } = await import("drizzle-orm");
 
-  const [jobs, securityEvents, userCount, anomalyReport] = await Promise.all([
-    listAllJobsFn(),
-    readSecurityEvents(100),
-    db.select({ count: count() }).from(users),
-    analyzeIPBehavior(),
-  ]);
+    const [jobs, securityEvents, userCount, anomalyReport] = await Promise.all([
+      listAllJobsFn(),
+      readSecurityEvents(100),
+      db.select({ count: count() }).from(users),
+      analyzeIPBehavior(),
+    ]);
 
-  return {
-    jobs,
-    securityEvents,
-    anomalyReport,
-    stats: {
-      totalUsers: userCount[0].count,
-      activeJobs: jobs.filter(j => j.status === 'PROCESSING').length,
-      failedJobs: jobs.filter(j => j.status === 'FAILED').length,
-    },
-  };
-});
+    return {
+      jobs,
+      securityEvents,
+      anomalyReport,
+      stats: {
+        totalUsers: userCount[0].count,
+        activeJobs: jobs.filter((j) => j.status === "PROCESSING").length,
+        failedJobs: jobs.filter((j) => j.status === "FAILED").length,
+      },
+    };
+  },
+);
 
-export const getSecurityEvents = createServerFn({ method: "GET" }).handler(async () => {
-  const { ensureAdmin } = await import("@/server/auth.server");
-  await ensureAdmin();
-  const { getSecurityEventsImpl } = await import("@/server/rpc-implementation.server");
-  return getSecurityEventsImpl();
-});
+export const getSecurityEvents = createServerFn({ method: "GET" }).handler(
+  async () => {
+    const { ensureAdmin } = await import("@/server/auth.server");
+    await ensureAdmin();
+    const { getSecurityEventsImpl } =
+      await import("@/server/rpc-implementation.server");
+    return getSecurityEventsImpl();
+  },
+);
 
-export const getDemoOutputs = createServerFn({ method: "GET" }).handler(async () => {
-  const { getDemoOutputsImpl } = await import("@/server/rpc-implementation.server");
-  return getDemoOutputsImpl();
-});
+export const getDemoOutputs = createServerFn({ method: "GET" }).handler(
+  async () => {
+    const { getDemoOutputsImpl } =
+      await import("@/server/rpc-implementation.server");
+    return getDemoOutputsImpl();
+  },
+);
 
-export const createBillingPortal = createServerFn({ method: "POST" }).handler(async () => {
-  const { createBillingPortalFn } = await import("@/server/billing.server");
-  return createBillingPortalFn();
-});
+export const createBillingPortal = createServerFn({ method: "POST" }).handler(
+  async () => {
+    const { createBillingPortalFn } = await import("@/server/billing.server");
+    return createBillingPortalFn();
+  },
+);
 
 export const postToX = createServerFn({ method: "POST" })
-  .inputValidator((data: any) => data)
+  .inputValidator((data: unknown) => postToXSchema.parse(data))
   .handler(async ({ data }) => {
     const { postToXFn } = await import("@/server/roast.server");
     return postToXFn(data);
   });
 
-export const getWrappedStats = createServerFn({ method: "GET" }).handler(async () => {
-  const { getWrappedStatsImpl } = await import("@/server/rpc-implementation.server");
-  return getWrappedStatsImpl();
-});
+export const getWrappedStats = createServerFn({ method: "GET" }).handler(
+  async () => {
+    const { getWrappedStatsImpl } =
+      await import("@/server/rpc-implementation.server");
+    return getWrappedStatsImpl();
+  },
+);
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-async function checkRateLimit(key: string, limit: number = 60, window: number = 60) {
+async function checkRateLimit(
+  key: string,
+  limit: number = 60,
+  window: number = 60,
+) {
   const { getRequest } = await import("@tanstack/react-start/server");
   const request = getRequest();
-  const ip = request?.headers.get("x-forwarded-for")?.split(",")[0] || "127.0.0.1";
-  
+  const ip =
+    request?.headers.get("x-forwarded-for")?.split(",")[0] || "127.0.0.1";
+
   const { rateLimit } = await import("@/server/redis");
   const { success } = await rateLimit(`rpc:${key}:${ip}`, limit, window);
-  
+
   if (!success) {
     throw new Error("RATE_LIMIT_REACHED");
   }
