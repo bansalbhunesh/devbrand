@@ -10,8 +10,11 @@ import {
   ShieldCheck,
   Check,
   Link2,
+  Ghost,
 } from "lucide-react";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
+import { Reveal, RevealItem } from "@/components/site/Reveal";
 
 import { getPublicSiteUrl } from "@/lib/public-site";
 
@@ -62,18 +65,76 @@ function RoastPage() {
 
   if (isLoading)
     return (
-      <div className="min-h-screen grid place-items-center bg-[#050505] text-white font-mono uppercase tracking-[0.3em] text-[10px]">
-        <div className="flex flex-col items-center gap-4">
-          <Flame className="h-6 w-6 text-red-500 animate-pulse" />
-          Decrypting humiliation...
+      <div className="min-h-screen grid place-items-center bg-[#050505] text-white">
+        <div className="flex flex-col items-center gap-8">
+          <div className="relative h-20 w-20 grid place-items-center">
+            <motion.span
+              aria-hidden
+              className="absolute inset-0 rounded-full border border-red-500/40"
+              animate={{
+                scale: [1, 1.4, 1.8],
+                opacity: [0.5, 0.2, 0],
+              }}
+              transition={{ duration: 2.8, repeat: Infinity, ease: "easeOut" }}
+            />
+            <motion.span
+              aria-hidden
+              className="absolute inset-0 rounded-full border border-red-500/40"
+              animate={{
+                scale: [1, 1.4, 1.8],
+                opacity: [0.5, 0.2, 0],
+              }}
+              transition={{
+                duration: 2.8,
+                delay: 1.4,
+                repeat: Infinity,
+                ease: "easeOut",
+              }}
+            />
+            <div className="relative h-12 w-12 rounded-full bg-red-500/10 border border-red-500/30 grid place-items-center">
+              <Flame className="h-5 w-5 text-red-500/80" />
+            </div>
+          </div>
+          <span className="font-mono uppercase tracking-[0.3em] text-[10px] text-muted-foreground">
+            Decrypting humiliation...
+          </span>
         </div>
       </div>
     );
 
   if (!roastData)
     return (
-      <div className="min-h-screen grid place-items-center bg-[#050505] text-white font-bold">
-        Roast not found.
+      <div className="min-h-screen grid place-items-center bg-[#050505] text-white p-6">
+        <div className="max-w-md text-center">
+          <div className="relative h-16 w-16 mx-auto mb-6 grid place-items-center">
+            <motion.span
+              aria-hidden
+              className="absolute inset-0 rounded-full border border-red-500/25"
+              animate={{
+                scale: [1, 1.35, 1.7],
+                opacity: [0.4, 0.15, 0],
+              }}
+              transition={{ duration: 3.2, repeat: Infinity, ease: "easeOut" }}
+            />
+            <div className="relative h-14 w-14 rounded-full bg-white/5 border border-white/15 grid place-items-center">
+              <Ghost className="h-5 w-5 text-white/60" />
+            </div>
+          </div>
+          <h1 className="text-3xl font-black mb-3 tracking-tighter">
+            Roast not found.
+          </h1>
+          <p className="text-muted-foreground mb-8 font-medium leading-relaxed">
+            This judgment has been redacted or never existed. The registry keeps
+            no record.
+          </p>
+          <Link
+            to="/#roast"
+            className="group inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-red-500 text-white font-black text-sm transition-all duration-300 shadow-[0_18px_40px_-12px_rgba(239,68,68,0.5)] hover:-translate-y-0.5 hover:shadow-[0_24px_60px_-12px_rgba(239,68,68,0.65)]"
+          >
+            Roast Someone Else
+            <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+          </Link>
+        </div>
       </div>
     );
 
@@ -105,8 +166,12 @@ function RoastPage() {
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-red-500/5 rounded-full blur-[140px] -translate-y-1/2 pointer-events-none" />
       <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-red-500/5 rounded-full blur-[100px] translate-y-1/2 pointer-events-none" />
 
-      <div className="max-w-3xl w-full relative z-10">
-        <div className="text-center mb-16">
+      <Reveal
+        stagger={0.12}
+        rootMargin="0px"
+        className="max-w-3xl w-full relative z-10"
+      >
+        <RevealItem className="text-center mb-16">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] font-black tracking-widest uppercase mb-6">
             <Flame className="h-3.5 w-3.5" /> High Criticality Roast
           </div>
@@ -118,9 +183,9 @@ function RoastPage() {
             <span className="h-1 w-1 rounded-full bg-red-500/30" />
             <span className="text-foreground">@{roastData.githubUsername}</span>
           </p>
-        </div>
+        </RevealItem>
 
-        <div className="p-12 md:p-20 rounded-[3rem] border border-white/5 bg-white/5 backdrop-blur-2xl relative group mb-16 shadow-2xl shadow-red-500/5 overflow-hidden">
+        <RevealItem className="p-12 md:p-20 rounded-[3rem] border border-white/5 bg-white/5 backdrop-blur-2xl relative group mb-16 shadow-2xl shadow-red-500/5 overflow-hidden">
           <div className="absolute top-0 right-0 p-12 opacity-[0.01] group-hover:opacity-[0.03] transition-opacity duration-1000 pointer-events-none">
             <Flame className="h-64 w-64" />
           </div>
@@ -155,34 +220,36 @@ function RoastPage() {
               </div>
             </div>
           </div>
-        </div>
+        </RevealItem>
 
-        <div className="flex flex-col items-center gap-12">
+        <RevealItem className="flex flex-col items-center gap-12">
           <div className="flex flex-wrap items-center justify-center gap-4">
             <button
               onClick={handlePostToX}
               disabled={posting}
-              className="flex items-center gap-3 px-10 py-5 rounded-2xl bg-white text-black font-black text-sm hover:brightness-90 transition shadow-2xl shadow-white/10 disabled:opacity-50 active:scale-95"
+              className="group flex items-center gap-3 px-10 py-5 rounded-2xl bg-white text-black font-black text-sm transition-all duration-300 shadow-[0_24px_60px_-16px_rgba(255,255,255,0.25)] hover:-translate-y-0.5 hover:shadow-[0_32px_80px_-16px_rgba(255,255,255,0.4)] disabled:opacity-50 disabled:translate-y-0"
             >
-              <Twitter className="h-5 w-5" />{" "}
+              <Twitter className="h-5 w-5 transition-transform duration-300 group-hover:-rotate-6" />{" "}
               {posting ? "Broadcasting..." : "Broadcast to X"}
             </button>
             <a
               href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "")}`}
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-3 px-10 py-5 rounded-2xl bg-[#0077b5] text-white font-black text-sm hover:brightness-110 transition shadow-2xl shadow-blue-500/20 active:scale-95"
+              className="group flex items-center gap-3 px-10 py-5 rounded-2xl bg-[#0077b5] text-white font-black text-sm transition-all duration-300 shadow-[0_24px_60px_-16px_rgba(0,119,181,0.5)] hover:-translate-y-0.5 hover:shadow-[0_32px_80px_-16px_rgba(0,119,181,0.7)]"
             >
-              <Share2 className="h-5 w-5" /> LinkedIn fallout
+              <Share2 className="h-5 w-5 transition-transform duration-300 group-hover:-rotate-6" />{" "}
+              LinkedIn fallout
             </a>
             <button
               onClick={handleCopyLink}
-              className="p-5 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 transition-all active:scale-95"
+              className="group p-5 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20 hover:-translate-y-0.5 transition-all duration-300"
+              aria-label="Copy roast link"
             >
               {copied ? (
                 <Check className="h-5 w-5 text-green-500" />
               ) : (
-                <Link2 className="h-5 w-5" />
+                <Link2 className="h-5 w-5 transition-transform duration-300 group-hover:rotate-[-8deg]" />
               )}
             </button>
           </div>
@@ -197,8 +264,8 @@ function RoastPage() {
               <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
-        </div>
-      </div>
+        </RevealItem>
+      </Reveal>
 
       <footer className="absolute bottom-12 left-1/2 -translate-x-1/2 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/30">
         <ShieldCheck className="h-3 w-3" /> Proof of technical Hubris registered
