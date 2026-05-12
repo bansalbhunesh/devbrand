@@ -7,6 +7,7 @@ import {
   ShieldCheck,
   Star,
 } from "lucide-react";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface TeamsTabProps {
@@ -86,9 +87,10 @@ export function TeamsTab({ user, handleUpgrade }: TeamsTabProps) {
             </p>
             <button
               onClick={handleUpgrade}
-              className="px-8 py-4 rounded-2xl bg-blue-500 text-white font-black text-sm hover:scale-105 transition-all shadow-2xl shadow-blue-500/20 flex items-center gap-3"
+              className="group px-8 py-4 rounded-2xl bg-blue-500 text-white font-black text-sm transition-all duration-300 shadow-[0_24px_60px_-16px_rgba(59,130,246,0.45)] hover:-translate-y-0.5 hover:shadow-[0_32px_80px_-16px_rgba(59,130,246,0.6)] flex items-center gap-3"
             >
-              Upgrade to Pro <ArrowRight className="h-4 w-4" />
+              Upgrade to Pro{" "}
+              <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
             </button>
           </div>
 
@@ -138,10 +140,16 @@ export function TeamsTab({ user, handleUpgrade }: TeamsTabProps) {
                 </h4>
                 <div className="h-24 w-full flex items-end gap-1.5 pb-2">
                   {[40, 70, 45, 90, 65, 80, 100, 85].map((h, i) => (
-                    <div
+                    <motion.div
                       key={i}
+                      initial={{ height: 0 }}
+                      animate={{ height: `${h}%` }}
+                      transition={{
+                        delay: 0.2 + i * 0.05,
+                        duration: 0.6,
+                        ease: [0.16, 1, 0.3, 1],
+                      }}
                       className="flex-1 bg-blue-500/20 rounded-t-sm"
-                      style={{ height: `${h}%` }}
                     />
                   ))}
                 </div>
@@ -151,7 +159,7 @@ export function TeamsTab({ user, handleUpgrade }: TeamsTabProps) {
                 </div>
               </div>
 
-              <div className="rounded-3xl border border-border bg-blue-500/5 p-8 border-blue-500/10">
+              <div className="rounded-3xl border border-blue-500/15 bg-blue-500/5 p-8">
                 <div className="flex items-center gap-2 text-blue-500 mb-2">
                   <Star className="h-4 w-4 fill-blue-500" />
                   <span className="text-xs font-black uppercase tracking-widest">
