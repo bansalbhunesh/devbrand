@@ -72,12 +72,13 @@ export const backgroundJobs = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     type: text("type").notNull(),
-    status: text("status").notNull().default("PENDING"), // PENDING | PROCESSING | COMPLETED | FAILED
+    status: text("status").notNull().default("PENDING"), // PENDING | PROCESSING | COMPLETED | FAILED | CANCELLED
     payload: jsonb("payload").$type<any>(),
     result: jsonb("result").$type<any>(),
     error: text("error"),
     retryCount: integer("retry_count").default(0),
     maxRetries: integer("max_retries").default(3),
+    scheduledFor: timestamp("scheduled_for", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -430,4 +431,45 @@ export const digests = pgTable(
 
 export const digestsRelations = relations(digests, ({ one }) => ({
   user: one(users, { fields: [digests.userId], references: [users.id] }),
+}));
+
+export const scheduledPosts = pgTable(
+  "scheduled_posts",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    outputId: uuid("output_id")
+      .notNull()
+      .references(() => outputs.id, { onDelete: "cascade" }),
+    channel: text("channel").notNull(), // linkedin | twitter
+    postKind: text("post_kind").notNull(), // linkedinPost1 | linkedinPost2 | linkedinPost3 | twitterThread
+    scheduledFor: timestamp("scheduled_for", { withTimezone: true }).notNull(),
+    status: text("status").notNull().default("SCHEDULED"), // SCHEDULED | READY | CANCELLED | FAILED
+    jobId: uuid("job_id").references(() => backgroundJobs.id),
+    readyAt: timestamp("ready_at", { withTimezone: true }),
+    shareUrl: text("share_url"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("scheduled_posts_user_idx").on(t.userId),
+    index("scheduled_posts_status_idx").on(t.status, t.scheduledFor),
+  ],
+);
+
+export const scheduledPostsRelations = relations(scheduledPosts, ({ one }) => ({
+  user: one(users, { fields: [scheduledPosts.userId], references: [users.id] }),
+  output: one(outputs, {
+    fields: [scheduledPosts.outputId],
+    references: [outputs.id],
+  }),
+  job: one(backgroundJobs, {
+    fields: [scheduledPosts.jobId],
+    references: [backgroundJobs.id],
+  }),
 }));

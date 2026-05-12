@@ -6,8 +6,8 @@
  * Run:  npx tsx scratch/introspect-drift.ts
  */
 import { Pool } from "@neondatabase/serverless";
-import { readFileSync, existsSync } from "fs";
-import { join } from "path";
+import { readFileSync, existsSync } from "node:fs";
+import { resolve } from "node:path";
 import {
   users,
   profiles,
@@ -24,23 +24,32 @@ import {
   webhookDeliveries,
   userPostEdits,
   digests,
+  scheduledPosts,
 } from "../src/server/schema.server";
 import { getTableConfig } from "drizzle-orm/pg-core";
 
-function loadDatabaseUrl(): string | undefined {
-  if (process.env.DATABASE_URL) return process.env.DATABASE_URL;
-  const envPath = existsSync(join(process.cwd(), ".env"))
-    ? join(process.cwd(), ".env")
-    : join(process.cwd(), "..", ".env");
-  if (!existsSync(envPath)) return undefined;
-  for (const line of readFileSync(envPath, "utf-8").split(/\r?\n/)) {
-    const m = line.match(/^DATABASE_URL\s*=\s*(.+)$/);
-    if (m) return m[1].trim().replace(/^['"]|['"]$/g, "");
+function envFromDotEnv(): Record<string, string> {
+  const candidates = [
+    resolve(process.cwd(), ".env"),
+    resolve(process.cwd(), "../.env"),
+    resolve(process.cwd(), "../../.env"),
+    resolve(process.cwd(), "../../../.env"),
+    resolve(process.cwd(), "../../../../.env"),
+  ];
+  const path = candidates.find((p) => existsSync(p));
+  if (!path) return {};
+  const out: Record<string, string> = {};
+  for (const line of readFileSync(path, "utf8").split(/\r?\n/)) {
+    if (!line || line.trimStart().startsWith("#")) continue;
+    const eq = line.indexOf("=");
+    if (eq < 0) continue;
+    out[line.slice(0, eq).trim()] = line.slice(eq + 1).trim();
   }
-  return undefined;
+  return out;
 }
 
-const url = loadDatabaseUrl();
+const url =
+  process.env.DATABASE_URL ?? envFromDotEnv().DATABASE_URL ?? undefined;
 if (!url) {
   console.error("DATABASE_URL is not set");
   process.exit(2);
@@ -62,6 +71,7 @@ const CODE_TABLES = [
   webhookDeliveries,
   userPostEdits,
   digests,
+  scheduledPosts,
 ];
 
 async function main() {

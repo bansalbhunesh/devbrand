@@ -1,7 +1,8 @@
 import { db } from "./db.server";
-import { backgroundJobs } from "./schema.server";
+import { backgroundJobs, scheduledPosts, outputs } from "./schema.server";
 import { eq, sql, inArray } from "drizzle-orm";
 import { loadSessionUser } from "./auth.server";
+import { env } from "../lib/env";
 
 export async function createJobFn(data: { type: string; payload: any }) {
   const user = await loadSessionUser();
@@ -123,6 +124,7 @@ export async function claimPendingJobs(
        SELECT id FROM background_jobs
         WHERE status = 'PENDING'
           AND ${typeFilter}
+          AND (scheduled_for IS NULL OR scheduled_for <= now())
         ORDER BY created_at ASC
         FOR UPDATE SKIP LOCKED
         LIMIT ${limit}
@@ -159,7 +161,10 @@ export async function drainQueueTick(limit = 3): Promise<{
     error?: string;
   }>;
 }> {
-  const claimed = await claimPendingJobs(["transform_pr_webhook"], limit);
+  const claimed = await claimPendingJobs(
+    ["transform_pr_webhook", "publish_scheduled_post"],
+    limit,
+  );
   const outcomes: Array<{
     jobId: string;
     status: "completed" | "failed" | "retry";
@@ -188,6 +193,17 @@ export async function drainQueueTick(limit = 3): Promise<{
           })
           .where(eq(backgroundJobs.id, job.id));
         outcomes.push({ jobId: job.id, status: "completed" });
+      } else if (job.type === "publish_scheduled_post") {
+        const result = await publishScheduledPost(job);
+        await db
+          .update(backgroundJobs)
+          .set({
+            status: "COMPLETED",
+            result: result as any,
+            updatedAt: new Date(),
+          })
+          .where(eq(backgroundJobs.id, job.id));
+        outcomes.push({ jobId: job.id, status: "completed" });
       } else {
         throw new Error(`UNKNOWN_JOB_TYPE: ${job.type}`);
       }
@@ -202,7 +218,12 @@ export async function drainQueueTick(limit = 3): Promise<{
         msg === "LIMIT_REACHED" ||
         msg === "USER_NOT_FOUND" ||
         msg === "BAD_PAYLOAD" ||
+        msg === "SCHEDULED_POST_NOT_FOUND" ||
+        msg === "SCHEDULED_POST_CANCELLED" ||
+        msg === "OUTPUT_NOT_FOUND" ||
         msg.startsWith("UNKNOWN_JOB_TYPE") ||
+        msg.startsWith("UNKNOWN_CHANNEL") ||
+        msg.startsWith("UNKNOWN_POST_KIND") ||
         msg.startsWith("TokenBudgetExceeded");
 
       if (terminal || retryCount > maxRetries) {
@@ -237,3 +258,91 @@ export async function drainQueueTick(limit = 3): Promise<{
 // Suppress unused-import lint for `inArray` which is here for future use
 // (when drainQueueTick gains multi-type dispatch with array filters).
 void inArray;
+
+const SHARE_TEXT_LIMIT = 280;
+
+function publicUrlForOutput(slug: string): string {
+  const base = (env.APP_URL ?? "").replace(/\/+$/, "");
+  return `${base}/t/${slug}`;
+}
+
+function pickPostText(
+  output: typeof outputs.$inferSelect,
+  postKind: string,
+): string {
+  switch (postKind) {
+    case "linkedinPost1":
+      return output.linkedinPost1;
+    case "linkedinPost2":
+      return output.linkedinPost2;
+    case "linkedinPost3":
+      return output.linkedinPost3;
+    case "twitterThread":
+      // v2 twitter thread output isn't shipped yet — fall back to the
+      // first LinkedIn draft so the share URL is still well-formed.
+      return output.linkedinPost1;
+    default:
+      throw new Error(`UNKNOWN_POST_KIND: ${postKind}`);
+  }
+}
+
+function buildShareUrl(
+  channel: string,
+  text: string,
+  publicUrl: string,
+): string {
+  if (channel === "linkedin") {
+    return `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(publicUrl)}`;
+  }
+  if (channel === "twitter") {
+    const truncated =
+      text.length > SHARE_TEXT_LIMIT
+        ? `${text.slice(0, SHARE_TEXT_LIMIT - 1)}…`
+        : text;
+    const body = `${truncated}\n\n${publicUrl}`;
+    return `https://twitter.com/intent/tweet?text=${encodeURIComponent(body)}`;
+  }
+  throw new Error(`UNKNOWN_CHANNEL: ${channel}`);
+}
+
+/**
+ * Dispatches a `publish_scheduled_post` job: loads the scheduled_posts row,
+ * resolves the share URL, flips status to READY. Mutates scheduled_posts in
+ * a single UPDATE so the dashboard polling can observe the transition
+ * atomically.
+ */
+async function publishScheduledPost(job: {
+  id: string;
+  payload: any;
+}): Promise<{ scheduledPostId: string; shareUrl: string }> {
+  const scheduledPostId = job.payload?.scheduledPostId;
+  if (typeof scheduledPostId !== "string" || scheduledPostId.length === 0) {
+    throw new Error("BAD_PAYLOAD");
+  }
+
+  const post = await db.query.scheduledPosts.findFirst({
+    where: eq(scheduledPosts.id, scheduledPostId),
+  });
+  if (!post) throw new Error("SCHEDULED_POST_NOT_FOUND");
+  if (post.status === "CANCELLED") throw new Error("SCHEDULED_POST_CANCELLED");
+
+  const output = await db.query.outputs.findFirst({
+    where: eq(outputs.id, post.outputId),
+  });
+  if (!output) throw new Error("OUTPUT_NOT_FOUND");
+
+  const publicUrl = publicUrlForOutput(output.slug);
+  const text = pickPostText(output, post.postKind);
+  const shareUrl = buildShareUrl(post.channel, text, publicUrl);
+
+  await db
+    .update(scheduledPosts)
+    .set({
+      status: "READY",
+      readyAt: new Date(),
+      shareUrl,
+    })
+    .where(eq(scheduledPosts.id, scheduledPostId));
+
+  return { scheduledPostId, shareUrl };
+}

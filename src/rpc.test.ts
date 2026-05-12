@@ -5,6 +5,8 @@ import {
   githubCallbackSchema,
   postToXSchema,
   roastSchema,
+  schedulePostSchema,
+  scheduledPostIdSchema,
   toggleVisibilitySchema,
   transformPRSchema,
   userSettingsSchema,
@@ -217,6 +219,49 @@ describe("rpc input schemas", () => {
     });
     it("rejects non-uuid", () => {
       expect(() => digestIdSchema.parse({ id: "not-a-uuid" })).toThrow();
+    });
+  });
+
+  describe("schedulePostSchema", () => {
+    const baseInput = {
+      outputId: validUuid,
+      channel: "linkedin" as const,
+      postKind: "linkedinPost1" as const,
+      scheduledFor: "2030-01-01T12:00:00.000Z",
+    };
+    it("accepts a well-formed schedule input", () => {
+      expect(() => schedulePostSchema.parse(baseInput)).not.toThrow();
+    });
+    it("rejects unknown channel", () => {
+      expect(() =>
+        schedulePostSchema.parse({ ...baseInput, channel: "instagram" }),
+      ).toThrow();
+    });
+    it("rejects unknown post kind", () => {
+      expect(() =>
+        schedulePostSchema.parse({ ...baseInput, postKind: "linkedinPost9" }),
+      ).toThrow();
+    });
+    it("rejects non-ISO scheduledFor", () => {
+      expect(() =>
+        schedulePostSchema.parse({ ...baseInput, scheduledFor: "tomorrow" }),
+      ).toThrow();
+    });
+    it("rejects non-uuid outputId", () => {
+      expect(() =>
+        schedulePostSchema.parse({ ...baseInput, outputId: "abc" }),
+      ).toThrow();
+    });
+  });
+
+  describe("scheduledPostIdSchema", () => {
+    it("accepts a uuid", () => {
+      expect(() =>
+        scheduledPostIdSchema.parse({ id: validUuid }),
+      ).not.toThrow();
+    });
+    it("rejects a non-uuid", () => {
+      expect(() => scheduledPostIdSchema.parse({ id: "abc" })).toThrow();
     });
   });
 
