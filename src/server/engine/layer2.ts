@@ -185,7 +185,26 @@ export function computeGraphMetrics(graph: DependencyGraph): GraphMetrics {
     };
   }
 
-  // 1. Initialize PageRank
+  // Pre-build an index map + adjacency arrays once. The prior implementation
+  // ran edges.filter() and nodes.findIndex() inside the PageRank inner loops,
+  // making each iteration O(N*E + E*(N+E)). With N=300 / E~1500 that was
+  // tens of millions of ops per iteration; now it's O(E) per iteration.
+  const idx = new Map<string, number>();
+  for (let i = 0; i < n; i++) idx.set(nodes[i].id, i);
+
+  const outDegree = new Array(n).fill(0);
+  const inDegree = new Array(n).fill(0);
+  const outEdges: number[][] = Array.from({ length: n }, () => []);
+  for (const edge of edges) {
+    const s = idx.get(edge.source);
+    const t = idx.get(edge.target);
+    if (s === undefined || t === undefined) continue;
+    outDegree[s]++;
+    inDegree[t]++;
+    outEdges[s].push(t);
+  }
+
+  // 1. PageRank
   let pr = new Array(n).fill(1 / n);
   const damping = 0.85;
   const iterations = 10;
@@ -193,74 +212,45 @@ export function computeGraphMetrics(graph: DependencyGraph): GraphMetrics {
   for (let iter = 0; iter < iterations; iter++) {
     const nextPr = new Array(n).fill((1 - damping) / n);
 
-    // Handle dangling nodes (nodes with no out-degree)
     let danglingWeight = 0;
     for (let i = 0; i < n; i++) {
-      const outDegree = edges.filter((e) => e.source === nodes[i].id).length;
-      if (outDegree === 0) {
-        danglingWeight += damping * (pr[i] / n);
-      }
+      if (outDegree[i] === 0) danglingWeight += damping * (pr[i] / n);
     }
+    for (let i = 0; i < n; i++) nextPr[i] += danglingWeight;
 
-    for (let i = 0; i < n; i++) {
-      nextPr[i] += danglingWeight;
-    }
-
-    for (const edge of edges) {
-      const sourceIdx = nodes.findIndex((node) => node.id === edge.source);
-      const targetIdx = nodes.findIndex((node) => node.id === edge.target);
-      if (sourceIdx !== -1 && targetIdx !== -1) {
-        const outDegree = edges.filter(
-          (e) => e.source === nodes[sourceIdx].id,
-        ).length;
-        nextPr[targetIdx] += damping * (pr[sourceIdx] / (outDegree || 1));
-      }
+    for (let s = 0; s < n; s++) {
+      if (outDegree[s] === 0) continue;
+      const share = damping * (pr[s] / outDegree[s]);
+      for (const t of outEdges[s]) nextPr[t] += share;
     }
     pr = nextPr;
   }
 
-  // 2. Compute Hubs and Authorities (HITS)
+  // 2. HITS — uses the same indexed edges, no more findIndex per iteration.
   let auth = new Array(n).fill(1);
   let hub = new Array(n).fill(1);
 
   for (let iter = 0; iter < 5; iter++) {
-    // Update Auth
     const nextAuth = new Array(n).fill(0);
-    for (const edge of edges) {
-      const sourceIdx = nodes.findIndex((node) => node.id === edge.source);
-      const targetIdx = nodes.findIndex((node) => node.id === edge.target);
-      if (sourceIdx !== -1 && targetIdx !== -1) {
-        nextAuth[targetIdx] += hub[sourceIdx];
-      }
+    for (let s = 0; s < n; s++) {
+      for (const t of outEdges[s]) nextAuth[t] += hub[s];
     }
     auth = nextAuth;
-    // Normalize Auth
     const authNorm = Math.sqrt(auth.reduce((s, v) => s + v * v, 0)) || 1;
     auth = auth.map((v) => v / authNorm);
 
-    // Update Hub
     const nextHub = new Array(n).fill(0);
-    for (const edge of edges) {
-      const sourceIdx = nodes.findIndex((node) => node.id === edge.source);
-      const targetIdx = nodes.findIndex((node) => node.id === edge.target);
-      if (sourceIdx !== -1 && targetIdx !== -1) {
-        nextHub[sourceIdx] += auth[targetIdx];
-      }
+    for (let s = 0; s < n; s++) {
+      for (const t of outEdges[s]) nextHub[s] += auth[t];
     }
     hub = nextHub;
-    // Normalize Hub
     const hubNorm = Math.sqrt(hub.reduce((s, v) => s + v * v, 0)) || 1;
     hub = hub.map((v) => v / hubNorm);
   }
 
-  // 3. Compute True Betweenness Centrality (Brandes' Algorithm)
+  // 3. Brandes' betweenness centrality (reuses the indexed adjacency built above).
   const cb = new Array(n).fill(0);
-  const adj: number[][] = Array.from({ length: n }, () => []);
-  for (const edge of edges) {
-    const s = nodes.findIndex((node) => node.id === edge.source);
-    const t = nodes.findIndex((node) => node.id === edge.target);
-    if (s !== -1 && t !== -1) adj[s].push(t);
-  }
+  const adj = outEdges;
 
   for (let s = 0; s < n; s++) {
     const S: number[] = [];
@@ -298,15 +288,15 @@ export function computeGraphMetrics(graph: DependencyGraph): GraphMetrics {
   const maxCb = Math.max(...cb, 1);
   const normalizedCb = cb.map((v) => (v / maxCb) * 100);
 
-  // 4. Compute Clustering Coefficient
+  // 4. Clustering coefficient — undirected adjacency derived from indexed edges.
   const cc = new Array(n).fill(0);
   const undirAdj: Set<number>[] = Array.from({ length: n }, () => new Set());
-  for (const edge of edges) {
-    const s = nodes.findIndex((node) => node.id === edge.source);
-    const t = nodes.findIndex((node) => node.id === edge.target);
-    if (s !== -1 && t !== -1 && s !== t) {
-      undirAdj[s].add(t);
-      undirAdj[t].add(s);
+  for (let s = 0; s < n; s++) {
+    for (const t of outEdges[s]) {
+      if (s !== t) {
+        undirAdj[s].add(t);
+        undirAdj[t].add(s);
+      }
     }
   }
 
@@ -324,15 +314,28 @@ export function computeGraphMetrics(graph: DependencyGraph): GraphMetrics {
   }
 
   // 5. Community Detection (Label Propagation Algorithm)
+  // Deterministic node order seeded by the graph's structural fingerprint
+  // (sum of in/out-degrees). The prior `sort(() => Math.random() - 0.5)`
+  // produced a biased non-uniform shuffle AND a different communityId every
+  // run on the same input — breaking reproducibility for cached graphs.
+  const seed = nodes.reduce(
+    (acc, _, i) => acc + outDegree[i] * 31 + inDegree[i] * 17,
+    n,
+  );
+  const stableOrder = new Array(n)
+    .fill(0)
+    .map((_, i) => i)
+    .sort((a, b) => {
+      const ha = ((a + 1) * seed) % 100003;
+      const hb = ((b + 1) * seed) % 100003;
+      return ha - hb;
+    });
   const communities = new Array(n).fill(0).map((_, i) => i);
   let changed = true;
   let iters = 0;
   while (changed && iters < 10) {
     changed = false;
-    const order = new Array(n)
-      .fill(0)
-      .map((_, i) => i)
-      .sort(() => Math.random() - 0.5);
+    const order = stableOrder;
     for (const i of order) {
       const neighborLabels = new Map<number, number>();
       for (const t of undirAdj[i]) {
@@ -373,35 +376,121 @@ export function computeGraphMetrics(graph: DependencyGraph): GraphMetrics {
   }
 
   const nodeMetrics: NodeGraphMetrics[] = nodes.map((node, i) => {
-    const inDegree = edges.filter((e) => e.target === node.id).length;
-    const outDegree = edges.filter((e) => e.source === node.id).length;
-
+    const inDeg = inDegree[i];
+    const outDeg = outDegree[i];
     return {
       filename: node.id,
       pageRank: pr[i],
       betweennessCentrality: normalizedCb[i],
-      inDegree,
-      outDegree,
+      inDegree: inDeg,
+      outDegree: outDeg,
       hubScore: hub[i],
       authorityScore: auth[i],
       clusteringCoefficient: cc[i],
       communityId: communities[i],
-      efferentCoupling: outDegree,
-      afferentCoupling: inDegree,
-      instability: outDegree / (inDegree + outDegree || 1),
+      efferentCoupling: outDeg,
+      afferentCoupling: inDeg,
+      instability: outDeg / (inDeg + outDeg || 1),
+      // Computing abstractness requires distinguishing concrete vs abstract
+      // (interfaces, abstract classes) types per file. Out of scope for the
+      // current graph build; left as 0 with this note rather than fake-shipped.
       abstractness: 0,
       distanceFromMainSequence: 0,
     };
   });
 
+  // Connected components via union-find over the UNDIRECTED edges. Cheap on
+  // the file-graph scale (≤300 nodes); replaces the prior hardcoded `1`.
+  const parent = new Array(n).fill(0).map((_, i) => i);
+  const find = (x: number): number => {
+    while (parent[x] !== x) {
+      parent[x] = parent[parent[x]];
+      x = parent[x];
+    }
+    return x;
+  };
+  const union = (a: number, b: number) => {
+    const ra = find(a);
+    const rb = find(b);
+    if (ra !== rb) parent[ra] = rb;
+  };
+  for (let i = 0; i < n; i++) {
+    for (const t of undirAdj[i]) union(i, t);
+  }
+  const roots = new Set<number>();
+  for (let i = 0; i < n; i++) roots.add(find(i));
+  const connectedComponents = roots.size;
+
+  // Cycle count via Tarjan-style SCC on the directed graph. We count SCCs
+  // with >1 node (true cycles) — replaces the prior hardcoded `0`.
+  let cycleCount = 0;
+  {
+    const indices = new Array(n).fill(-1);
+    const lowlinks = new Array(n).fill(0);
+    const onStack = new Array(n).fill(false);
+    const stack: number[] = [];
+    let idxCounter = 0;
+    const strongconnect = (v: number) => {
+      // Iterative variant to avoid blowing the JS stack on big graphs.
+      const work: Array<{ v: number; i: number }> = [{ v, i: 0 }];
+      indices[v] = idxCounter;
+      lowlinks[v] = idxCounter;
+      idxCounter++;
+      stack.push(v);
+      onStack[v] = true;
+      while (work.length > 0) {
+        const frame = work[work.length - 1];
+        const neighbors = outEdges[frame.v];
+        if (frame.i < neighbors.length) {
+          const w = neighbors[frame.i++];
+          if (indices[w] === -1) {
+            indices[w] = idxCounter;
+            lowlinks[w] = idxCounter;
+            idxCounter++;
+            stack.push(w);
+            onStack[w] = true;
+            work.push({ v: w, i: 0 });
+          } else if (onStack[w]) {
+            lowlinks[frame.v] = Math.min(lowlinks[frame.v], indices[w]);
+          }
+        } else {
+          if (lowlinks[frame.v] === indices[frame.v]) {
+            const scc: number[] = [];
+            while (stack.length > 0) {
+              const w = stack.pop()!;
+              onStack[w] = false;
+              scc.push(w);
+              if (w === frame.v) break;
+            }
+            if (scc.length > 1) cycleCount++;
+          }
+          work.pop();
+          if (work.length > 0) {
+            const caller = work[work.length - 1];
+            lowlinks[caller.v] = Math.min(
+              lowlinks[caller.v],
+              lowlinks[frame.v],
+            );
+          }
+        }
+      }
+    };
+    for (let v = 0; v < n; v++) {
+      if (indices[v] === -1) strongconnect(v);
+    }
+  }
+
   const globalMetrics: GlobalGraphMetrics = {
+    // avgPathLength and diameter require all-pairs BFS — O(N*(N+E)). On a
+    // 300-node graph that's ~hundreds of thousands of ops; cheap but not
+    // currently consumed downstream, so left 0 with this note.
     avgPathLength: 0,
     diameter: 0,
-    density: edges.length / (n * (n - 1) || 1),
+    density: n > 1 ? edges.length / (n * (n - 1)) : 0,
     modularity: q,
-    avgClusteringCoefficient: cc.reduce((a, b) => a + b, 0) / n,
-    connectedComponents: 1,
-    cycleCount: 0,
+    avgClusteringCoefficient: n > 0 ? cc.reduce((a, b) => a + b, 0) / n : 0,
+    connectedComponents,
+    cycleCount,
   };
 
   return {

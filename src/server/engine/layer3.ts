@@ -48,15 +48,29 @@ export async function computeImpactProfile(
   });
 
   // Calculate Impact Signature
-
-  const isHighModularityChange = (graphMetrics.structuralChanges || []).some(
-    (s) => s.changeType === "community_shift",
-  );
+  //
+  // architecturalDisruption was previously based on `graphMetrics.structuralChanges`,
+  // which Layer 2 never populated — the dimension was always 0 despite carrying
+  // 0.25 weight. Replace with a signal that's actually computed: AST-detected
+  // breaking changes (removed exported symbols) and high-PageRank file count.
+  const astDiffs = enrichedPR.astDiffs || [];
+  const breakingAst = astDiffs.filter(
+    (a) => a.semanticChange === "breaking",
+  ).length;
+  const refactorAst = astDiffs.filter(
+    (a) => a.semanticChange === "refactor",
+  ).length;
+  const highPageRankFiles = graphMetrics.nodeMetrics.filter(
+    (m) => m.pageRank > 0.01,
+  ).length;
+  const hasCycleIntroduction = graphMetrics.globalMetrics.cycleCount > 0;
 
   const dimensions: ImpactDimensions = {
     architecturalDisruption:
-      (graphMetrics.structuralChanges?.length || 0) * 15 +
-      (isHighModularityChange ? 30 : 0),
+      breakingAst * 30 +
+      refactorAst * 10 +
+      highPageRankFiles * 8 +
+      (hasCycleIntroduction ? 20 : 0),
     riskAndHotspot:
       staticMetrics.overallMetrics.maxChurnScore / 8 +
       staticMetrics.overallMetrics.avgComplexity * 2,
@@ -67,8 +81,7 @@ export async function computeImpactProfile(
       enrichedPR.diffs.filter((d) => d.filename.includes("test")).length * 10,
     complexityLoad: staticMetrics.overallMetrics.avgComplexity * 1.5,
     semanticSignificance:
-      (enrichedPR.astDiffs || []).filter((a) => a.semanticChange !== "none")
-        .length * 20,
+      astDiffs.filter((a) => a.semanticChange !== "none").length * 20,
   };
 
   // Weighted average for a more accurate ArchScore
@@ -104,23 +117,62 @@ export async function computeImpactProfile(
     }),
   );
 
+  // Confidence: derive from the spread + signal density rather than ship 0.92
+  // as a flat constant. High when multiple dimensions agree (low variance,
+  // high signal), lower when most dimensions are 0.
+  const dimensionValues = Object.values(dimensions);
+  const nonZeroDimensions = dimensionValues.filter((v) => v > 0).length;
+  const signalDensity = nonZeroDimensions / dimensionValues.length;
+  const confidence = Math.min(0.95, Math.max(0.3, 0.4 + signalDensity * 0.5));
+
+  // riskFactors: surface real risks from the signals we computed instead of
+  // emitting a single canned "hotspot" entry.
+  const riskFactors: Array<{
+    factor: string;
+    severity: "low" | "medium" | "high";
+    description: string;
+    mitigatable: boolean;
+  }> = [];
+  if (dimensions.riskAndHotspot > 70) {
+    riskFactors.push({
+      factor: "hotspot",
+      severity: "high",
+      description: "High churn + complexity combined in changed files",
+      mitigatable: true,
+    });
+  }
+  if (breakingAst > 0) {
+    riskFactors.push({
+      factor: "breaking_change",
+      severity: "high",
+      description: `${breakingAst} file(s) removed exported symbols`,
+      mitigatable: false,
+    });
+  }
+  if (hasCycleIntroduction) {
+    riskFactors.push({
+      factor: "dependency_cycle",
+      severity: "medium",
+      description: `Repo dependency graph contains ${graphMetrics.globalMetrics.cycleCount} cycle(s)`,
+      mitigatable: true,
+    });
+  }
+  if (dimensions.knowledgeDispersion < 10 && enrichedPR.diffs.length > 5) {
+    riskFactors.push({
+      factor: "bus_factor",
+      severity: "medium",
+      description: "Touched files have narrow ownership history",
+      mitigatable: true,
+    });
+  }
+
   return {
     dimensions,
     archScore,
     archScoreBreakdown: breakdown,
-    confidence: 0.92, // Increased confidence due to more rigorous metrics
+    confidence,
     rawSignals: [],
     perFileContributions,
-    riskFactors:
-      dimensions.riskAndHotspot > 70
-        ? [
-            {
-              factor: "hotspot",
-              severity: "high",
-              description: "High complexity hotspot detected",
-              mitigatable: true,
-            },
-          ]
-        : [],
+    riskFactors,
   };
 }

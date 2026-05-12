@@ -310,11 +310,19 @@ export async function extractIssueReferences(
   return issues;
 }
 
+/**
+ * Returns up to 50 recent commits that touched the FIRST file in `filePaths`.
+ * Despite the parameter shape, this is a single-file query — the name kept
+ * historical signature to avoid downstream churn, but the body only ever
+ * indexed [0]. A future version should either iterate or accept a single
+ * `path: string`.
+ */
 export async function fetchCommitHistory(
   metadata: PRMetadata,
   filePaths: string[],
 ): Promise<CommitHistory[]> {
   const commits: CommitHistory[] = [];
+  if (filePaths.length === 0) return commits;
   try {
     const { data } = await octokit.rest.repos.listCommits({
       owner: metadata.owner,
@@ -334,7 +342,7 @@ export async function fetchCommitHistory(
         filesTouched: [],
       });
     }
-  } catch (e) {
+  } catch {
     /* ignore history failures */
   }
 
@@ -345,8 +353,10 @@ export async function computeCodeOwnership(
   metadata: PRMetadata,
   filePaths: string[],
 ): Promise<FileOwnership[]> {
-  const ownership: FileOwnership[] = [];
-  for (const filename of filePaths.slice(0, 10)) {
+  // Was a sequential for-loop, costing ~10× extra wall-clock on the
+  // listCommits round-trips. The per-file work is independent — run in
+  // parallel and let GitHub's own concurrency budget handle the rest.
+  const tasks = filePaths.slice(0, 10).map(async (filename) => {
     try {
       const { data } = await octokit.rest.repos.listCommits({
         owner: metadata.owner,
@@ -357,7 +367,6 @@ export async function computeCodeOwnership(
 
       const authorStats: Record<string, number> = {};
       let totalCommits = 0;
-
       for (const commit of data) {
         const author = commit.commit.author?.name || "unknown";
         authorStats[author] = (authorStats[author] || 0) + 1;
@@ -372,19 +381,21 @@ export async function computeCodeOwnership(
         }))
         .sort((a, b) => b.percentage - a.percentage);
 
-      ownership.push({
+      const entry: FileOwnership = {
         filename,
         authorContributions,
         truckFactor: authorContributions.filter((a) => a.percentage > 10)
           .length,
         entropy: 0,
-      });
-    } catch (e) {
-      /* ignore issues for this file */
+      };
+      return entry;
+    } catch {
+      return null;
     }
-  }
+  });
 
-  return ownership;
+  const results = await Promise.all(tasks);
+  return results.filter((r): r is FileOwnership => r !== null);
 }
 
 function truncatePatch(patch: string, budget: number = 15000): string {
@@ -425,79 +436,81 @@ export async function ingestAndPreprocessPR(
     .slice(0, 10)
     .map((d) => d.filename);
 
-  const astDiffs: ASTDiff[] = await Promise.all(
-    diffs.map(async (diff) => {
-      try {
-        // Fetch "before" and "after" content for semantic analysis
-        // Note: We only do this for supported file types AND top churn files to save tokens/API calls
-        const isSupported = /\.(ts|tsx|js|jsx)$/.test(diff.filename);
-        const isTopChurn = topChurnFiles.includes(diff.filename);
+  // Bound concurrency to avoid hitting GitHub's secondary rate limits on
+  // large PRs. Per file we make up to 2 getContent calls (before + after),
+  // so 5 concurrent files = up to 10 in-flight GitHub requests.
+  const AST_DIFF_CONCURRENCY = 5;
+  const emptyAstDiff = (diff: FileDiff): ASTDiff => ({
+    filename: diff.filename,
+    beforeSymbols: [],
+    afterSymbols: [],
+    addedSymbols: [],
+    removedSymbols: [],
+    changedSymbols: [],
+    addedImports: [],
+    removedImports: [],
+    semanticChange:
+      diff.status === "added"
+        ? "additive"
+        : diff.status === "deleted"
+          ? "breaking"
+          : "none",
+  });
 
-        if (!isSupported || !isTopChurn) {
-          return {
-            filename: diff.filename,
-            beforeSymbols: [],
-            afterSymbols: [],
-            addedSymbols: [],
-            removedSymbols: [],
-            changedSymbols: [],
-            addedImports: [],
-            removedImports: [],
-            semanticChange:
-              diff.status === "added"
-                ? "additive"
-                : diff.status === "deleted"
-                  ? "breaking"
-                  : "none",
-          };
+  const astDiffs: ASTDiff[] = new Array(diffs.length);
+  let nextIdx = 0;
+  await Promise.all(
+    Array.from({ length: Math.min(AST_DIFF_CONCURRENCY, diffs.length) }, () =>
+      (async () => {
+        while (true) {
+          const i = nextIdx++;
+          if (i >= diffs.length) return;
+          const diff = diffs[i];
+          try {
+            const isSupported = /\.(ts|tsx|js|jsx)$/.test(diff.filename);
+            const isTopChurn = topChurnFiles.includes(diff.filename);
+            if (!isSupported || !isTopChurn) {
+              astDiffs[i] = emptyAstDiff(diff);
+              continue;
+            }
+            const [{ data: beforeData }, { data: afterData }] =
+              await Promise.all([
+                octokit.rest.repos
+                  .getContent({
+                    owner: metadata.owner,
+                    repo: metadata.repo,
+                    path: diff.previousFilename || diff.filename,
+                    ref: metadata.baseSha,
+                  })
+                  .catch(() => ({ data: { content: "" } })),
+                octokit.rest.repos
+                  .getContent({
+                    owner: metadata.owner,
+                    repo: metadata.repo,
+                    path: diff.filename,
+                    ref: metadata.headSha,
+                  })
+                  .catch(() => ({ data: { content: "" } })),
+              ]);
+
+            const beforeCode =
+              "content" in beforeData
+                ? Buffer.from(beforeData.content, "base64").toString("utf-8")
+                : "";
+            const afterCode =
+              "content" in afterData
+                ? Buffer.from(afterData.content, "base64").toString("utf-8")
+                : "";
+
+            // Attach full content to the diff for layer 1 to consume.
+            diff.fullContent = afterCode;
+            astDiffs[i] = generateASTDiff(diff.filename, beforeCode, afterCode);
+          } catch {
+            astDiffs[i] = { ...emptyAstDiff(diff), semanticChange: "none" };
+          }
         }
-
-        const [{ data: beforeData }, { data: afterData }] = await Promise.all([
-          octokit.rest.repos
-            .getContent({
-              owner: metadata.owner,
-              repo: metadata.repo,
-              path: diff.previousFilename || diff.filename,
-              ref: metadata.baseSha,
-            })
-            .catch(() => ({ data: { content: "" } })),
-          octokit.rest.repos
-            .getContent({
-              owner: metadata.owner,
-              repo: metadata.repo,
-              path: diff.filename,
-              ref: metadata.headSha,
-            })
-            .catch(() => ({ data: { content: "" } })),
-        ]);
-
-        const beforeCode =
-          "content" in beforeData
-            ? Buffer.from(beforeData.content, "base64").toString("utf-8")
-            : "";
-        const afterCode =
-          "content" in afterData
-            ? Buffer.from(afterData.content, "base64").toString("utf-8")
-            : "";
-
-        // Attach full content to the diff for later static analysis (Layer 1)
-        diff.fullContent = afterCode;
-
-        return generateASTDiff(diff.filename, beforeCode, afterCode);
-      } catch (err) {
-        return {
-          filename: diff.filename,
-          beforeSymbols: [],
-          afterSymbols: [],
-          addedSymbols: [],
-          removedSymbols: [],
-          changedSymbols: [],
-          addedImports: [],
-          removedImports: [],
-          semanticChange: "none",
-        };
-      }
-    }),
+      })(),
+    ),
   );
 
   return {
