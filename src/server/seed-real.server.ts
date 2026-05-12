@@ -62,7 +62,7 @@ async function seedRealData() {
   for (const prUrl of REAL_PRS) {
     try {
       logger.info(`Processing real PR: ${prUrl}`);
-      const draft = await runEngine(prUrl, userId, {
+      const { narrative: draft } = await runEngine(prUrl, userId, {
         seniority: user.seniority as any,
         tone: user.tone as any,
         targetAudience: user.targetAudience as any,

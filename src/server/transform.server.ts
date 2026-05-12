@@ -32,6 +32,12 @@ export async function transformPRFn(data: { prUrl: string; userId?: string }) {
 
   // Simulation of Async processing
   // In a real env, we'd trigger an edge function or queue here.
+  const engineTimeoutMs = (() => {
+    const raw = process.env.ENGINE_TIMEOUT_MS;
+    const parsed = raw ? parseInt(raw, 10) : NaN;
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : 300_000; // 5 min
+  })();
+
   (async () => {
     try {
       await updateJobStatusFn(job.id, { status: "PROCESSING" });
@@ -52,7 +58,15 @@ export async function transformPRFn(data: { prUrl: string; userId?: string }) {
         targetAudience: user.targetAudience as any,
       };
 
-      const output = await runEngine(prUrl, userId, context);
+      const { narrative: output, usage } = await Promise.race([
+        runEngine(prUrl, userId, context),
+        new Promise<never>((_, reject) =>
+          setTimeout(
+            () => reject(new Error("ENGINE_TIMEOUT")),
+            engineTimeoutMs,
+          ),
+        ),
+      ]);
 
       const slug = generateSlug(prUrl, userId);
       const [inserted] = await db
@@ -97,6 +111,7 @@ export async function transformPRFn(data: { prUrl: string; userId?: string }) {
             prUrl,
             impactScore: output.impactScore,
             category: output.category,
+            usage,
           } as any,
         }),
         updateJobStatusFn(job.id, {
@@ -111,7 +126,12 @@ export async function transformPRFn(data: { prUrl: string; userId?: string }) {
         error: err.message || "Unknown Error",
       });
     }
-  })();
+  })().catch((err) => {
+    // Last-resort guard: if the catch handler above itself throws (e.g.
+    // updateJobStatusFn fails on a Neon outage), surface it rather than
+    // letting it become an unhandled rejection.
+    console.error("Unhandled job error:", err);
+  });
 
   return { jobId: job.id };
 }

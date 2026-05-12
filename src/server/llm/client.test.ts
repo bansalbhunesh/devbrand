@@ -29,14 +29,18 @@ describe("completeText llm routing", () => {
     process.env.OPENAI_COMPAT_API_KEY = "";
 
     const { completeText } = await import("./client");
-    const text = await completeText({
+    const result = await completeText({
       system: "SYS",
       user: "USR",
       maxTokens: 10,
       temperature: 0.2,
     });
 
-    expect(text).toContain("ok");
+    expect(result.text).toContain("ok");
+    expect(result.usage).toMatchObject({
+      inputTokens: 0,
+      outputTokens: 0,
+    });
     const fetchMock = fetch as unknown as ReturnType<typeof vi.fn>;
     expect(fetchMock).toHaveBeenCalledWith(
       "http://127.0.0.1:11434/v1/chat/completions",

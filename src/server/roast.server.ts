@@ -161,13 +161,14 @@ OUTPUT JSON SCHEMA:
 
 Return ONLY valid JSON. No preamble.`;
 
-  const rawContent = await completeText({
+  const llmResult = await completeText({
     system: systemPrompt,
     user: JSON.stringify(profileSummary, null, 2),
     maxTokens: 1000,
     temperature: 0.8,
+    cacheSystem: true,
   });
-  const cleaned = normalizeLlmJsonText(rawContent);
+  const cleaned = normalizeLlmJsonText(llmResult.text);
   const output = RoastOutputSchema.parse(JSON.parse(cleaned));
 
   const [inserted] = await db
@@ -192,6 +193,7 @@ Return ONLY valid JSON. No preamble.`;
           username,
           criticality: output.criticality,
           roastId: inserted.id,
+          usage: llmResult.usage,
         },
       }),
     ]);

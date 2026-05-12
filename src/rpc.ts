@@ -12,19 +12,20 @@ import { z } from "zod";
  */
 
 // ── Input Schemas ────────────────────────────────────────────────────────────
+// Exported so tests can target them directly without spinning up TanStack Start.
 
-const githubCallbackSchema = z.object({
+export const githubCallbackSchema = z.object({
   code: z.string().min(1).max(1024),
   state: z.string().min(1).max(1024).optional(),
 });
 
-const userSettingsSchema = z.object({
+export const userSettingsSchema = z.object({
   seniority: z.enum(["junior", "mid", "senior", "staff"]),
   tone: z.enum(["direct", "storytelling", "technical"]),
   targetAudience: z.enum(["recruiter", "manager", "peer", "founder"]),
 });
 
-const transformPRSchema = z.object({
+export const transformPRSchema = z.object({
   prUrl: z
     .string()
     .url()
@@ -35,12 +36,12 @@ const transformPRSchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
-const toggleVisibilitySchema = z.object({
+export const toggleVisibilitySchema = z.object({
   outputId: z.string().uuid(),
   isPublic: z.boolean(),
 });
 
-const roastSchema = z.object({
+export const roastSchema = z.object({
   username: z
     .string()
     .min(1)
@@ -53,13 +54,13 @@ const roastSchema = z.object({
   tone: z.enum(["salty", "helpful", "nuclear", "technical"]),
 });
 
-const verifyPaymentSchema = z.object({
+export const verifyPaymentSchema = z.object({
   razorpay_order_id: z.string().min(1).max(128),
   razorpay_payment_id: z.string().min(1).max(128),
   razorpay_signature: z.string().min(1).max(256),
 });
 
-const postToXSchema = z.object({
+export const postToXSchema = z.object({
   id: z.string().uuid(),
   content: z.string().min(1).max(4000),
 });

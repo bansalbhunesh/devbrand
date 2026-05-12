@@ -3,18 +3,28 @@ import { analyzeStaticMetrics } from "./layer1";
 import { analyzeDependencyGraph } from "./layer2";
 import { computeImpactProfile } from "./layer3";
 import { analyzeInvisibleWork } from "./layer4";
-import { generateNarrative } from "./layer5";
+import { generateNarrative, consumeLayer5Usage } from "./layer5";
 import { runLayer6 } from "./layer6";
+import { consumeLayer6Usage } from "./layer6";
 import { runLayer7 } from "./layer7";
+import { sumUsage, ZeroUsage, type TokenUsage } from "../llm/client";
 import type { NarrativeDraft, UserContext, GraphImpactReport } from "./types";
 
 import { logger } from "@/lib/logger";
+
+export type EngineResult = {
+  narrative: NarrativeDraft;
+  usage: TokenUsage;
+};
 
 export async function runEngine(
   prUrl: string,
   userId: string,
   context: UserContext,
-): Promise<NarrativeDraft> {
+): Promise<EngineResult> {
+  // Reset accumulators so prior runs in the same process don't leak.
+  consumeLayer5Usage();
+  consumeLayer6Usage();
   try {
     logger.info("Engine start", { userId, prUrl });
 
@@ -75,14 +85,26 @@ export async function runEngine(
     // Layer 7: Feedback Loop & Continuous Learning
     const finalNarrative = await runLayer7(userId, verifiedNarrative);
 
+    const usage = sumUsage([
+      consumeLayer5Usage(),
+      consumeLayer6Usage(),
+    ]) as TokenUsage;
+
     logger.info("Engine success", {
       userId,
       prUrl,
       impactScore: finalNarrative.impactScore,
+      usage,
     });
-    return finalNarrative;
+    return { narrative: finalNarrative, usage };
   } catch (err: any) {
     logger.error(err, { userId, prUrl });
+    // Drain accumulators on failure so a half-finished run doesn't poison the next.
+    consumeLayer5Usage();
+    consumeLayer6Usage();
     throw err;
   }
 }
+
+// Re-export so callers don't need to know which submodule defines the helper.
+export { ZeroUsage } from "../llm/client";

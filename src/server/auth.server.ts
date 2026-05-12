@@ -58,7 +58,7 @@ async function getKey(): Promise<CryptoKey> {
     ["sign", "verify"],
   );
 }
-async function signState(state: string): Promise<string> {
+export async function signState(state: string): Promise<string> {
   const key = await getKey();
   const enc = new TextEncoder();
   const sig = await crypto.subtle.sign("HMAC", key, enc.encode(state));
@@ -69,7 +69,7 @@ async function signState(state: string): Promise<string> {
   return `${state}.${sigB64}`;
 }
 
-async function verifyState(signedState: string): Promise<string | null> {
+export async function verifyState(signedState: string): Promise<string | null> {
   const parts = signedState.split(".");
   if (parts.length !== 2) return null;
   const [state, sigB64] = parts;
