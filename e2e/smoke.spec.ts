@@ -33,7 +33,9 @@ test.describe("DevBrand smoke", () => {
   test("explore feed renders without auth", async ({ page }) => {
     await page.goto("/explore");
     await expect(page.getByText(/engineering radar/i)).toBeVisible();
-    await expect(page.getByRole("heading", { name: /evidence/i })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: /evidence/i }),
+    ).toBeVisible();
   });
 
   test("roast-friend page exposes username input + CTA", async ({ page }) => {

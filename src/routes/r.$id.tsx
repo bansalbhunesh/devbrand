@@ -259,7 +259,7 @@ function RoastPage() {
             <div className="h-px w-20 bg-white/10" />
             <Link
               to="/"
-            hash="roast"
+              hash="roast"
               className="group text-xs font-black uppercase tracking-[0.3em] text-muted-foreground hover:text-red-500 transition-all flex items-center gap-3"
             >
               Get Roasted Yourself{" "}

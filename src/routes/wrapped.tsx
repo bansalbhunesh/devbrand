@@ -38,6 +38,35 @@ function WrappedPage() {
     enabled: !!session?.id,
   });
 
+  // Hooks must run unconditionally, before any early return — see the
+  // isLoading/!stats branches below. Previously these lived after the
+  // returns and triggered "Rendered more hooks than during the previous
+  // render" once stats resolved.
+  const nextSlide = React.useCallback(
+    () => setSlide((s) => Math.min(s + 1, 5)),
+    [],
+  );
+  const prevSlide = React.useCallback(
+    () => setSlide((s) => Math.max(s - 1, 0)),
+    [],
+  );
+
+  React.useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowRight" || e.key === " ") {
+        nextSlide();
+      } else if (e.key === "ArrowLeft") {
+        prevSlide();
+      } else if (e.key === "Home") {
+        setSlide(0);
+      } else if (e.key === "End") {
+        setSlide(5);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [nextSlide, prevSlide]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen grid place-items-center bg-[#050505]">
@@ -117,33 +146,6 @@ function WrappedPage() {
       </div>
     );
   }
-
-  const nextSlide = React.useCallback(
-    () => setSlide((s) => Math.min(s + 1, 5)),
-    [],
-  );
-  const prevSlide = React.useCallback(
-    () => setSlide((s) => Math.max(s - 1, 0)),
-    [],
-  );
-
-  // Keyboard navigation. Arrow keys advance; Home/End jump to bookends.
-  // Doesn't interfere with form fields (no inputs on this page).
-  React.useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "ArrowRight" || e.key === " ") {
-        nextSlide();
-      } else if (e.key === "ArrowLeft") {
-        prevSlide();
-      } else if (e.key === "Home") {
-        setSlide(0);
-      } else if (e.key === "End") {
-        setSlide(5);
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [nextSlide, prevSlide]);
 
   const slides = [
     // Slide 0: Intro
