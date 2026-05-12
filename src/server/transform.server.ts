@@ -36,7 +36,7 @@ export async function transformPRFn(data: {
   const context: UserContext = {
     seniority: user.seniority as any,
     tone: user.tone as any,
-    targetAudience: (user as any).targetAudience || "recruiter",
+    targetAudience: user.targetAudience as any,
   };
 
   const output = await runEngine(prUrl, userId, context);

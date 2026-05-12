@@ -319,6 +319,12 @@ export async function getSecurityEventsFn() {
   }));
 }
 
+const settingsSchema = z.object({
+  seniority: z.enum(["junior", "mid", "senior", "staff"]),
+  tone: z.enum(["direct", "storytelling", "technical"]),
+  targetAudience: z.enum(["recruiter", "manager", "peer", "founder"]),
+});
+
 export async function updateUserSettingsFn(data: z.infer<typeof settingsSchema>) {
   const user = await loadSessionUser();
   if (!user) throw new Error("UNAUTHORIZED");
@@ -327,6 +333,7 @@ export async function updateUserSettingsFn(data: z.infer<typeof settingsSchema>)
     .set({
       seniority: data.seniority,
       tone: data.tone,
+      targetAudience: data.targetAudience,
       updatedAt: new Date(),
     })
     .where(eq(users.id, user.id));
