@@ -6,6 +6,8 @@
  * Run:  npx tsx scratch/introspect-drift.ts
  */
 import { Pool } from "@neondatabase/serverless";
+import { readFileSync, existsSync } from "fs";
+import { join } from "path";
 import {
   users,
   profiles,
@@ -21,10 +23,24 @@ import {
   trackedRepos,
   webhookDeliveries,
   userPostEdits,
+  digests,
 } from "../src/server/schema.server";
 import { getTableConfig } from "drizzle-orm/pg-core";
 
-const url = process.env.DATABASE_URL;
+function loadDatabaseUrl(): string | undefined {
+  if (process.env.DATABASE_URL) return process.env.DATABASE_URL;
+  const envPath = existsSync(join(process.cwd(), ".env"))
+    ? join(process.cwd(), ".env")
+    : join(process.cwd(), "..", ".env");
+  if (!existsSync(envPath)) return undefined;
+  for (const line of readFileSync(envPath, "utf-8").split(/\r?\n/)) {
+    const m = line.match(/^DATABASE_URL\s*=\s*(.+)$/);
+    if (m) return m[1].trim().replace(/^['"]|['"]$/g, "");
+  }
+  return undefined;
+}
+
+const url = loadDatabaseUrl();
 if (!url) {
   console.error("DATABASE_URL is not set");
   process.exit(2);
@@ -45,6 +61,7 @@ const CODE_TABLES = [
   trackedRepos,
   webhookDeliveries,
   userPostEdits,
+  digests,
 ];
 
 async function main() {
