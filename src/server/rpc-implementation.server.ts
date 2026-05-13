@@ -50,15 +50,15 @@ export async function getTeamImpactImpl(teamId: string) {
     where: eq(teamMembers.teamId, teamId),
     with: { user: true },
   });
-  const memberIds = members.map((m) => m.userId);
+  const memberIds = members.map((m: any) => m.userId);
   const recentImpacts =
     memberIds.length > 0
       ? (await db.query.outputs.findMany({
           where: inArray(outputs.userId, memberIds),
           orderBy: [desc(outputs.createdAt)],
           limit: 30,
-        }) as any[])
-      : ([] as any[]);
+        }) as Output[])
+      : ([] as Output[]);
 
   const avgImpact =
     recentImpacts.length > 0
@@ -69,7 +69,7 @@ export async function getTeamImpactImpl(teamId: string) {
     (o: Output) => o.category === "Architecture" || (o.impactScore || 0) > 80,
   ).length;
   const invisibleWorkCount = recentImpacts.filter(
-    (o: any) => o.metadata?.invisibleWorkReport?.isSignificant,
+    (o: Output) => o.metadata?.invisibleWorkReport?.isSignificant,
   ).length;
   const invisibleWorkPercent =
     recentImpacts.length > 0
