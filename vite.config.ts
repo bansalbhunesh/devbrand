@@ -4,17 +4,18 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 
+import { cloudflare } from "@cloudflare/vite-plugin";
+
 export default defineConfig({
-  plugins: [
-    // TanStack Start v1.167 has no Vercel adapter — `preset: "vercel"` here
-    // was decorative and silently ignored, producing a plain Node ESM bundle
-    // at dist/server/server.js that Vercel didn't know how to invoke.
-    // Vercel wiring is now explicit via api/index.ts + vercel.json rewrites.
-    tanstackStart(),
-    react(),
-    tailwindcss(),
-    tsconfigPaths(),
-  ],
+  plugins: [// TanStack Start v1.167 has no Vercel adapter — `preset: "vercel"` here
+  // was decorative and silently ignored, producing a plain Node ESM bundle
+  // at dist/server/server.js that Vercel didn't know how to invoke.
+  // Vercel wiring is now explicit via api/index.ts + vercel.json rewrites.
+  tanstackStart(), react(), tailwindcss(), tsconfigPaths(), cloudflare({
+    viteEnvironment: {
+      name: "ssr"
+    }
+  })],
   server: {
     // Pin dev port so Playwright's webServer healthcheck (localhost:3000)
     // hits a deterministic target. Vite's default 5173 was getting squatted
