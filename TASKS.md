@@ -7,6 +7,10 @@
 
 ## 1. Core Engine Hardening (Judgment Layer)
 - [ ] **TODO**: Refactor `VerdictEngine` to support "Persona Inference" (e.g., detecting FAANG-style vs. Startup-style code).
+- [x] Unify `EventBus` and export as a singleton `mesh`.
+- [x] Fix cross-workspace leaks in `packages/repo-intelligence`.
+- [x] Initiate first 68 repos "System Awareness" ingestion.
+- [x] Upgrade `llm.gateway.ts` to real Anthropic provider.
 - [ ] **TODO**: Implement `Layer 8: Architectural Drift` detection in `packages/repo-intelligence`.
 - [ ] **TODO**: Port `voice-memory.server.ts` logic from `apps/web` to a standalone package `@devbrand/intelligence-store`.
 

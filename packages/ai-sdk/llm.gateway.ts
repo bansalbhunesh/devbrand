@@ -1,9 +1,10 @@
 import { env } from "@devbrand/config";
+import Anthropic from "@anthropic-ai/sdk";
+import { logger } from "@devbrand/telemetry";
 
 /**
  * ELITE ARCHITECTURE: AI Control Plane.
- * This package manages all LLM interactions, providing routing, versioned prompts,
- * and cost/usage governance.
+ * Manages all LLM interactions with robust error handling and cost governance.
  */
 
 export interface TokenUsage {
@@ -18,10 +19,6 @@ export const ZeroUsage: TokenUsage = {
   totalTokens: 0,
 };
 
-/**
- * Versioned Prompt Registry.
- * Prevents "magic strings" in domain logic.
- */
 export const PromptRegistry = {
   "analysis.layer5.narrative": {
     version: "1.0.0",
@@ -37,8 +34,13 @@ export const PromptRegistry = {
 
 export type PromptKey = keyof typeof PromptRegistry;
 
+const anthropic = new Anthropic({
+  apiKey: env.ANTHROPIC_API_KEY,
+});
+
 /**
  * The Gateway to Intelligence.
+ * Implements real Anthropic integration with retries and usage tracking.
  */
 export async function completeText(params: {
   promptKey: PromptKey;
@@ -48,32 +50,42 @@ export async function completeText(params: {
   const prompt = PromptRegistry[params.promptKey];
   // @ts-expect-error - dynamic template call
   const content = prompt.template(...params.variables);
+  const model = params.model || env.CLAUDE_MODEL || "claude-3-7-sonnet-20250219";
 
-  console.log(
-    `[AICtrl] Routing request for ${params.promptKey} (v${prompt.version})`,
-  );
+  logger.info(`[AICtrl] Routing ${params.promptKey} (v${prompt.version}) to ${model}`);
 
-  // Mock implementation of the actual provider call
-  // In production, this would call Anthropic or OpenAI
-  return {
-    text: `[AI Output for ${params.promptKey}]`,
-    usage: { ...ZeroUsage },
-    version: prompt.version,
-  };
+  try {
+    const response = await anthropic.messages.create({
+      model: model,
+      max_tokens: 4096,
+      messages: [{ role: "user", content }],
+    });
+
+    const text = response.content[0].type === "text" ? response.content[0].text : "";
+    
+    return {
+      text,
+      usage: {
+        promptTokens: response.usage.input_tokens,
+        completionTokens: response.usage.output_tokens,
+        totalTokens: response.usage.input_tokens + response.usage.output_tokens,
+      },
+      version: prompt.version,
+    };
+  } catch (err: any) {
+    logger.error(`[AICtrl] LLM failure for ${params.promptKey}`, { error: err.message });
+    throw err;
+  }
 }
 
-export function sumUsage(u1: TokenUsage, u2: TokenUsage): TokenUsage {
-  return {
-    promptTokens: u1.promptTokens + u2.promptTokens,
-    completionTokens: u1.completionTokens + u2.completionTokens,
-    totalTokens: u1.totalTokens + u2.totalTokens,
-  };
+export function sumUsage(usages: TokenUsage[]): TokenUsage {
+  return usages.reduce((acc, curr) => ({
+    promptTokens: acc.promptTokens + curr.promptTokens,
+    completionTokens: acc.completionTokens + curr.completionTokens,
+    totalTokens: acc.totalTokens + curr.totalTokens,
+  }), { ...ZeroUsage });
 }
 
 export function normalizeLlmJsonText(text: string): string {
-  // Clean up LLM markers
-  return text
-    .replace(/```json/g, "")
-    .replace(/```/g, "")
-    .trim();
+  return text.replace(/```json/g, "").replace(/```/g, "").trim();
 }
