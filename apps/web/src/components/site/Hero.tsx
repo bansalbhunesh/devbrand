@@ -59,18 +59,18 @@ export function Hero() {
           className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.4em] text-blue-500 border border-blue-500/20 rounded-full px-4 py-2 bg-blue-500/5 mb-8 shadow-sm"
         >
           <ShieldCheck className="h-3 w-3" />
-          Verified Engineering Intelligence
+          The Intelligence Layer for Software Systems
         </motion.div>
 
         <motion.h1
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.1 }}
-          className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight leading-[1.1] mb-8"
+          className="text-5xl md:text-7xl lg:text-9xl font-black tracking-tighter leading-[0.9] mb-8"
         >
-          Turn raw code into <br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-500">
-            career leverage.
+          Engineering <br />
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-purple-500 to-orange-500">
+            Judgment.
           </span>
         </motion.h1>
 
@@ -78,11 +78,10 @@ export function Hero() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
-          className="max-w-2xl mx-auto text-lg md:text-xl text-muted-foreground mb-12 leading-relaxed font-medium"
+          className="max-w-3xl mx-auto text-xl md:text-2xl text-muted-foreground mb-12 leading-tight font-medium"
         >
-          DevBrand analyzes your engineering impact, finds the "hidden" value in
-          your work, and builds a verifiable reputation that recruiters actually
-          understand.
+          AI is generating code faster than humans can understand it. Architecture is rotting silently. <br className="hidden md:block" />
+          <span className="text-foreground font-bold">DevBrand is the antidote.</span> Predictive intelligence for modern repos.
         </motion.p>
 
         <motion.div
