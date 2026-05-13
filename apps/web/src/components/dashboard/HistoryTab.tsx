@@ -87,7 +87,6 @@ export function HistoryTab({
             >
               <HistoryCard
                 output={o}
-
                 onQueryInvalidate={() =>
                   qc.invalidateQueries({ queryKey: ["outputs", user.id] })
                 }

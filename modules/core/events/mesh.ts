@@ -7,11 +7,34 @@ import { logger, trace } from "@devbrand/telemetry";
  */
 
 export const EventSchema = z.discriminatedUnion("type", [
-  z.object({ type: z.literal("repo.registered"), payload: z.object({ repoId: z.string(), userId: z.string(), url: z.string() }) }),
-  z.object({ type: z.literal("repo.synced"), payload: z.object({ repoId: z.string(), branch: z.string() }) }),
-  z.object({ type: z.literal("analysis.started"), payload: z.object({ jobId: z.string(), repoId: z.string() }) }),
-  z.object({ type: z.literal("analysis.completed"), payload: z.object({ jobId: z.string(), outputId: z.string() }) }),
-  z.object({ type: z.literal("workflow.state_changed"), payload: z.object({ workflowId: z.string(), from: z.string(), to: z.string() }) }),
+  z.object({
+    type: z.literal("repo.registered"),
+    payload: z.object({
+      repoId: z.string(),
+      userId: z.string(),
+      url: z.string(),
+    }),
+  }),
+  z.object({
+    type: z.literal("repo.synced"),
+    payload: z.object({ repoId: z.string(), branch: z.string() }),
+  }),
+  z.object({
+    type: z.literal("analysis.started"),
+    payload: z.object({ jobId: z.string(), repoId: z.string() }),
+  }),
+  z.object({
+    type: z.literal("analysis.completed"),
+    payload: z.object({ jobId: z.string(), outputId: z.string() }),
+  }),
+  z.object({
+    type: z.literal("workflow.state_changed"),
+    payload: z.object({
+      workflowId: z.string(),
+      from: z.string(),
+      to: z.string(),
+    }),
+  }),
 ]);
 
 export type PlatformEvent = z.infer<typeof EventSchema>;
@@ -41,23 +64,35 @@ class EventBus {
       const handlers = this.handlers.get(event.type);
       if (!handlers) return;
 
-      const promises = Array.from(handlers).map(h => this.executeWithRetry(event, h));
+      const promises = Array.from(handlers).map((h) =>
+        this.executeWithRetry(event, h),
+      );
       await Promise.all(promises);
     });
   }
 
-  private async executeWithRetry(event: PlatformEvent, handler: Handler<any>, attempt = 1) {
+  private async executeWithRetry(
+    event: PlatformEvent,
+    handler: Handler<any>,
+    attempt = 1,
+  ) {
     try {
       // Since we've validated the event type at runtime, we can safely invoke the handler
       await (handler as any)(event.payload);
     } catch (err) {
       if (attempt < this.maxRetries) {
         const delay = Math.pow(2, attempt) * 100;
-        logger.warn(`Handler for ${event.type} failed. Retrying in ${delay}ms...`, { attempt });
-        await new Promise(r => setTimeout(r, delay));
+        logger.warn(
+          `Handler for ${event.type} failed. Retrying in ${delay}ms...`,
+          { attempt },
+        );
+        await new Promise((r) => setTimeout(r, delay));
         return this.executeWithRetry(event, handler, attempt + 1);
       } else {
-        logger.error(`Handler for ${event.type} terminals failed. Routing to DLQ.`, { event });
+        logger.error(
+          `Handler for ${event.type} terminals failed. Routing to DLQ.`,
+          { event },
+        );
         await this.routeToDLQ(event, err as Error);
       }
     }
@@ -65,7 +100,10 @@ class EventBus {
 
   private async routeToDLQ(event: PlatformEvent, err: Error) {
     // In production, this would persist to a 'dead_letter_events' table
-    logger.error("DLQ: Event isolated", { type: event.type, error: err.message });
+    logger.error("DLQ: Event isolated", {
+      type: event.type,
+      error: err.message,
+    });
   }
 }
 

@@ -1,5 +1,8 @@
 import { db } from "@infrastructure/database/db.server";
-import { userEvents, reputationHistory } from "@infrastructure/database/schema.server";
+import {
+  userEvents,
+  reputationHistory,
+} from "@infrastructure/database/schema.server";
 
 import { eq, desc } from "drizzle-orm";
 import type { NarrativeDraft } from "./types";

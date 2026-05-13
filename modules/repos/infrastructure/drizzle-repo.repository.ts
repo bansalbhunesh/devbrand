@@ -12,14 +12,21 @@ export class DrizzleTrackedRepoRepository implements ITrackedRepoRepository {
     }) as unknown as TrackedRepo[];
   }
 
-  async findByIdAndUserId(id: string, userId: string): Promise<TrackedRepo | null> {
+  async findByIdAndUserId(
+    id: string,
+    userId: string,
+  ): Promise<TrackedRepo | null> {
     const row = await db.query.trackedRepos.findFirst({
       where: and(eq(trackedRepos.id, id), eq(trackedRepos.userId, userId)),
     });
     return row as unknown as TrackedRepo | null;
   }
 
-  async findByOwnerRepoAndUserId(owner: string, repo: string, userId: string): Promise<TrackedRepo | null> {
+  async findByOwnerRepoAndUserId(
+    owner: string,
+    repo: string,
+    userId: string,
+  ): Promise<TrackedRepo | null> {
     const row = await db.query.trackedRepos.findFirst({
       where: and(
         eq(trackedRepos.userId, userId),
@@ -36,11 +43,17 @@ export class DrizzleTrackedRepoRepository implements ITrackedRepoRepository {
   }
 
   async updateSecret(id: string, secret: string): Promise<void> {
-    await db.update(trackedRepos).set({ webhookSecret: secret }).where(eq(trackedRepos.id, id));
+    await db
+      .update(trackedRepos)
+      .set({ webhookSecret: secret })
+      .where(eq(trackedRepos.id, id));
   }
 
   async delete(id: string, userId: string): Promise<boolean> {
-    const res = await db.delete(trackedRepos).where(and(eq(trackedRepos.id, id), eq(trackedRepos.userId, userId))).returning();
+    const res = await db
+      .delete(trackedRepos)
+      .where(and(eq(trackedRepos.id, id), eq(trackedRepos.userId, userId)))
+      .returning();
     return res.length > 0;
   }
 }

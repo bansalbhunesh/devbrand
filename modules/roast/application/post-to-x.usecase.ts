@@ -5,7 +5,12 @@ import { userEvents } from "@infrastructure/database/schema.server";
 export class PostToXUseCase {
   constructor(private roastRepo: IRoastRepository) {}
 
-  async execute(data: { id: string; content: string; userId: string; githubLogin: string }) {
+  async execute(data: {
+    id: string;
+    content: string;
+    userId: string;
+    githubLogin: string;
+  }) {
     const { id, content, userId, githubLogin } = data;
 
     console.log(

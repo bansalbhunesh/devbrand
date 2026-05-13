@@ -11,7 +11,9 @@ export class CreateCheckoutUseCase {
 
   async execute(userId: string) {
     const instance = this.razorpayService.getInstance();
-    const user = await db.query.users.findFirst({ where: eq(users.id, userId) });
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, userId),
+    });
     if (!user) throw new Error("USER_NOT_FOUND");
 
     const amount = PRO_PLAN_AMOUNT_PAISE;

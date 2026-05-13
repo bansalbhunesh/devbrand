@@ -17,7 +17,11 @@ export class RegisterTrackedRepoUseCase {
   async execute(data: { userId: string; owner: string; repo: string }) {
     const { userId, owner, repo } = data;
 
-    const existing = await this.repoRepository.findByOwnerRepoAndUserId(owner, repo, userId);
+    const existing = await this.repoRepository.findByOwnerRepoAndUserId(
+      owner,
+      repo,
+      userId,
+    );
     if (existing) throw new Error("ALREADY_TRACKED");
 
     const secret = this.generateWebhookSecret();

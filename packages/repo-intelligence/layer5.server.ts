@@ -1,4 +1,10 @@
-import { completeText, normalizeLlmJsonText, sumUsage, ZeroUsage, type TokenUsage } from "@devbrand/ai-sdk";
+import {
+  completeText,
+  normalizeLlmJsonText,
+  sumUsage,
+  ZeroUsage,
+  type TokenUsage,
+} from "@devbrand/ai-sdk";
 import type { NarrativeRequest, NarrativeDraft } from "./types";
 
 let _usage: TokenUsage = { ...ZeroUsage };
@@ -9,7 +15,9 @@ export function consumeGeneratorUsage(): TokenUsage {
   return u;
 }
 
-export async function runLayer5(req: NarrativeRequest): Promise<NarrativeDraft> {
+export async function runLayer5(
+  req: NarrativeRequest,
+): Promise<NarrativeDraft> {
   const result = await completeText({
     promptKey: "analysis.layer5.narrative",
     variables: [JSON.stringify(req)],

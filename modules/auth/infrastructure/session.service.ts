@@ -1,4 +1,8 @@
-import { getCookie, setCookie, deleteCookie } from "@tanstack/react-start/server";
+import {
+  getCookie,
+  setCookie,
+  deleteCookie,
+} from "@tanstack/react-start/server";
 import { env } from "@devbrand/config";
 
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
@@ -25,14 +29,23 @@ export class SessionService {
     );
   }
 
-  async signSession(userId: string, sessionNonce: string, options?: { rotate?: boolean }): Promise<string> {
+  async signSession(
+    userId: string,
+    sessionNonce: string,
+    options?: { rotate?: boolean },
+  ): Promise<string> {
     const key = await this.getKey();
     const enc = new TextEncoder();
     const ts = Date.now().toString(36);
     const nonce = options?.rotate ? crypto.randomUUID().slice(0, 8) : "";
-    const payload = nonce ? `${userId}.${ts}.${sessionNonce}.${nonce}` : `${userId}.${ts}.${sessionNonce}`;
+    const payload = nonce
+      ? `${userId}.${ts}.${sessionNonce}.${nonce}`
+      : `${userId}.${ts}.${sessionNonce}`;
     const sig = await crypto.subtle.sign("HMAC", key, enc.encode(payload));
-    const sigB64 = btoa(String.fromCharCode(...new Uint8Array(sig))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+    const sigB64 = btoa(String.fromCharCode(...new Uint8Array(sig)))
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=/g, "");
     return `${payload}.${sigB64}`;
   }
 
@@ -46,11 +59,17 @@ export class SessionService {
       const enc = new TextEncoder();
       const normalizedSig = sigB64.replace(/-/g, "+").replace(/_/g, "/");
       const sig = Uint8Array.from(atob(normalizedSig), (c) => c.charCodeAt(0));
-      const valid = await crypto.subtle.verify("HMAC", key, sig, enc.encode(payload));
+      const valid = await crypto.subtle.verify(
+        "HMAC",
+        key,
+        sig,
+        enc.encode(payload),
+      );
       if (!valid) return null;
       const [userId, ts, sessionNonce] = parts;
       const issuedAt = parseInt(ts, 36);
-      if (isNaN(issuedAt) || Date.now() - issuedAt > SESSION_TTL_MS) return null;
+      if (isNaN(issuedAt) || Date.now() - issuedAt > SESSION_TTL_MS)
+        return null;
       return { userId, issuedAt, sessionNonce: sessionNonce || "" };
     } catch {
       return null;

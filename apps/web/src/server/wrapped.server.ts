@@ -37,21 +37,27 @@ export async function getWrappedStatsInternal() {
   );
   const avgImpact = Math.round(totalImpact / yearOutputs.length);
 
-  const categoryMap = yearOutputs.reduce<Record<string, number>>((acc: Record<string, number>, o: OutputRow) => {
-    const cat = o.category ?? "Other";
-    acc[cat] = (acc[cat] ?? 0) + 1;
-    return acc;
-  }, {});
+  const categoryMap = yearOutputs.reduce<Record<string, number>>(
+    (acc: Record<string, number>, o: OutputRow) => {
+      const cat = o.category ?? "Other";
+      acc[cat] = (acc[cat] ?? 0) + 1;
+      return acc;
+    },
+    {},
+  );
   const sortedCategories = (
     Object.entries(categoryMap) as [string, number][]
   ).sort(([, a], [, b]) => b - a);
   const topCategory = sortedCategories[0]?.[0] ?? "Feature";
 
-  const complexityMap = yearOutputs.reduce<Record<string, number>>((acc: Record<string, number>, o: OutputRow) => {
-    const c = o.complexityLevel ?? "Mid";
-    acc[c] = (acc[c] ?? 0) + 1;
-    return acc;
-  }, {});
+  const complexityMap = yearOutputs.reduce<Record<string, number>>(
+    (acc: Record<string, number>, o: OutputRow) => {
+      const c = o.complexityLevel ?? "Mid";
+      acc[c] = (acc[c] ?? 0) + 1;
+      return acc;
+    },
+    {},
+  );
   const topComplexity =
     Object.entries(complexityMap).sort(([, a], [, b]) => b - a)[0]?.[0] ??
     "Mid";
@@ -72,10 +78,13 @@ export async function getWrappedStatsInternal() {
 
   const stackMap = yearOutputs
     .flatMap((o) => o.stack ?? [])
-    .reduce<Record<string, number>>((acc: Record<string, number>, s: string) => {
-      acc[s] = (acc[s] ?? 0) + 1;
-      return acc;
-    }, {});
+    .reduce<Record<string, number>>(
+      (acc: Record<string, number>, s: string) => {
+        acc[s] = (acc[s] ?? 0) + 1;
+        return acc;
+      },
+      {},
+    );
   const topStack = Object.entries(stackMap)
     .sort(([, a], [, b]) => b - a)
     .slice(0, 5)

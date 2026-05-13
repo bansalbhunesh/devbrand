@@ -23,10 +23,7 @@ import { SectionLabel, SectionTitle } from "./DemoTransform";
  */
 export function Autonomy() {
   return (
-    <section
-      id="autonomy"
-      className="relative w-full overflow-hidden"
-    >
+    <section id="autonomy" className="relative w-full overflow-hidden">
       {/* Ambient glow — softer than the Roast section's red, positioned
           off-axis so it doesn't fight the demo section above. */}
       <div

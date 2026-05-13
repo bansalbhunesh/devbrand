@@ -9,7 +9,12 @@ import { outputs } from "@infrastructure/database/schema.server";
  * Coordinates the full analysis pipeline from ingestion to narrative persistence.
  */
 
-type PRState = "INITIALIZING" | "ANALYZING" | "PERSISTING" | "COMPLETED" | "FAILED";
+type PRState =
+  | "INITIALIZING"
+  | "ANALYZING"
+  | "PERSISTING"
+  | "COMPLETED"
+  | "FAILED";
 
 export class AnalyzePRWorkflow extends Workflow<PRState> {
   async execute() {
@@ -31,15 +36,18 @@ export class AnalyzePRWorkflow extends Workflow<PRState> {
       await this.transition("ANALYZING", "PERSISTING");
 
       // Save the output
-      const [newOutput] = await db.insert(outputs).values({
-        userId: this.ctx.userId,
-        prUrl: prUrl,
-        prTitle: result.summary.title,
-        impactScore: result.summary.impactScore,
-        category: result.summary.category,
-        content: JSON.stringify(result),
-        slug: Math.random().toString(36).substring(7),
-      }).returning();
+      const [newOutput] = await db
+        .insert(outputs)
+        .values({
+          userId: this.ctx.userId,
+          prUrl: prUrl,
+          prTitle: result.summary.title,
+          impactScore: result.summary.impactScore,
+          category: result.summary.category,
+          content: JSON.stringify(result),
+          slug: Math.random().toString(36).substring(7),
+        })
+        .returning();
 
       await mesh.emit({
         type: "analysis.completed",
@@ -47,7 +55,6 @@ export class AnalyzePRWorkflow extends Workflow<PRState> {
       });
 
       await this.transition("PERSISTING", "COMPLETED");
-
     } catch (err) {
       await this.transition("ANALYZING", "FAILED");
       throw err;

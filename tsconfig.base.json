@@ -19,7 +19,9 @@
     "paths": {
       "@/*": ["./src/*"],
       "@devbrand/ai-sdk": ["./packages/ai-sdk/index.ts"],
-      "@devbrand/repo-intelligence": ["./packages/repo-intelligence/index.server.ts"],
+      "@devbrand/repo-intelligence": [
+        "./packages/repo-intelligence/index.server.ts"
+      ],
       "@devbrand/config": ["./packages/config/env.ts"],
       "@infrastructure/*": ["./infrastructure/*"],
       "@modules/*": ["./modules/*"]

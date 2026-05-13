@@ -22,7 +22,10 @@ export class GetPublicFeedUseCase {
     const rankedEngineers = topEngineers
       .map((u: any) => ({
         ...u,
-        totalImpact: u.outputs.reduce((s: number, o: any) => s + (o.impactScore || 0), 0),
+        totalImpact: u.outputs.reduce(
+          (s: number, o: any) => s + (o.impactScore || 0),
+          0,
+        ),
         avgImpact: Math.round(
           u.outputs.reduce((s: number, o: any) => s + (o.impactScore || 0), 0) /
             (u.outputs.length || 1),

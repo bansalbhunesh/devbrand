@@ -76,7 +76,9 @@ export async function verifyState(signedState: string): Promise<string | null> {
   const enc = new TextEncoder();
 
   const normalizedSig = sigB64.replace(/-/g, "+").replace(/_/g, "/");
-  const sig = Uint8Array.from(atob(normalizedSig), (c: string) => c.charCodeAt(0));
+  const sig = Uint8Array.from(atob(normalizedSig), (c: string) =>
+    c.charCodeAt(0),
+  );
 
   const valid = await crypto.subtle.verify("HMAC", key, sig, enc.encode(state));
   return valid ? state : null;
@@ -122,7 +124,9 @@ async function verifySession(
     const enc = new TextEncoder();
 
     const normalizedSig = sigB64.replace(/-/g, "+").replace(/_/g, "/");
-    const sig = Uint8Array.from(atob(normalizedSig), (c: string) => c.charCodeAt(0));
+    const sig = Uint8Array.from(atob(normalizedSig), (c: string) =>
+      c.charCodeAt(0),
+    );
 
     const valid = await crypto.subtle.verify(
       "HMAC",

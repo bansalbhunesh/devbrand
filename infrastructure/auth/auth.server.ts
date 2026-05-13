@@ -8,17 +8,25 @@ import {
 import { db } from "@infrastructure/database/db.server";
 import { users } from "@infrastructure/database/schema.server";
 import { eq } from "drizzle-orm";
-import { rateLimit, logSecurityEvent } from "@infrastructure/cache/redis.server";
+import {
+  rateLimit,
+  logSecurityEvent,
+} from "@infrastructure/cache/redis.server";
 import { env } from "@devbrand/config";
 
 function sessionCookieName(): string {
-  // @ts-ignore - import.meta.env might not be available in all environments, fallback to devbrand_sid
-  return (typeof import.meta !== 'undefined' && import.meta.env?.PROD) ? "__Secure-devbrand_sid" : "devbrand_sid";
+  // @ts-expect-error - import.meta.env might not be available in all environments, fallback to devbrand_sid
+  return typeof import.meta !== "undefined" && import.meta.env?.PROD
+    ? "__Secure-devbrand_sid"
+    : "devbrand_sid";
 }
 
 function cookieSecure(): boolean {
-  // @ts-ignore
-  return process.env.NODE_ENV === "production" || (typeof import.meta !== 'undefined' && import.meta.env?.PROD);
+  // @ts-expect-error - process.env might not be fully typed in this context
+  return (
+    process.env.NODE_ENV === "production" ||
+    (typeof import.meta !== "undefined" && import.meta.env?.PROD)
+  );
 }
 
 const STATE_COOKIE_NAME = "devbrand_oauth_state";
@@ -78,7 +86,9 @@ export async function verifyState(signedState: string): Promise<string | null> {
   const enc = new TextEncoder();
 
   const normalizedSig = sigB64.replace(/-/g, "+").replace(/_/g, "/");
-  const sig = Uint8Array.from(atob(normalizedSig), (c: string) => c.charCodeAt(0));
+  const sig = Uint8Array.from(atob(normalizedSig), (c: string) =>
+    c.charCodeAt(0),
+  );
 
   const valid = await crypto.subtle.verify("HMAC", key, sig, enc.encode(state));
   return valid ? state : null;
@@ -124,7 +134,9 @@ async function verifySession(
     const enc = new TextEncoder();
 
     const normalizedSig = sigB64.replace(/-/g, "+").replace(/_/g, "/");
-    const sig = Uint8Array.from(atob(normalizedSig), (c: string) => c.charCodeAt(0));
+    const sig = Uint8Array.from(atob(normalizedSig), (c: string) =>
+      c.charCodeAt(0),
+    );
 
     const valid = await crypto.subtle.verify(
       "HMAC",
@@ -345,7 +357,8 @@ export async function getSecurityEventsFn() {
   const user = await loadSessionUser();
   if (!user) throw new Error("UNAUTHORIZED");
   if (user.plan !== "pro") throw new Error("PRO_REQUIRED");
-  const { readSecurityEvents } = await import("@infrastructure/cache/redis.server");
+  const { readSecurityEvents } =
+    await import("@infrastructure/cache/redis.server");
   const rows = await readSecurityEvents(100);
   return rows.map((r: any) => ({
     type: r.type,

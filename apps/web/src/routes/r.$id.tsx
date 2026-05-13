@@ -211,12 +211,14 @@ function RoastPage() {
                 Signal Class
               </div>
               <div className="text-xl font-bold uppercase tracking-tight text-foreground/80">
-                {({
-                  LOW: "Faint",
-                  MEDIUM: "Steady",
-                  HIGH: "Strong",
-                  NUCLEAR: "Elite",
-                } as Record<string, string>)[criticality] ?? criticality}
+                {(
+                  {
+                    LOW: "Faint",
+                    MEDIUM: "Steady",
+                    HIGH: "Strong",
+                    NUCLEAR: "Elite",
+                  } as Record<string, string>
+                )[criticality] ?? criticality}
               </div>
             </div>
             <div className="ml-auto text-right hidden sm:block">

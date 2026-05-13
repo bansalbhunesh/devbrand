@@ -1,5 +1,9 @@
 import { db } from "@infrastructure/database/db.server";
-import { outputs, users, userEvents } from "@infrastructure/database/schema.server";
+import {
+  outputs,
+  users,
+  userEvents,
+} from "@infrastructure/database/schema.server";
 import { eq, sql } from "drizzle-orm";
 import { runEngine } from "@/server/engine/index.server";
 import type { UserContext } from "@/server/engine/types";
@@ -15,18 +19,25 @@ export class RunTransformUseCase {
   async execute(args: { userId: string; prUrl: string }) {
     const { userId, prUrl } = args;
 
-    const dbUser = await db.query.users.findFirst({ where: eq(users.id, userId) });
+    const dbUser = await db.query.users.findFirst({
+      where: eq(users.id, userId),
+    });
     if (!dbUser) throw new Error("USER_NOT_FOUND");
 
-    const { checkAndResetLimits, enforceTokenBudget, recordTokenUsage } = await import("@/server/limits.server");
+    const { checkAndResetLimits, enforceTokenBudget, recordTokenUsage } =
+      await import("@/server/limits.server");
     const freshUser = await checkAndResetLimits(userId);
 
-    const isFreeLimitReached = freshUser?.plan === "free" && (freshUser?.generationsThisMonth ?? 0) >= 3;
+    const isFreeLimitReached =
+      freshUser?.plan === "free" && (freshUser?.generationsThisMonth ?? 0) >= 3;
     if (isFreeLimitReached) throw new Error("LIMIT_REACHED");
 
     await enforceTokenBudget(userId);
 
-    const engineTimeoutMs = parseInt(process.env.ENGINE_TIMEOUT_MS || "300000", 10);
+    const engineTimeoutMs = parseInt(
+      process.env.ENGINE_TIMEOUT_MS || "300000",
+      10,
+    );
 
     const context: UserContext = {
       seniority: dbUser.seniority as any,
@@ -72,12 +83,22 @@ export class RunTransformUseCase {
       .returning();
 
     await Promise.all([
-      db.update(users).set({ generationsThisMonth: sql`${users.generationsThisMonth} + 1` }).where(eq(users.id, userId)),
+      db
+        .update(users)
+        .set({ generationsThisMonth: sql`${users.generationsThisMonth} + 1` })
+        .where(eq(users.id, userId)),
       recordTokenUsage(userId, usage),
       db.insert(userEvents).values({
         userId,
         eventType: "generate",
-        payload: { outputId: inserted.id, slug, prUrl, impactScore: output.impactScore, category: output.category, usage } as any,
+        payload: {
+          outputId: inserted.id,
+          slug,
+          prUrl,
+          impactScore: output.impactScore,
+          category: output.category,
+          usage,
+        } as any,
       }),
     ]);
 

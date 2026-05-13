@@ -18,10 +18,13 @@ function LandingPage() {
   return (
     <div className="min-h-screen bg-background">
       <main className="w-full">
-        <section id="hero" className="snap-start min-h-screen flex items-center w-full">
+        <section
+          id="hero"
+          className="snap-start min-h-screen flex items-center w-full"
+        >
           <Hero />
         </section>
-        
+
         <section id="demo" className="scroll-mt-20 w-full">
           <DemoTransform />
         </section>
@@ -30,23 +33,38 @@ function LandingPage() {
           <Workflow />
         </section>
 
-        <section id="autonomy" className="scroll-mt-20 snap-start min-h-screen flex items-center w-full">
+        <section
+          id="autonomy"
+          className="scroll-mt-20 snap-start min-h-screen flex items-center w-full"
+        >
           <Autonomy />
         </section>
 
-        <section id="intelligence" className="scroll-mt-20 snap-start min-h-screen flex items-center w-full">
+        <section
+          id="intelligence"
+          className="scroll-mt-20 snap-start min-h-screen flex items-center w-full"
+        >
           <Intelligence />
         </section>
 
-        <section id="invisible-work" className="scroll-mt-20 snap-start min-h-screen flex items-center w-full">
+        <section
+          id="invisible-work"
+          className="scroll-mt-20 snap-start min-h-screen flex items-center w-full"
+        >
           <InvisibleWork />
         </section>
 
-        <section id="roast" className="scroll-mt-20 snap-start min-h-screen flex items-center w-full">
+        <section
+          id="roast"
+          className="scroll-mt-20 snap-start min-h-screen flex items-center w-full"
+        >
           <Roast />
         </section>
 
-        <section id="pricing" className="scroll-mt-20 snap-start min-h-screen flex items-center w-full">
+        <section
+          id="pricing"
+          className="scroll-mt-20 snap-start min-h-screen flex items-center w-full"
+        >
           <Pricing />
         </section>
       </main>

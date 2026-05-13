@@ -15,7 +15,8 @@ export async function buildImportGraph(
   repo: string,
 ): Promise<ArchGraph> {
   const existing = await db.query.repoGraphs.findFirst({
-    where: (rg: any, { and, eq }: any) => and(eq(rg.owner, owner), eq(rg.repo, repo)),
+    where: (rg: any, { and, eq }: any) =>
+      and(eq(rg.owner, owner), eq(rg.repo, repo)),
   });
 
   // Cache for 24h

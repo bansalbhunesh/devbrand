@@ -1,9 +1,16 @@
 import { db } from "@infrastructure/database/db.server";
-import { backgroundJobs, scheduledPosts, outputs } from "@infrastructure/database/schema.server";
+import {
+  backgroundJobs,
+  scheduledPosts,
+  outputs,
+} from "@infrastructure/database/schema.server";
 import { eq, sql, inArray } from "drizzle-orm";
 import { loadSessionUser } from "@infrastructure/auth/auth.server";
 import { env } from "@devbrand/config";
-import { registerWorkflow, runWorkflow } from "../../modules/core/workflow/engine";
+import {
+  registerWorkflow,
+  runWorkflow,
+} from "../../modules/core/workflow/engine";
 import { AnalyzePRWorkflow } from "../../modules/repos/application/analyze-pr.workflow";
 
 // --- Workflow Registration ---
@@ -189,13 +196,13 @@ export async function drainQueueTick(limit = 3): Promise<{
         }
 
         if (!prUrl) throw new Error("BAD_PAYLOAD");
-        
+
         await runWorkflow(job.type, {
           jobId: job.id,
           userId: job.userId,
           payload: { prUrl },
         });
-        
+
         outcomes.push({ jobId: job.id, status: "completed" });
       } else if (job.type === "publish_scheduled_post") {
         const result = await publishScheduledPost(job);

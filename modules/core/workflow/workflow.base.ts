@@ -16,9 +16,9 @@ export abstract class Workflow<TInput, TOutput> {
   async run(input: TInput, context: WorkflowContext): Promise<TOutput> {
     try {
       await this.updateStatus(context.jobId, "PROCESSING");
-      
+
       const result = await this.execute(input, context);
-      
+
       await this.updateStatus(context.jobId, "COMPLETED", result);
       return result;
     } catch (err: any) {
@@ -29,20 +29,34 @@ export abstract class Workflow<TInput, TOutput> {
 
   protected async updateStep(jobId: string, step: string) {
     console.log(`[Workflow] Job ${jobId} -> Step: ${step}`);
-    await db.update(backgroundJobs).set({
-      payload: sql`${backgroundJobs.payload} || jsonb_build_object('currentStep', ${step})`,
-      updatedAt: new Date(),
-    }).where(eq(backgroundJobs.id, jobId));
+    await db
+      .update(backgroundJobs)
+      .set({
+        payload: sql`${backgroundJobs.payload} || jsonb_build_object('currentStep', ${step})`,
+        updatedAt: new Date(),
+      })
+      .where(eq(backgroundJobs.id, jobId));
   }
 
-  protected abstract execute(input: TInput, context: WorkflowContext): Promise<TOutput>;
+  protected abstract execute(
+    input: TInput,
+    context: WorkflowContext,
+  ): Promise<TOutput>;
 
-  private async updateStatus(jobId: string, status: string, result: any = null, error: string | null = null) {
-    await db.update(backgroundJobs).set({
-      status: status as any,
-      result: result as any,
-      error,
-      updatedAt: new Date(),
-    }).where(eq(backgroundJobs.id, jobId));
+  private async updateStatus(
+    jobId: string,
+    status: string,
+    result: any = null,
+    error: string | null = null,
+  ) {
+    await db
+      .update(backgroundJobs)
+      .set({
+        status: status as any,
+        result: result as any,
+        error,
+        updatedAt: new Date(),
+      })
+      .where(eq(backgroundJobs.id, jobId));
   }
 }

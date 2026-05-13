@@ -52,7 +52,10 @@ export abstract class Workflow<TState extends string> {
 /**
  * Registry to map job types to workflow implementations.
  */
-const workflowRegistry: Map<string, new (ctx: WorkflowContext) => Workflow<any>> = new Map();
+const workflowRegistry: Map<
+  string,
+  new (ctx: WorkflowContext) => Workflow<any>
+> = new Map();
 
 export function registerWorkflow(
   type: string,

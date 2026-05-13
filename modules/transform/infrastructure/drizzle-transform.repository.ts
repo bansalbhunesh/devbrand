@@ -1,11 +1,20 @@
 import { db } from "@infrastructure/database/db.server";
-import { outputs, users, userEvents } from "@infrastructure/database/schema.server";
+import {
+  outputs,
+  users,
+  userEvents,
+} from "@infrastructure/database/schema.server";
 import { eq, sql } from "drizzle-orm";
-import { TransformRepository, SaveTransformResultInput } from "../contracts/transform.repository";
+import {
+  TransformRepository,
+  SaveTransformResultInput,
+} from "../contracts/transform.repository";
 import { recordTokenUsage } from "@/server/limits.server";
 
 export class DrizzleTransformRepository implements TransformRepository {
-  async saveResult(input: SaveTransformResultInput): Promise<{ id: string; slug: string }> {
+  async saveResult(
+    input: SaveTransformResultInput,
+  ): Promise<{ id: string; slug: string }> {
     const { userId, prUrl, output, usage, slug } = input;
 
     const [inserted] = await db
@@ -41,7 +50,14 @@ export class DrizzleTransformRepository implements TransformRepository {
     await db.insert(userEvents).values({
       userId,
       eventType: "generate",
-      payload: { outputId: inserted.id, slug, prUrl, impactScore: output.impactScore, category: output.category, usage } as any,
+      payload: {
+        outputId: inserted.id,
+        slug,
+        prUrl,
+        impactScore: output.impactScore,
+        category: output.category,
+        usage,
+      } as any,
     });
 
     // Record token usage

@@ -4,8 +4,10 @@
  */
 
 export const logger = {
-  info: (msg: string, ctx: any = {}) => console.log(`[INFO] ${msg}`, JSON.stringify(ctx)),
-  warn: (msg: string, ctx: any = {}) => console.warn(`[WARN] ${msg}`, JSON.stringify(ctx)),
+  info: (msg: string, ctx: any = {}) =>
+    console.log(`[INFO] ${msg}`, JSON.stringify(ctx)),
+  warn: (msg: string, ctx: any = {}) =>
+    console.warn(`[WARN] ${msg}`, JSON.stringify(ctx)),
   error: (msg: string, ctx: any = {}, err?: Error) => {
     console.error(`[ERROR] ${msg}`, JSON.stringify(ctx), err?.stack);
     // In production, this would send to Sentry/Axiom
@@ -22,9 +24,11 @@ export async function trace<T>(
 ): Promise<T> {
   const start = Date.now();
   const tags: Record<string, any> = {};
-  
+
   const span = {
-    setTag: (k: string, v: any) => { tags[k] = v; },
+    setTag: (k: string, v: any) => {
+      tags[k] = v;
+    },
   };
 
   try {

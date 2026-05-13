@@ -9,6 +9,8 @@ export interface SaveTransformResultInput {
 }
 
 export interface TransformRepository {
-  saveResult(input: SaveTransformResultInput): Promise<{ id: string; slug: string }>;
+  saveResult(
+    input: SaveTransformResultInput,
+  ): Promise<{ id: string; slug: string }>;
   incrementGenerationCount(userId: string): Promise<void>;
 }

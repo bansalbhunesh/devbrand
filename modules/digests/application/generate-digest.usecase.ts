@@ -3,14 +3,20 @@ import { DigestKind } from "../domain/digest.entities";
 import { db } from "@infrastructure/database/db.server";
 import { outputs, userEvents } from "@infrastructure/database/schema.server";
 import { and, eq, desc, gte, lte } from "drizzle-orm";
-import { completeText, normalizeLlmJsonText } from "@/modules/ai/infrastructure/llm.gateway";
+import {
+  completeText,
+  normalizeLlmJsonText,
+} from "@/modules/ai/infrastructure/llm.gateway";
 
 const MAX_OUTPUTS_PER_DIGEST = 40;
 
 export class GenerateDigestUseCase {
   constructor(private digestRepo: IDigestRepository) {}
 
-  async execute(userId: string, args: { since: Date; until: Date; kind: DigestKind }) {
+  async execute(
+    userId: string,
+    args: { since: Date; until: Date; kind: DigestKind },
+  ) {
     const since = new Date(args.since);
     const until = new Date(args.until);
 
@@ -26,7 +32,13 @@ export class GenerateDigestUseCase {
         createdAt: outputs.createdAt,
       })
       .from(outputs)
-      .where(and(eq(outputs.userId, userId), gte(outputs.createdAt, since), lte(outputs.createdAt, until)))
+      .where(
+        and(
+          eq(outputs.userId, userId),
+          gte(outputs.createdAt, since),
+          lte(outputs.createdAt, until),
+        ),
+      )
       .orderBy(desc(outputs.createdAt))
       .limit(MAX_OUTPUTS_PER_DIGEST);
 
@@ -34,14 +46,24 @@ export class GenerateDigestUseCase {
 
     // 2. Prompt Assembly (Logic moved from helpers)
     const systemPrompt = this.buildSystemPrompt(args.kind, rows.length);
-    const userMessage = rows.map(r => `### ${r.prTitle}\n- id: ${r.id}\n- category: ${r.category}\n- impact: ${r.impactScore}\n- bullet: ${r.resumeBullet}`).join("\n\n");
+    const userMessage = rows
+      .map(
+        (r) =>
+          `### ${r.prTitle}\n- id: ${r.id}\n- category: ${r.category}\n- impact: ${r.impactScore}\n- bullet: ${r.resumeBullet}`,
+      )
+      .join("\n\n");
 
     // 3. LLM Call
-    const result = await completeText({ system: systemPrompt, user: userMessage, maxTokens: 3000, temperature: 0.6 });
+    const result = await completeText({
+      system: systemPrompt,
+      user: userMessage,
+      maxTokens: 3000,
+      temperature: 0.6,
+    });
 
     // 4. Parse & Normalize
     const parsed = JSON.parse(normalizeLlmJsonText(result.text));
-    
+
     // 5. Persist
     const inserted = await this.digestRepo.save({
       userId,
@@ -51,7 +73,7 @@ export class GenerateDigestUseCase {
       linkedinPost: parsed.linkedinPost,
       twitterThread: parsed.twitterThread,
       releaseNotes: parsed.releaseNotes,
-      includedOutputIds: rows.map(r => r.id),
+      includedOutputIds: rows.map((r) => r.id),
     });
 
     // 6. Token Usage & Events
@@ -61,7 +83,12 @@ export class GenerateDigestUseCase {
       db.insert(userEvents).values({
         userId,
         eventType: "digest_generate",
-        payload: { digestId: inserted.id, kind: args.kind, outputCount: rows.length, usage: result.usage } as any,
+        payload: {
+          digestId: inserted.id,
+          kind: args.kind,
+          outputCount: rows.length,
+          usage: result.usage,
+        } as any,
       }),
     ]);
 

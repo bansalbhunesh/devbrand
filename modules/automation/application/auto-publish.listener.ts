@@ -12,7 +12,7 @@ export class AutoPublishListener {
 
       // 1. Get the output details (specifically the prUrl)
       const output = await db.query.outputs.findFirst({
-        where: eq(outputs.id, outputId)
+        where: eq(outputs.id, outputId),
       });
       if (!output) return;
 
@@ -27,12 +27,14 @@ export class AutoPublishListener {
           eq(trackedRepos.userId, userId),
           eq(trackedRepos.owner, owner),
           eq(trackedRepos.repo, repoName),
-          eq(trackedRepos.autoPublish, true)
-        )
+          eq(trackedRepos.autoPublish, true),
+        ),
       });
 
       if (repo) {
-        console.log(`[AutoPublish] Triggering publish for ${outputId} on repo ${owner}/${repoName}`);
+        console.log(
+          `[AutoPublish] Triggering publish for ${outputId} on repo ${owner}/${repoName}`,
+        );
         // Here we would call the PublishUseCase or schedule it
         // For now, we log the intent.
       }

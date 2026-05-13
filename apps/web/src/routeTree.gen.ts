@@ -8,350 +8,350 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from './routes/__root'
-import { Route as WrappedRouteImport } from './routes/wrapped'
-import { Route as RoastFriendRouteImport } from './routes/roast-friend'
-import { Route as RoastRouteImport } from './routes/roast'
-import { Route as ReferralsRouteImport } from './routes/referrals'
-import { Route as ExploreRouteImport } from './routes/explore'
-import { Route as DashboardRouteImport } from './routes/dashboard'
-import { Route as AdminRouteImport } from './routes/admin'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as WebhooksRazorpayRouteImport } from './routes/webhooks.razorpay'
-import { Route as WebhooksGithubRouteImport } from './routes/webhooks.github'
-import { Route as ULoginRouteImport } from './routes/u.$login'
-import { Route as TeamIdRouteImport } from './routes/team.$id'
-import { Route as TSlugRouteImport } from './routes/t.$slug'
-import { Route as RIdRouteImport } from './routes/r.$id'
-import { Route as InternalCronDrainRouteImport } from './routes/internal.cron.drain'
-import { Route as ApiAuthCallbackGithubRouteImport } from './routes/api.auth.callback.github'
+import { Route as rootRouteImport } from "./routes/__root";
+import { Route as WrappedRouteImport } from "./routes/wrapped";
+import { Route as RoastFriendRouteImport } from "./routes/roast-friend";
+import { Route as RoastRouteImport } from "./routes/roast";
+import { Route as ReferralsRouteImport } from "./routes/referrals";
+import { Route as ExploreRouteImport } from "./routes/explore";
+import { Route as DashboardRouteImport } from "./routes/dashboard";
+import { Route as AdminRouteImport } from "./routes/admin";
+import { Route as IndexRouteImport } from "./routes/index";
+import { Route as WebhooksRazorpayRouteImport } from "./routes/webhooks.razorpay";
+import { Route as WebhooksGithubRouteImport } from "./routes/webhooks.github";
+import { Route as ULoginRouteImport } from "./routes/u.$login";
+import { Route as TeamIdRouteImport } from "./routes/team.$id";
+import { Route as TSlugRouteImport } from "./routes/t.$slug";
+import { Route as RIdRouteImport } from "./routes/r.$id";
+import { Route as InternalCronDrainRouteImport } from "./routes/internal.cron.drain";
+import { Route as ApiAuthCallbackGithubRouteImport } from "./routes/api.auth.callback.github";
 
 const WrappedRoute = WrappedRouteImport.update({
-  id: '/wrapped',
-  path: '/wrapped',
+  id: "/wrapped",
+  path: "/wrapped",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const RoastFriendRoute = RoastFriendRouteImport.update({
-  id: '/roast-friend',
-  path: '/roast-friend',
+  id: "/roast-friend",
+  path: "/roast-friend",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const RoastRoute = RoastRouteImport.update({
-  id: '/roast',
-  path: '/roast',
+  id: "/roast",
+  path: "/roast",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const ReferralsRoute = ReferralsRouteImport.update({
-  id: '/referrals',
-  path: '/referrals',
+  id: "/referrals",
+  path: "/referrals",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const ExploreRoute = ExploreRouteImport.update({
-  id: '/explore',
-  path: '/explore',
+  id: "/explore",
+  path: "/explore",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const DashboardRoute = DashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
+  id: "/dashboard",
+  path: "/dashboard",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const AdminRoute = AdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
+  id: "/admin",
+  path: "/admin",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+  id: "/",
+  path: "/",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const WebhooksRazorpayRoute = WebhooksRazorpayRouteImport.update({
-  id: '/webhooks/razorpay',
-  path: '/webhooks/razorpay',
+  id: "/webhooks/razorpay",
+  path: "/webhooks/razorpay",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const WebhooksGithubRoute = WebhooksGithubRouteImport.update({
-  id: '/webhooks/github',
-  path: '/webhooks/github',
+  id: "/webhooks/github",
+  path: "/webhooks/github",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const ULoginRoute = ULoginRouteImport.update({
-  id: '/u/$login',
-  path: '/u/$login',
+  id: "/u/$login",
+  path: "/u/$login",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const TeamIdRoute = TeamIdRouteImport.update({
-  id: '/team/$id',
-  path: '/team/$id',
+  id: "/team/$id",
+  path: "/team/$id",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const TSlugRoute = TSlugRouteImport.update({
-  id: '/t/$slug',
-  path: '/t/$slug',
+  id: "/t/$slug",
+  path: "/t/$slug",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const RIdRoute = RIdRouteImport.update({
-  id: '/r/$id',
-  path: '/r/$id',
+  id: "/r/$id",
+  path: "/r/$id",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const InternalCronDrainRoute = InternalCronDrainRouteImport.update({
-  id: '/internal/cron/drain',
-  path: '/internal/cron/drain',
+  id: "/internal/cron/drain",
+  path: "/internal/cron/drain",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const ApiAuthCallbackGithubRoute = ApiAuthCallbackGithubRouteImport.update({
-  id: '/api/auth/callback/github',
-  path: '/api/auth/callback/github',
+  id: "/api/auth/callback/github",
+  path: "/api/auth/callback/github",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
-  '/dashboard': typeof DashboardRoute
-  '/explore': typeof ExploreRoute
-  '/referrals': typeof ReferralsRoute
-  '/roast': typeof RoastRoute
-  '/roast-friend': typeof RoastFriendRoute
-  '/wrapped': typeof WrappedRoute
-  '/r/$id': typeof RIdRoute
-  '/t/$slug': typeof TSlugRoute
-  '/team/$id': typeof TeamIdRoute
-  '/u/$login': typeof ULoginRoute
-  '/webhooks/github': typeof WebhooksGithubRoute
-  '/webhooks/razorpay': typeof WebhooksRazorpayRoute
-  '/internal/cron/drain': typeof InternalCronDrainRoute
-  '/api/auth/callback/github': typeof ApiAuthCallbackGithubRoute
+  "/": typeof IndexRoute;
+  "/admin": typeof AdminRoute;
+  "/dashboard": typeof DashboardRoute;
+  "/explore": typeof ExploreRoute;
+  "/referrals": typeof ReferralsRoute;
+  "/roast": typeof RoastRoute;
+  "/roast-friend": typeof RoastFriendRoute;
+  "/wrapped": typeof WrappedRoute;
+  "/r/$id": typeof RIdRoute;
+  "/t/$slug": typeof TSlugRoute;
+  "/team/$id": typeof TeamIdRoute;
+  "/u/$login": typeof ULoginRoute;
+  "/webhooks/github": typeof WebhooksGithubRoute;
+  "/webhooks/razorpay": typeof WebhooksRazorpayRoute;
+  "/internal/cron/drain": typeof InternalCronDrainRoute;
+  "/api/auth/callback/github": typeof ApiAuthCallbackGithubRoute;
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
-  '/dashboard': typeof DashboardRoute
-  '/explore': typeof ExploreRoute
-  '/referrals': typeof ReferralsRoute
-  '/roast': typeof RoastRoute
-  '/roast-friend': typeof RoastFriendRoute
-  '/wrapped': typeof WrappedRoute
-  '/r/$id': typeof RIdRoute
-  '/t/$slug': typeof TSlugRoute
-  '/team/$id': typeof TeamIdRoute
-  '/u/$login': typeof ULoginRoute
-  '/webhooks/github': typeof WebhooksGithubRoute
-  '/webhooks/razorpay': typeof WebhooksRazorpayRoute
-  '/internal/cron/drain': typeof InternalCronDrainRoute
-  '/api/auth/callback/github': typeof ApiAuthCallbackGithubRoute
+  "/": typeof IndexRoute;
+  "/admin": typeof AdminRoute;
+  "/dashboard": typeof DashboardRoute;
+  "/explore": typeof ExploreRoute;
+  "/referrals": typeof ReferralsRoute;
+  "/roast": typeof RoastRoute;
+  "/roast-friend": typeof RoastFriendRoute;
+  "/wrapped": typeof WrappedRoute;
+  "/r/$id": typeof RIdRoute;
+  "/t/$slug": typeof TSlugRoute;
+  "/team/$id": typeof TeamIdRoute;
+  "/u/$login": typeof ULoginRoute;
+  "/webhooks/github": typeof WebhooksGithubRoute;
+  "/webhooks/razorpay": typeof WebhooksRazorpayRoute;
+  "/internal/cron/drain": typeof InternalCronDrainRoute;
+  "/api/auth/callback/github": typeof ApiAuthCallbackGithubRoute;
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
-  '/dashboard': typeof DashboardRoute
-  '/explore': typeof ExploreRoute
-  '/referrals': typeof ReferralsRoute
-  '/roast': typeof RoastRoute
-  '/roast-friend': typeof RoastFriendRoute
-  '/wrapped': typeof WrappedRoute
-  '/r/$id': typeof RIdRoute
-  '/t/$slug': typeof TSlugRoute
-  '/team/$id': typeof TeamIdRoute
-  '/u/$login': typeof ULoginRoute
-  '/webhooks/github': typeof WebhooksGithubRoute
-  '/webhooks/razorpay': typeof WebhooksRazorpayRoute
-  '/internal/cron/drain': typeof InternalCronDrainRoute
-  '/api/auth/callback/github': typeof ApiAuthCallbackGithubRoute
+  __root__: typeof rootRouteImport;
+  "/": typeof IndexRoute;
+  "/admin": typeof AdminRoute;
+  "/dashboard": typeof DashboardRoute;
+  "/explore": typeof ExploreRoute;
+  "/referrals": typeof ReferralsRoute;
+  "/roast": typeof RoastRoute;
+  "/roast-friend": typeof RoastFriendRoute;
+  "/wrapped": typeof WrappedRoute;
+  "/r/$id": typeof RIdRoute;
+  "/t/$slug": typeof TSlugRoute;
+  "/team/$id": typeof TeamIdRoute;
+  "/u/$login": typeof ULoginRoute;
+  "/webhooks/github": typeof WebhooksGithubRoute;
+  "/webhooks/razorpay": typeof WebhooksRazorpayRoute;
+  "/internal/cron/drain": typeof InternalCronDrainRoute;
+  "/api/auth/callback/github": typeof ApiAuthCallbackGithubRoute;
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath
+  fileRoutesByFullPath: FileRoutesByFullPath;
   fullPaths:
-    | '/'
-    | '/admin'
-    | '/dashboard'
-    | '/explore'
-    | '/referrals'
-    | '/roast'
-    | '/roast-friend'
-    | '/wrapped'
-    | '/r/$id'
-    | '/t/$slug'
-    | '/team/$id'
-    | '/u/$login'
-    | '/webhooks/github'
-    | '/webhooks/razorpay'
-    | '/internal/cron/drain'
-    | '/api/auth/callback/github'
-  fileRoutesByTo: FileRoutesByTo
+    | "/"
+    | "/admin"
+    | "/dashboard"
+    | "/explore"
+    | "/referrals"
+    | "/roast"
+    | "/roast-friend"
+    | "/wrapped"
+    | "/r/$id"
+    | "/t/$slug"
+    | "/team/$id"
+    | "/u/$login"
+    | "/webhooks/github"
+    | "/webhooks/razorpay"
+    | "/internal/cron/drain"
+    | "/api/auth/callback/github";
+  fileRoutesByTo: FileRoutesByTo;
   to:
-    | '/'
-    | '/admin'
-    | '/dashboard'
-    | '/explore'
-    | '/referrals'
-    | '/roast'
-    | '/roast-friend'
-    | '/wrapped'
-    | '/r/$id'
-    | '/t/$slug'
-    | '/team/$id'
-    | '/u/$login'
-    | '/webhooks/github'
-    | '/webhooks/razorpay'
-    | '/internal/cron/drain'
-    | '/api/auth/callback/github'
+    | "/"
+    | "/admin"
+    | "/dashboard"
+    | "/explore"
+    | "/referrals"
+    | "/roast"
+    | "/roast-friend"
+    | "/wrapped"
+    | "/r/$id"
+    | "/t/$slug"
+    | "/team/$id"
+    | "/u/$login"
+    | "/webhooks/github"
+    | "/webhooks/razorpay"
+    | "/internal/cron/drain"
+    | "/api/auth/callback/github";
   id:
-    | '__root__'
-    | '/'
-    | '/admin'
-    | '/dashboard'
-    | '/explore'
-    | '/referrals'
-    | '/roast'
-    | '/roast-friend'
-    | '/wrapped'
-    | '/r/$id'
-    | '/t/$slug'
-    | '/team/$id'
-    | '/u/$login'
-    | '/webhooks/github'
-    | '/webhooks/razorpay'
-    | '/internal/cron/drain'
-    | '/api/auth/callback/github'
-  fileRoutesById: FileRoutesById
+    | "__root__"
+    | "/"
+    | "/admin"
+    | "/dashboard"
+    | "/explore"
+    | "/referrals"
+    | "/roast"
+    | "/roast-friend"
+    | "/wrapped"
+    | "/r/$id"
+    | "/t/$slug"
+    | "/team/$id"
+    | "/u/$login"
+    | "/webhooks/github"
+    | "/webhooks/razorpay"
+    | "/internal/cron/drain"
+    | "/api/auth/callback/github";
+  fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  AdminRoute: typeof AdminRoute
-  DashboardRoute: typeof DashboardRoute
-  ExploreRoute: typeof ExploreRoute
-  ReferralsRoute: typeof ReferralsRoute
-  RoastRoute: typeof RoastRoute
-  RoastFriendRoute: typeof RoastFriendRoute
-  WrappedRoute: typeof WrappedRoute
-  RIdRoute: typeof RIdRoute
-  TSlugRoute: typeof TSlugRoute
-  TeamIdRoute: typeof TeamIdRoute
-  ULoginRoute: typeof ULoginRoute
-  WebhooksGithubRoute: typeof WebhooksGithubRoute
-  WebhooksRazorpayRoute: typeof WebhooksRazorpayRoute
-  InternalCronDrainRoute: typeof InternalCronDrainRoute
-  ApiAuthCallbackGithubRoute: typeof ApiAuthCallbackGithubRoute
+  IndexRoute: typeof IndexRoute;
+  AdminRoute: typeof AdminRoute;
+  DashboardRoute: typeof DashboardRoute;
+  ExploreRoute: typeof ExploreRoute;
+  ReferralsRoute: typeof ReferralsRoute;
+  RoastRoute: typeof RoastRoute;
+  RoastFriendRoute: typeof RoastFriendRoute;
+  WrappedRoute: typeof WrappedRoute;
+  RIdRoute: typeof RIdRoute;
+  TSlugRoute: typeof TSlugRoute;
+  TeamIdRoute: typeof TeamIdRoute;
+  ULoginRoute: typeof ULoginRoute;
+  WebhooksGithubRoute: typeof WebhooksGithubRoute;
+  WebhooksRazorpayRoute: typeof WebhooksRazorpayRoute;
+  InternalCronDrainRoute: typeof InternalCronDrainRoute;
+  ApiAuthCallbackGithubRoute: typeof ApiAuthCallbackGithubRoute;
 }
 
-declare module '@tanstack/react-router' {
+declare module "@tanstack/react-router" {
   interface FileRoutesByPath {
-    '/wrapped': {
-      id: '/wrapped'
-      path: '/wrapped'
-      fullPath: '/wrapped'
-      preLoaderRoute: typeof WrappedRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/roast-friend': {
-      id: '/roast-friend'
-      path: '/roast-friend'
-      fullPath: '/roast-friend'
-      preLoaderRoute: typeof RoastFriendRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/roast': {
-      id: '/roast'
-      path: '/roast'
-      fullPath: '/roast'
-      preLoaderRoute: typeof RoastRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/referrals': {
-      id: '/referrals'
-      path: '/referrals'
-      fullPath: '/referrals'
-      preLoaderRoute: typeof ReferralsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/explore': {
-      id: '/explore'
-      path: '/explore'
-      fullPath: '/explore'
-      preLoaderRoute: typeof ExploreRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin': {
-      id: '/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AdminRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/webhooks/razorpay': {
-      id: '/webhooks/razorpay'
-      path: '/webhooks/razorpay'
-      fullPath: '/webhooks/razorpay'
-      preLoaderRoute: typeof WebhooksRazorpayRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/webhooks/github': {
-      id: '/webhooks/github'
-      path: '/webhooks/github'
-      fullPath: '/webhooks/github'
-      preLoaderRoute: typeof WebhooksGithubRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/u/$login': {
-      id: '/u/$login'
-      path: '/u/$login'
-      fullPath: '/u/$login'
-      preLoaderRoute: typeof ULoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/team/$id': {
-      id: '/team/$id'
-      path: '/team/$id'
-      fullPath: '/team/$id'
-      preLoaderRoute: typeof TeamIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/t/$slug': {
-      id: '/t/$slug'
-      path: '/t/$slug'
-      fullPath: '/t/$slug'
-      preLoaderRoute: typeof TSlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/r/$id': {
-      id: '/r/$id'
-      path: '/r/$id'
-      fullPath: '/r/$id'
-      preLoaderRoute: typeof RIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/internal/cron/drain': {
-      id: '/internal/cron/drain'
-      path: '/internal/cron/drain'
-      fullPath: '/internal/cron/drain'
-      preLoaderRoute: typeof InternalCronDrainRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/auth/callback/github': {
-      id: '/api/auth/callback/github'
-      path: '/api/auth/callback/github'
-      fullPath: '/api/auth/callback/github'
-      preLoaderRoute: typeof ApiAuthCallbackGithubRouteImport
-      parentRoute: typeof rootRouteImport
-    }
+    "/wrapped": {
+      id: "/wrapped";
+      path: "/wrapped";
+      fullPath: "/wrapped";
+      preLoaderRoute: typeof WrappedRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/roast-friend": {
+      id: "/roast-friend";
+      path: "/roast-friend";
+      fullPath: "/roast-friend";
+      preLoaderRoute: typeof RoastFriendRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/roast": {
+      id: "/roast";
+      path: "/roast";
+      fullPath: "/roast";
+      preLoaderRoute: typeof RoastRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/referrals": {
+      id: "/referrals";
+      path: "/referrals";
+      fullPath: "/referrals";
+      preLoaderRoute: typeof ReferralsRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/explore": {
+      id: "/explore";
+      path: "/explore";
+      fullPath: "/explore";
+      preLoaderRoute: typeof ExploreRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/dashboard": {
+      id: "/dashboard";
+      path: "/dashboard";
+      fullPath: "/dashboard";
+      preLoaderRoute: typeof DashboardRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/admin": {
+      id: "/admin";
+      path: "/admin";
+      fullPath: "/admin";
+      preLoaderRoute: typeof AdminRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/": {
+      id: "/";
+      path: "/";
+      fullPath: "/";
+      preLoaderRoute: typeof IndexRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/webhooks/razorpay": {
+      id: "/webhooks/razorpay";
+      path: "/webhooks/razorpay";
+      fullPath: "/webhooks/razorpay";
+      preLoaderRoute: typeof WebhooksRazorpayRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/webhooks/github": {
+      id: "/webhooks/github";
+      path: "/webhooks/github";
+      fullPath: "/webhooks/github";
+      preLoaderRoute: typeof WebhooksGithubRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/u/$login": {
+      id: "/u/$login";
+      path: "/u/$login";
+      fullPath: "/u/$login";
+      preLoaderRoute: typeof ULoginRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/team/$id": {
+      id: "/team/$id";
+      path: "/team/$id";
+      fullPath: "/team/$id";
+      preLoaderRoute: typeof TeamIdRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/t/$slug": {
+      id: "/t/$slug";
+      path: "/t/$slug";
+      fullPath: "/t/$slug";
+      preLoaderRoute: typeof TSlugRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/r/$id": {
+      id: "/r/$id";
+      path: "/r/$id";
+      fullPath: "/r/$id";
+      preLoaderRoute: typeof RIdRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/internal/cron/drain": {
+      id: "/internal/cron/drain";
+      path: "/internal/cron/drain";
+      fullPath: "/internal/cron/drain";
+      preLoaderRoute: typeof InternalCronDrainRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/api/auth/callback/github": {
+      id: "/api/auth/callback/github";
+      path: "/api/auth/callback/github";
+      fullPath: "/api/auth/callback/github";
+      preLoaderRoute: typeof ApiAuthCallbackGithubRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
   }
 }
 
@@ -372,16 +372,16 @@ const rootRouteChildren: RootRouteChildren = {
   WebhooksRazorpayRoute: WebhooksRazorpayRoute,
   InternalCronDrainRoute: InternalCronDrainRoute,
   ApiAuthCallbackGithubRoute: ApiAuthCallbackGithubRoute,
-}
+};
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>()
+  ._addFileTypes<FileRouteTypes>();
 
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
+import type { getRouter } from "./router.tsx";
+import type { createStart } from "@tanstack/react-start";
+declare module "@tanstack/react-start" {
   interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
+    ssr: true;
+    router: Awaited<ReturnType<typeof getRouter>>;
   }
 }

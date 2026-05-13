@@ -1,12 +1,7 @@
 "use client";
 
 import * as React from "react";
-import {
-  motion,
-  useScroll,
-  useTransform,
-  useSpring,
-} from "framer-motion";
+import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 import { Check, Link2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getDemoOutputs } from "@/rpc";
@@ -133,7 +128,11 @@ function Stage({ pair, index: _index, total: _total }: StageProps) {
   });
 
   const scanX = useTransform(progress, [0.4, 0.6], ["0%", "100%"]);
-  const scanOpacity = useTransform(progress, [0.35, 0.4, 0.6, 0.65], [0, 1, 1, 0]);
+  const scanOpacity = useTransform(
+    progress,
+    [0.35, 0.4, 0.6, 0.65],
+    [0, 1, 1, 0],
+  );
   const afterOpacity = useTransform(progress, [0.45, 0.6], [0, 1]);
   const scale = useTransform(progress, [0.3, 0.5, 0.7], [0.95, 1, 0.95]);
 
@@ -142,7 +141,10 @@ function Stage({ pair, index: _index, total: _total }: StageProps) {
       ref={ref}
       className="relative mx-auto max-w-7xl px-6 h-screen flex items-center snap-start snap-always"
     >
-      <motion.div style={{ scale }} className="w-full grid md:grid-cols-2 gap-8 relative items-center">
+      <motion.div
+        style={{ scale }}
+        className="w-full grid md:grid-cols-2 gap-8 relative items-center"
+      >
         {/* BEFORE */}
         <div className="relative p-8 md:p-10 rounded-3xl border border-white/5 bg-background/40 backdrop-blur-sm flex flex-col justify-center">
           <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.25em] text-muted-foreground/60 font-black mb-6">
@@ -197,7 +199,11 @@ function AfterPane({ pair }: { pair: StageProps["pair"] }) {
             }}
             className="text-[10px] font-bold inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.03]"
           >
-            {copied ? <Check className="h-3.5 w-3.5 text-green-400" /> : <Link2 className="h-3.5 w-3.5" />}
+            {copied ? (
+              <Check className="h-3.5 w-3.5 text-green-400" />
+            ) : (
+              <Link2 className="h-3.5 w-3.5" />
+            )}
             {copied ? "Copied" : "Share"}
           </button>
         </div>
@@ -213,7 +219,10 @@ function AfterPane({ pair }: { pair: StageProps["pair"] }) {
         </div>
         <div className="space-y-1.5">
           {pair.citations.map((c, idx) => (
-            <div key={idx} className="flex items-center gap-2 text-[11px] font-mono text-muted-foreground">
+            <div
+              key={idx}
+              className="flex items-center gap-2 text-[11px] font-mono text-muted-foreground"
+            >
               <span className="text-blue-400">[{idx + 1}]</span>
               <span className="truncate">{c.ref}</span>
               <span className="opacity-30">·</span>

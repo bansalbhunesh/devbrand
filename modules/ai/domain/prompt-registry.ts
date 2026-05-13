@@ -1,6 +1,6 @@
 /**
  * AI Domain: Prompt Registry
- * 
+ *
  * Centralized repository for all system prompts. This allows for:
  * 1. Prompt Versioning
  * 2. Testing prompts in isolation
@@ -39,9 +39,9 @@ export const PROMPT_REGISTRY = {
     STRICT FORMATTING:
     - Return ONLY valid JSON matching the schema. No markdown.${voiceBlock}
   `,
-  
+
   ROAST_ENGINEER: (githubHandle: string, data: any) => `
     Roast this engineer: ${githubHandle}. 
     Data: ${JSON.stringify(data)}
-  `
+  `,
 };

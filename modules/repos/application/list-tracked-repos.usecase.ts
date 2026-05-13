@@ -12,14 +12,14 @@ export class ListTrackedReposUseCase {
   async execute(userId: string) {
     const repos = await this.repoRepository.findByUserId(userId);
     return {
-      repos: repos.map(r => ({
+      repos: repos.map((r) => ({
         id: r.id,
         owner: r.owner,
         repo: r.repo,
         autoPublish: r.autoPublish,
         createdAt: r.createdAt,
       })),
-      webhookUrl: this.webhookUrl()
+      webhookUrl: this.webhookUrl(),
     };
   }
 }

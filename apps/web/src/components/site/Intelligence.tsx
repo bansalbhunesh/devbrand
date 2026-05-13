@@ -24,10 +24,7 @@ const capabilities = [
 
 export function Intelligence() {
   return (
-    <section
-      id="intelligence"
-      className="w-full relative"
-    >
+    <section id="intelligence" className="w-full relative">
       <div className="mx-auto max-w-7xl px-6">
         <div className="text-center mb-20">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-[10px] font-bold text-purple-500 uppercase tracking-widest mb-6">

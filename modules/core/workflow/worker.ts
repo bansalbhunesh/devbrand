@@ -7,7 +7,7 @@ import { EventBus } from "../events/event-bus";
 export class BackgroundWorker {
   constructor(
     private registry: WorkflowRegistry,
-    private eventBus: EventBus
+    private eventBus: EventBus,
   ) {}
 
   async processNextJob() {
@@ -19,9 +19,9 @@ export class BackgroundWorker {
           eq(backgroundJobs.status, "PENDING"),
           or(
             eq(backgroundJobs.scheduledFor, null as any),
-            lt(backgroundJobs.scheduledFor, new Date())
-          )
-        )
+            lt(backgroundJobs.scheduledFor, new Date()),
+          ),
+        ),
       )
       .limit(1);
 
@@ -29,10 +29,13 @@ export class BackgroundWorker {
 
     console.log(`[Worker] Picking up job: ${job.type} (${job.id})`);
     const workflow = this.registry.getWorkflow(job.type, this.eventBus);
-    
+
     if (!workflow) {
       console.error(`[Worker] No workflow registered for type: ${job.type}`);
-      await db.update(backgroundJobs).set({ status: "FAILED", error: "UNREGISTERED_WORKFLOW" }).where(eq(backgroundJobs.id, job.id));
+      await db
+        .update(backgroundJobs)
+        .set({ status: "FAILED", error: "UNREGISTERED_WORKFLOW" })
+        .where(eq(backgroundJobs.id, job.id));
       return true;
     }
 

@@ -15,10 +15,10 @@ export const Route = createAPIFileRoute("/api/worker")({
     const worker = new BackgroundWorker(registry, eventBus);
 
     console.log("[API Worker] Poke received. Processing jobs...");
-    
+
     let jobsProcessed = 0;
     let processed = true;
-    
+
     // Process a batch of jobs
     while (processed && jobsProcessed < 10) {
       processed = await worker.processNextJob();

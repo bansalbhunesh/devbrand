@@ -153,17 +153,22 @@ export const scheduledPostIdSchema = z.object({
 
 // ── Auth ─────────────────────────────────────────────────────────────────────
 
-export const getSession = createServerFn({ method: "GET" }).handler(async () => {
-  const { SessionService } = await import("@modules/auth/infrastructure/session.service");
-  const { LoadSessionUserUseCase } = await import("@modules/auth/application/load-session-user.usecase");
-  
-  const sessionService = new SessionService();
-  const useCase = new LoadSessionUserUseCase(sessionService);
-  return useCase.execute();
-});
+export const getSession = createServerFn({ method: "GET" }).handler(
+  async () => {
+    const { SessionService } =
+      await import("@modules/auth/infrastructure/session.service");
+    const { LoadSessionUserUseCase } =
+      await import("@modules/auth/application/load-session-user.usecase");
+
+    const sessionService = new SessionService();
+    const useCase = new LoadSessionUserUseCase(sessionService);
+    return useCase.execute();
+  },
+);
 
 export const logout = createServerFn({ method: "POST" }).handler(async () => {
-  const { SessionService } = await import("@modules/auth/infrastructure/session.service");
+  const { SessionService } =
+    await import("@modules/auth/infrastructure/session.service");
   const sessionService = new SessionService();
   sessionService.deleteSessionCookie();
   return { success: true };
@@ -171,16 +176,19 @@ export const logout = createServerFn({ method: "POST" }).handler(async () => {
 
 export const logoutAllDevices = createServerFn({ method: "POST" }).handler(
   async () => {
-    const { logoutAllDevicesFn } = await import("@infrastructure/auth/auth.server");
+    const { logoutAllDevicesFn } =
+      await import("@infrastructure/auth/auth.server");
     return logoutAllDevicesFn();
   },
 );
 
 export const signInWithGithub = createServerFn({ method: "POST" }).handler(
   async () => {
-    const { StateService } = await import("@modules/auth/infrastructure/state.service");
-    const { SignInWithGithubUseCase } = await import("@modules/auth/application/sign-in-with-github.usecase");
-    
+    const { StateService } =
+      await import("@modules/auth/infrastructure/state.service");
+    const { SignInWithGithubUseCase } =
+      await import("@modules/auth/application/sign-in-with-github.usecase");
+
     const stateService = new StateService();
     const useCase = new SignInWithGithubUseCase(stateService);
     return useCase.execute();
@@ -192,14 +200,20 @@ export const handleGithubCallback = createServerFn({ method: "POST" })
     z.object({ code: z.string(), state: z.string().optional() }).parse(data),
   )
   .handler(async ({ data }) => {
-    const { StateService } = await import("@modules/auth/infrastructure/state.service");
-    const { SessionService } = await import("@modules/auth/infrastructure/session.service");
-    const { CompleteGithubOAuthUseCase } = await import("@modules/auth/application/complete-github-oauth.usecase");
+    const { StateService } =
+      await import("@modules/auth/infrastructure/state.service");
+    const { SessionService } =
+      await import("@modules/auth/infrastructure/session.service");
+    const { CompleteGithubOAuthUseCase } =
+      await import("@modules/auth/application/complete-github-oauth.usecase");
 
     const stateService = new StateService();
     const sessionService = new SessionService();
-    const useCase = new CompleteGithubOAuthUseCase(stateService, sessionService);
-    
+    const useCase = new CompleteGithubOAuthUseCase(
+      stateService,
+      sessionService,
+    );
+
     return useCase.execute(data);
   });
 
@@ -207,7 +221,8 @@ export const updateUserSettings = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => userSettingsSchema.parse(data))
   .handler(async ({ data }) => {
     await checkRateLimit("user_settings", 20, 60);
-    const { updateUserSettingsFn } = await import("@infrastructure/auth/auth.server");
+    const { updateUserSettingsFn } =
+      await import("@infrastructure/auth/auth.server");
     return updateUserSettingsFn(data);
   });
 
@@ -217,9 +232,10 @@ export const getBadgeData = createServerFn({ method: "GET" })
   .inputValidator((login: string) => z.string().parse(login))
   .handler(async ({ data: login }) => {
     const { db } = await import("@infrastructure/database/db.server");
-    const { users, outputs } = await import("@infrastructure/database/schema.server");
+    const { users, outputs } =
+      await import("@infrastructure/database/schema.server");
     const { eq, avg } = await import("drizzle-orm");
-    
+
     const user = await db.query.users.findFirst({
       where: eq(users.githubLogin, login),
     });
@@ -236,7 +252,8 @@ export const getProfileData = createServerFn({ method: "GET" })
   .inputValidator((login: string) => z.string().parse(login))
   .handler(async ({ data: login }) => {
     const { db } = await import("@infrastructure/database/db.server");
-    const { users, outputs } = await import("@infrastructure/database/schema.server");
+    const { users, outputs } =
+      await import("@infrastructure/database/schema.server");
     const { eq, and, desc } = await import("drizzle-orm");
 
     const user = await db.query.users.findFirst({
@@ -255,13 +272,15 @@ export const getProfileData = createServerFn({ method: "GET" })
 export const getTeamImpact = createServerFn({ method: "GET" })
   .inputValidator((teamId: string) => z.string().parse(teamId))
   .handler(async ({ data: teamId }) => {
-    const { GetTeamImpactUseCase } = await import("@modules/teams/application/get-team-impact.usecase");
+    const { GetTeamImpactUseCase } =
+      await import("@modules/teams/application/get-team-impact.usecase");
     return new GetTeamImpactUseCase().execute(teamId);
   });
 
 export const getPublicFeed = createServerFn({ method: "GET" }).handler(
   async () => {
-    const { GetPublicFeedUseCase } = await import("@modules/feeds/application/get-public-feed.usecase");
+    const { GetPublicFeedUseCase } =
+      await import("@modules/feeds/application/get-public-feed.usecase");
     return new GetPublicFeedUseCase().execute();
   },
 );
@@ -293,12 +312,16 @@ export const transformPR = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => transformPRSchema.parse(data))
   .handler(async ({ data }) => {
     await checkRateLimit("transform_pr", 5, 3600);
-    const { loadSessionUser } = await import("@infrastructure/auth/auth.server");
+    const { loadSessionUser } =
+      await import("@infrastructure/auth/auth.server");
     const user = await loadSessionUser();
     if (!user) throw new Error("UNAUTHORIZED");
 
     const { createJobFn } = await import("@infrastructure/queues/jobs.server");
-    const job = await createJobFn({ type: "transform_pr", payload: { prUrl: data.prUrl } });
+    const job = await createJobFn({
+      type: "transform_pr",
+      payload: { prUrl: data.prUrl },
+    });
 
     // The BackgroundWorker (initialized at app startup) will pick this up.
     // In a serverless env, we also "poke" the worker endpoint.
@@ -307,7 +330,7 @@ export const transformPR = createServerFn({ method: "POST" })
         const { getRequest } = await import("@tanstack/react-start/server");
         const request = getRequest();
         const baseUrl = new URL(request.url).origin;
-        
+
         // Asynchronous fire-and-forget poke
         fetch(`${baseUrl}/api/worker`, { method: "GET" }).catch(() => {});
       } catch (err) {
@@ -320,7 +343,8 @@ export const transformPR = createServerFn({ method: "POST" })
 
 export const getUserOutputs = createServerFn({ method: "GET" }).handler(
   async () => {
-    const { loadSessionUser } = await import("@infrastructure/auth/auth.server");
+    const { loadSessionUser } =
+      await import("@infrastructure/auth/auth.server");
     const user = await loadSessionUser();
     if (!user) throw new Error("UNAUTHORIZED");
 
@@ -339,7 +363,8 @@ export const getUserOutputs = createServerFn({ method: "GET" }).handler(
 export const toggleOutputVisibility = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => toggleVisibilitySchema.parse(data))
   .handler(async ({ data }) => {
-    const { loadSessionUser } = await import("@infrastructure/auth/auth.server");
+    const { loadSessionUser } =
+      await import("@infrastructure/auth/auth.server");
     const user = await loadSessionUser();
     if (!user) throw new Error("UNAUTHORIZED");
 
@@ -347,7 +372,9 @@ export const toggleOutputVisibility = createServerFn({ method: "POST" })
     const { outputs } = await import("@infrastructure/database/schema.server");
     const { and, eq } = await import("drizzle-orm");
 
-    await db.update(outputs).set({ isPublic: data.isPublic })
+    await db
+      .update(outputs)
+      .set({ isPublic: data.isPublic })
       .where(and(eq(outputs.id, data.outputId), eq(outputs.userId, user.id)));
     return { success: true };
   });
@@ -356,12 +383,14 @@ export const saveEditedPost = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => saveEditedPostSchema.parse(data))
   .handler(async ({ data }) => {
     await checkRateLimit("save_edit", 30, 60);
-    const { loadSessionUser } = await import("@infrastructure/auth/auth.server");
+    const { loadSessionUser } =
+      await import("@infrastructure/auth/auth.server");
     const user = await loadSessionUser();
     if (!user) throw new Error("UNAUTHORIZED");
 
     const { db } = await import("@infrastructure/database/db.server");
-    const { userEvents } = await import("@infrastructure/database/schema.server");
+    const { userEvents } =
+      await import("@infrastructure/database/schema.server");
 
     await db.insert(userEvents).values({
       userId: user.id,
@@ -375,9 +404,12 @@ export const generateRoast = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => roastSchema.parse(data))
   .handler(async ({ data }) => {
     await checkRateLimit("generate_roast", 10, 3600);
-    const { DrizzleRoastRepository } = await import("@modules/roast/infrastructure/drizzle-roast.repository");
-    const { RoastGithubService } = await import("@modules/roast/infrastructure/github.service");
-    const { GenerateRoastUseCase } = await import("@modules/roast/application/generate-roast.usecase");
+    const { DrizzleRoastRepository } =
+      await import("@modules/roast/infrastructure/drizzle-roast.repository");
+    const { RoastGithubService } =
+      await import("@modules/roast/infrastructure/github.service");
+    const { GenerateRoastUseCase } =
+      await import("@modules/roast/application/generate-roast.usecase");
 
     const repo = new DrizzleRoastRepository();
     const github = new RoastGithubService();
@@ -391,12 +423,15 @@ export const generateRoast = createServerFn({ method: "POST" })
 export const createCheckoutSession = createServerFn({ method: "POST" }).handler(
   async () => {
     await checkRateLimit("checkout", 5, 3600);
-    const { loadSessionUser } = await import("@infrastructure/auth/auth.server");
+    const { loadSessionUser } =
+      await import("@infrastructure/auth/auth.server");
     const user = await loadSessionUser();
     if (!user) throw new Error("UNAUTHORIZED");
 
-    const { RazorpayService } = await import("@modules/billing/infrastructure/razorpay.service");
-    const { CreateCheckoutUseCase } = await import("@modules/billing/application/create-checkout.usecase");
+    const { RazorpayService } =
+      await import("@modules/billing/infrastructure/razorpay.service");
+    const { CreateCheckoutUseCase } =
+      await import("@modules/billing/application/create-checkout.usecase");
 
     const service = new RazorpayService();
     const useCase = new CreateCheckoutUseCase(service);
@@ -413,7 +448,8 @@ export const verifyPayment = createServerFn({ method: "POST" })
 
 export const getReferralData = createServerFn({ method: "GET" }).handler(
   async () => {
-    const { loadSessionUser } = await import("@infrastructure/auth/auth.server");
+    const { loadSessionUser } =
+      await import("@infrastructure/auth/auth.server");
     const session = await loadSessionUser();
     if (!session) throw new Error("Unauthorized");
     const { getReferralDataImpl } =
@@ -425,7 +461,8 @@ export const getReferralData = createServerFn({ method: "GET" }).handler(
 export const getJobStatus = createServerFn({ method: "GET" })
   .inputValidator((jobId: string) => jobId)
   .handler(async ({ data: jobId }) => {
-    const { getJobStatusFn } = await import("@infrastructure/queues/jobs.server");
+    const { getJobStatusFn } =
+      await import("@infrastructure/queues/jobs.server");
     return getJobStatusFn(jobId);
   });
 
@@ -434,8 +471,10 @@ export const getAdminStats = createServerFn({ method: "GET" }).handler(
     const { ensureAdmin } = await import("@infrastructure/auth/auth.server");
     await ensureAdmin();
 
-    const { listAllJobsFn } = await import("@infrastructure/queues/jobs.server");
-    const { readSecurityEvents } = await import("@infrastructure/cache/redis.server");
+    const { listAllJobsFn } =
+      await import("@infrastructure/queues/jobs.server");
+    const { readSecurityEvents } =
+      await import("@infrastructure/cache/redis.server");
     const { analyzeIPBehavior } = await import("@/server/security.server");
     const { db } = await import("@infrastructure/database/db.server");
     const { users } = await import("@infrastructure/database/schema.server");
@@ -465,7 +504,8 @@ export const getSecurityEvents = createServerFn({ method: "GET" }).handler(
   async () => {
     const { ensureAdmin } = await import("@infrastructure/auth/auth.server");
     await ensureAdmin();
-    const { readSecurityEvents } = await import("@infrastructure/cache/redis.server");
+    const { readSecurityEvents } =
+      await import("@infrastructure/cache/redis.server");
     return readSecurityEvents(50);
   },
 );
@@ -487,7 +527,8 @@ export const getDemoOutputs = createServerFn({ method: "GET" }).handler(
 
 export const createBillingPortal = createServerFn({ method: "POST" }).handler(
   async () => {
-    const { loadSessionUser } = await import("@infrastructure/auth/auth.server");
+    const { loadSessionUser } =
+      await import("@infrastructure/auth/auth.server");
     const user = await loadSessionUser();
     if (!user) throw new Error("UNAUTHORIZED");
     return { url: "/dashboard" };
@@ -497,12 +538,15 @@ export const createBillingPortal = createServerFn({ method: "POST" }).handler(
 export const postToX = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => postToXSchema.parse(data))
   .handler(async ({ data }) => {
-    const { loadSessionUser } = await import("@infrastructure/auth/auth.server");
+    const { loadSessionUser } =
+      await import("@infrastructure/auth/auth.server");
     const user = await loadSessionUser();
     if (!user) throw new Error("UNAUTHORIZED");
 
-    const { DrizzleRoastRepository } = await import("@modules/roast/infrastructure/drizzle-roast.repository");
-    const { PostToXUseCase } = await import("@modules/roast/application/post-to-x.usecase");
+    const { DrizzleRoastRepository } =
+      await import("@modules/roast/infrastructure/drizzle-roast.repository");
+    const { PostToXUseCase } =
+      await import("@modules/roast/application/post-to-x.usecase");
 
     const repo = new DrizzleRoastRepository();
     const useCase = new PostToXUseCase(repo);
@@ -518,14 +562,20 @@ export const postToX = createServerFn({ method: "POST" })
 
 export const listTrackedRepos = createServerFn({ method: "GET" }).handler(
   async () => {
-    const { SessionService } = await import("@modules/auth/infrastructure/session.service");
-    const { LoadSessionUserUseCase } = await import("@modules/auth/application/load-session-user.usecase");
-    const sessionUser = await new LoadSessionUserUseCase(new SessionService()).execute();
+    const { SessionService } =
+      await import("@modules/auth/infrastructure/session.service");
+    const { LoadSessionUserUseCase } =
+      await import("@modules/auth/application/load-session-user.usecase");
+    const sessionUser = await new LoadSessionUserUseCase(
+      new SessionService(),
+    ).execute();
     if (!sessionUser) throw new Error("UNAUTHORIZED");
 
-    const { DrizzleTrackedRepoRepository } = await import("@modules/repos/infrastructure/drizzle-repo.repository");
-    const { ListTrackedReposUseCase } = await import("@modules/repos/application/list-tracked-repos.usecase");
-    
+    const { DrizzleTrackedRepoRepository } =
+      await import("@modules/repos/infrastructure/drizzle-repo.repository");
+    const { ListTrackedReposUseCase } =
+      await import("@modules/repos/application/list-tracked-repos.usecase");
+
     const repo = new DrizzleTrackedRepoRepository();
     const useCase = new ListTrackedReposUseCase(repo);
     return useCase.execute(sessionUser.id);
@@ -536,12 +586,15 @@ export const registerTrackedRepo = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => trackedRepoInputSchema.parse(data))
   .handler(async ({ data }) => {
     await checkRateLimit("register_repo", 20, 3600);
-    const { loadSessionUser } = await import("@infrastructure/auth/auth.server");
+    const { loadSessionUser } =
+      await import("@infrastructure/auth/auth.server");
     const user = await loadSessionUser();
     if (!user) throw new Error("UNAUTHORIZED");
 
-    const { DrizzleTrackedRepoRepository } = await import("@modules/repos/infrastructure/drizzle-repo.repository");
-    const { RegisterTrackedRepoUseCase } = await import("@modules/repos/application/register-tracked-repo.usecase");
+    const { DrizzleTrackedRepoRepository } =
+      await import("@modules/repos/infrastructure/drizzle-repo.repository");
+    const { RegisterTrackedRepoUseCase } =
+      await import("@modules/repos/application/register-tracked-repo.usecase");
 
     const repo = new DrizzleTrackedRepoRepository();
     const useCase = new RegisterTrackedRepoUseCase(repo);
@@ -552,13 +605,15 @@ export const rotateWebhookSecret = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => trackedRepoIdSchema.parse(data))
   .handler(async ({ data }) => {
     await checkRateLimit("rotate_webhook_secret", 10, 3600);
-    const { loadSessionUser } = await import("@infrastructure/auth/auth.server");
+    const { loadSessionUser } =
+      await import("@infrastructure/auth/auth.server");
     const user = await loadSessionUser();
     if (!user) throw new Error("UNAUTHORIZED");
 
-    const { DrizzleTrackedRepoRepository } = await import("@modules/repos/infrastructure/drizzle-repo.repository");
+    const { DrizzleTrackedRepoRepository } =
+      await import("@modules/repos/infrastructure/drizzle-repo.repository");
     const repo = new DrizzleTrackedRepoRepository();
-    
+
     const existing = await repo.findByIdAndUserId(data.id, user.id);
     if (!existing) throw new Error("NOT_FOUND");
 
@@ -572,11 +627,13 @@ export const rotateWebhookSecret = createServerFn({ method: "POST" })
 export const deleteTrackedRepo = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => trackedRepoIdSchema.parse(data))
   .handler(async ({ data }) => {
-    const { loadSessionUser } = await import("@infrastructure/auth/auth.server");
+    const { loadSessionUser } =
+      await import("@infrastructure/auth/auth.server");
     const user = await loadSessionUser();
     if (!user) throw new Error("UNAUTHORIZED");
 
-    const { DrizzleTrackedRepoRepository } = await import("@modules/repos/infrastructure/drizzle-repo.repository");
+    const { DrizzleTrackedRepoRepository } =
+      await import("@modules/repos/infrastructure/drizzle-repo.repository");
     const repo = new DrizzleTrackedRepoRepository();
     const deleted = await repo.delete(data.id, user.id);
 
@@ -598,12 +655,15 @@ export const generateDigest = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => generateDigestSchema.parse(data))
   .handler(async ({ data }) => {
     await checkRateLimit("digest_generate", 5, 3600);
-    const { loadSessionUser } = await import("@infrastructure/auth/auth.server");
+    const { loadSessionUser } =
+      await import("@infrastructure/auth/auth.server");
     const user = await loadSessionUser();
     if (!user) throw new Error("UNAUTHORIZED");
 
-    const { DrizzleDigestRepository } = await import("@modules/digests/infrastructure/drizzle-digest.repository");
-    const { GenerateDigestUseCase } = await import("@modules/digests/application/generate-digest.usecase");
+    const { DrizzleDigestRepository } =
+      await import("@modules/digests/infrastructure/drizzle-digest.repository");
+    const { GenerateDigestUseCase } =
+      await import("@modules/digests/application/generate-digest.usecase");
 
     const repo = new DrizzleDigestRepository();
     const useCase = new GenerateDigestUseCase(repo);
@@ -612,11 +672,13 @@ export const generateDigest = createServerFn({ method: "POST" })
 
 export const listDigests = createServerFn({ method: "GET" }).handler(
   async () => {
-    const { loadSessionUser } = await import("@infrastructure/auth/auth.server");
+    const { loadSessionUser } =
+      await import("@infrastructure/auth/auth.server");
     const user = await loadSessionUser();
     if (!user) throw new Error("UNAUTHORIZED");
 
-    const { DrizzleDigestRepository } = await import("@modules/digests/infrastructure/drizzle-digest.repository");
+    const { DrizzleDigestRepository } =
+      await import("@modules/digests/infrastructure/drizzle-digest.repository");
     const repo = new DrizzleDigestRepository();
     const rows = await repo.listByUserId(user.id, 50);
 
@@ -630,11 +692,13 @@ export const listDigests = createServerFn({ method: "GET" }).handler(
 export const getDigest = createServerFn({ method: "GET" })
   .inputValidator((id: string) => digestIdSchema.parse({ id }).id)
   .handler(async ({ data: id }) => {
-    const { loadSessionUser } = await import("@infrastructure/auth/auth.server");
+    const { loadSessionUser } =
+      await import("@infrastructure/auth/auth.server");
     const user = await loadSessionUser();
     if (!user) throw new Error("UNAUTHORIZED");
 
-    const { DrizzleDigestRepository } = await import("@modules/digests/infrastructure/drizzle-digest.repository");
+    const { DrizzleDigestRepository } =
+      await import("@modules/digests/infrastructure/drizzle-digest.repository");
     const repo = new DrizzleDigestRepository();
     const row = await repo.findByIdAndUserId(id, user.id);
     if (!row) throw new Error("NOT_FOUND");
@@ -652,22 +716,26 @@ export const schedulePost = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => schedulePostSchema.parse(data))
   .handler(async ({ data }) => {
     await checkRateLimit("schedule_post", 30, 3600);
-    const { loadSessionUser } = await import("@infrastructure/auth/auth.server");
+    const { loadSessionUser } =
+      await import("@infrastructure/auth/auth.server");
     const user = await loadSessionUser();
     if (!user) throw new Error("UNAUTHORIZED");
 
-    const { SchedulePostUseCase } = await import("@modules/scheduling/application/schedule-post.usecase");
+    const { SchedulePostUseCase } =
+      await import("@modules/scheduling/application/schedule-post.usecase");
     return new SchedulePostUseCase().execute(user.id, data);
   });
 
 export const listScheduledPosts = createServerFn({ method: "GET" }).handler(
   async () => {
-    const { loadSessionUser } = await import("@infrastructure/auth/auth.server");
+    const { loadSessionUser } =
+      await import("@infrastructure/auth/auth.server");
     const user = await loadSessionUser();
     if (!user) throw new Error("UNAUTHORIZED");
 
     const { db } = await import("@infrastructure/database/db.server");
-    const { scheduledPosts, outputs } = await import("@infrastructure/database/schema.server");
+    const { scheduledPosts, outputs } =
+      await import("@infrastructure/database/schema.server");
     const { eq, desc } = await import("drizzle-orm");
 
     const rows = await db
@@ -696,25 +764,40 @@ export const listScheduledPosts = createServerFn({ method: "GET" }).handler(
 export const cancelScheduledPost = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => scheduledPostIdSchema.parse(data))
   .handler(async ({ data }) => {
-    const { loadSessionUser } = await import("@infrastructure/auth/auth.server");
+    const { loadSessionUser } =
+      await import("@infrastructure/auth/auth.server");
     const user = await loadSessionUser();
     if (!user) throw new Error("UNAUTHORIZED");
 
     const { db } = await import("@infrastructure/database/db.server");
-    const { scheduledPosts, backgroundJobs } = await import("@infrastructure/database/schema.server");
+    const { scheduledPosts, backgroundJobs } =
+      await import("@infrastructure/database/schema.server");
     const { and, eq } = await import("drizzle-orm");
 
     const existing = await db.query.scheduledPosts.findFirst({
-      where: and(eq(scheduledPosts.id, data.id), eq(scheduledPosts.userId, user.id)),
+      where: and(
+        eq(scheduledPosts.id, data.id),
+        eq(scheduledPosts.userId, user.id),
+      ),
     });
     if (!existing) throw new Error("NOT_FOUND");
     if (existing.status !== "SCHEDULED") throw new Error("NOT_CANCELLABLE");
 
-    await db.update(scheduledPosts).set({ status: "CANCELLED" }).where(eq(scheduledPosts.id, data.id));
+    await db
+      .update(scheduledPosts)
+      .set({ status: "CANCELLED" })
+      .where(eq(scheduledPosts.id, data.id));
 
     if (existing.jobId) {
-      await db.update(backgroundJobs).set({ status: "CANCELLED", updatedAt: new Date() })
-        .where(and(eq(backgroundJobs.id, existing.jobId), eq(backgroundJobs.status, "PENDING")));
+      await db
+        .update(backgroundJobs)
+        .set({ status: "CANCELLED", updatedAt: new Date() })
+        .where(
+          and(
+            eq(backgroundJobs.id, existing.jobId),
+            eq(backgroundJobs.status, "PENDING"),
+          ),
+        );
     }
 
     return { cancelled: true };

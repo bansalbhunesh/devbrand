@@ -3,12 +3,14 @@ import { EventBus } from "../events/event-bus";
 
 export class WorkflowRegistry {
   private static instance: WorkflowRegistry;
-  private workflows: Map<string, (eventBus: EventBus) => Workflow<any, any>> = new Map();
+  private workflows: Map<string, (eventBus: EventBus) => Workflow<any, any>> =
+    new Map();
 
   private constructor() {}
 
   static getInstance(): WorkflowRegistry {
-    if (!WorkflowRegistry.instance) WorkflowRegistry.instance = new WorkflowRegistry();
+    if (!WorkflowRegistry.instance)
+      WorkflowRegistry.instance = new WorkflowRegistry();
     return WorkflowRegistry.instance;
   }
 
@@ -16,7 +18,10 @@ export class WorkflowRegistry {
     this.workflows.set(type, factory);
   }
 
-  getWorkflow(type: string, eventBus: EventBus): Workflow<any, any> | undefined {
+  getWorkflow(
+    type: string,
+    eventBus: EventBus,
+  ): Workflow<any, any> | undefined {
     const factory = this.workflows.get(type);
     return factory ? factory(eventBus) : undefined;
   }

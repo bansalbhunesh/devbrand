@@ -1,7 +1,14 @@
-import { RoastTone, PERSONA_MAP, RoastOutputSchema } from "../domain/roast.types";
+import {
+  RoastTone,
+  PERSONA_MAP,
+  RoastOutputSchema,
+} from "../domain/roast.types";
 import { IRoastRepository } from "../contracts/roast.repository";
 import { RoastGithubService } from "../infrastructure/github.service";
-import { completeText, normalizeLlmJsonText } from "@/modules/ai/infrastructure/llm.gateway";
+import {
+  completeText,
+  normalizeLlmJsonText,
+} from "@/modules/ai/infrastructure/llm.gateway";
 import { db } from "@infrastructure/database/db.server";
 import { users, userEvents } from "@infrastructure/database/schema.server";
 import { eq, sql } from "drizzle-orm";
@@ -17,16 +24,13 @@ export class GenerateRoastUseCase {
     private githubService: RoastGithubService,
   ) {}
 
-  async execute(data: {
-    username: string;
-    userId?: string;
-    tone: RoastTone;
-  }) {
+  async execute(data: { username: string; userId?: string; tone: RoastTone }) {
     const { username, userId, tone } = data;
 
     // 1. Rate limiting & Limit Reset
     if (userId) {
-      const { checkAndResetLimits, enforceTokenBudget } = await import("@/server/limits.server");
+      const { checkAndResetLimits, enforceTokenBudget } =
+        await import("@/server/limits.server");
       const user = await checkAndResetLimits(userId);
       if (
         user &&
@@ -38,18 +42,31 @@ export class GenerateRoastUseCase {
       await enforceTokenBudget(userId);
     } else {
       const request = getRequest();
-      const ip = request?.headers.get("x-forwarded-for")?.split(",")[0] || "127.0.0.1";
-      const { success } = await rateLimit(`roast:anon:${ip}`, PUBLIC_ANON_LIMIT, 3600);
+      const ip =
+        request?.headers.get("x-forwarded-for")?.split(",")[0] || "127.0.0.1";
+      const { success } = await rateLimit(
+        `roast:anon:${ip}`,
+        PUBLIC_ANON_LIMIT,
+        3600,
+      );
       if (!success) throw new Error("PUBLIC_RATE_LIMIT_REACHED");
     }
 
     // 2. Fetch Data
-    const { user: ghUser, events, repos } = await this.githubService.fetchUserProfile(username);
+    const {
+      user: ghUser,
+      events,
+      repos,
+    } = await this.githubService.fetchUserProfile(username);
 
     // 3. Process Data (Domain logic)
     const pushEvents = events.filter((e: any) => e.type === "PushEvent");
     const commitMessages = pushEvents
-      .flatMap((e: any) => ((e.payload as any).commits as any[])?.map((c: any) => c.message) ?? [])
+      .flatMap(
+        (e: any) =>
+          ((e.payload as any).commits as any[])?.map((c: any) => c.message) ??
+          [],
+      )
       .filter(Boolean)
       .slice(0, 20);
 
@@ -62,7 +79,9 @@ export class GenerateRoastUseCase {
       }, {});
 
     const lowEffortCommits = commitMessages.filter(
-      (m) => /^(fix|update|test|chore|merge|tmp|save|.)(\s|$|:)/i.test(m) || m.length < 5
+      (m) =>
+        /^(fix|update|test|chore|merge|tmp|save|.)(\s|$|:)/i.test(m) ||
+        m.length < 5,
     ).length;
 
     const profileSummary = {
@@ -72,7 +91,8 @@ export class GenerateRoastUseCase {
       followers: ghUser.followers,
       following: ghUser.following,
       account_age_years: Math.floor(
-        (Date.now() - new Date(ghUser.created_at).getTime()) / (365 * 24 * 60 * 60 * 1000)
+        (Date.now() - new Date(ghUser.created_at).getTime()) /
+          (365 * 24 * 60 * 60 * 1000),
       ),
       top_repos: repos.map((r: any) => ({
         name: r.name,
@@ -165,12 +185,20 @@ Return ONLY valid JSON. No preamble.`;
     if (userId) {
       const { recordTokenUsage } = await import("@/server/limits.server");
       await Promise.all([
-        db.update(users).set({ roastCountThisMonth: sql`${users.roastCountThisMonth} + 1` }).where(eq(users.id, userId)),
+        db
+          .update(users)
+          .set({ roastCountThisMonth: sql`${users.roastCountThisMonth} + 1` })
+          .where(eq(users.id, userId)),
         recordTokenUsage(userId, llmResult.usage),
         db.insert(userEvents).values({
           userId,
           eventType: "roast",
-          payload: { username, criticality: output.criticality, roastId: id, usage: llmResult.usage },
+          payload: {
+            username,
+            criticality: output.criticality,
+            roastId: id,
+            usage: llmResult.usage,
+          },
         }),
       ]);
     }

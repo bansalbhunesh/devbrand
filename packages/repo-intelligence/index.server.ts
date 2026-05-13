@@ -65,7 +65,8 @@ export async function runEngine(
 
     // Voice memory — feed the user's last 3 edits as few-shot examples.
     // Empty when voice_learning_enabled is false or no edits yet.
-    const { getUserVoiceExamples } = await import("../../apps/web/src/server/voice-memory.server");
+    const { getUserVoiceExamples } =
+      await import("../../apps/web/src/server/voice-memory.server");
     const voiceExamples = await getUserVoiceExamples(userId);
 
     // Layer 5: Narrative Generation

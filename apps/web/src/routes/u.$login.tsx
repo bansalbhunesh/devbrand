@@ -33,7 +33,12 @@ function UserProfilePage() {
               aria-hidden
               className="absolute inset-0 rounded-full border border-blue-500/40"
               animate={{ scale: [1, 1.4, 1.8], opacity: [0.5, 0.2, 0] }}
-              transition={{ duration: 2.8, delay: 1.4, repeat: Infinity, ease: "easeOut" }}
+              transition={{
+                duration: 2.8,
+                delay: 1.4,
+                repeat: Infinity,
+                ease: "easeOut",
+              }}
             />
             <div className="relative h-12 w-12 rounded-full bg-blue-500/10 border border-blue-500/30 grid place-items-center">
               <Activity className="h-5 w-5 text-blue-500/80" />
@@ -79,5 +84,10 @@ function UserProfilePage() {
       </div>
     );
 
-  return <UserProfileView user={profile.user} publicOutputs={profile.publicOutputs} />;
+  return (
+    <UserProfileView
+      user={profile.user}
+      publicOutputs={profile.publicOutputs}
+    />
+  );
 }
