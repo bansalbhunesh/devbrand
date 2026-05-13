@@ -1,3 +1,4 @@
+import * as React from "react";
 import { useEffect, useRef, useState } from "react";
 import {
   ArrowRight,
@@ -22,6 +23,13 @@ import {
 import { NeuralBackground } from "./NeuralBackground";
 import { REVEAL_EASE } from "./Reveal";
 import { Magnetic } from "./Magnetic";
+
+// HeroBackdrop is a fullscreen WebGL shader (FBM-driven mesh-gradient
+// field with cursor-reactive warp). Lazy-loaded so the marketing site's
+// first paint never waits on the three.js chunk — NeuralBackground is
+// the Suspense fallback. Once the shader chunk arrives it fades in over
+// the 2D particles, and we keep particles as a subtle light overlay.
+const HeroBackdrop = React.lazy(() => import("./HeroBackdrop"));
 
 const springConfig = { damping: 25, stiffness: 120, mass: 0.5 };
 
@@ -125,8 +133,19 @@ export function Hero() {
       ref={containerRef}
       className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden pt-32 pb-20"
     >
-      {/* Cinematic Overlays */}
-      <NeuralBackground />
+      {/* Cinematic Overlays.
+          Z stacking from back to front:
+            0) HeroBackdrop shader (mesh-gradient field)
+            1) NeuralBackground 2D particles (subtle light overlay)
+            2) bg-grid texture (tactile structure)
+            3) ambient red/blue glow blobs from below
+          Each layer is non-pointer so the hero CTAs aren't blocked. */}
+      <React.Suspense fallback={<NeuralBackground />}>
+        <HeroBackdrop />
+      </React.Suspense>
+      <div className="absolute inset-0 pointer-events-none opacity-[0.4] mix-blend-screen">
+        <NeuralBackground />
+      </div>
       <div className="absolute inset-0 bg-grid pointer-events-none opacity-[0.1]" />
 
       {/* Cursor Spotlight */}

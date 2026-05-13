@@ -150,12 +150,20 @@ function RootComponent() {
       <QueryClientProvider client={queryClient}>
         <SmoothScroll />
         <AnimatePresence mode="wait">
+          {/* Cinematic route transition.
+              Outgoing scales out (1 → 1.02) + blurs out (0 → 10px). Incoming
+              comes in scaled down (0.985 → 1) + de-blurring (10 → 0). Reads
+              as a brief camera shutter / depth-of-field shift rather than a
+              flat fade. Filter blur is GPU-accelerated on modern browsers.
+              Cubic ease [0.16, 1, 0.3, 1] matches the Reveal primitive used
+              site-wide; everything decelerates with the same curve. */}
           <motion.div
             key={location.pathname}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            initial={{ opacity: 0, scale: 0.985, filter: "blur(10px)" }}
+            animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+            exit={{ opacity: 0, scale: 1.02, filter: "blur(10px)" }}
+            transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+            style={{ willChange: "transform, filter, opacity" }}
           >
             <Outlet />
           </motion.div>
