@@ -48,3 +48,7 @@ scratch/walkthrough/findings.json
 # playwright test results
 /test-results
 /playwright-report
+
+.dev.vars*
+!.dev.vars.example
+!.env.example

@@ -22,12 +22,14 @@
     "db:test-scheduled-drain": "tsx scratch/test-scheduled-drain.ts",
     "build": "vite build",
     "build:dev": "vite build --mode development",
-    "preview": "vite preview",
+    "preview": "npm run build && wrangler dev",
     "db:push": "drizzle-kit push",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "deploy": "npm run build && wrangler deploy",
+    "cf-typegen": "wrangler types"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.95.1",
@@ -100,6 +102,7 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.36.4",
     "@eslint/js": "^9.32.0",
     "@playwright/test": "^1.60.0",
     "@types/babel__core": "^7.20.5",
@@ -124,6 +127,7 @@
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.56.1",
     "vite": "^7.3.1",
-    "vitest": "^4.1.5"
+    "vitest": "^4.1.5",
+    "wrangler": "^4.90.1"
   }
 }
