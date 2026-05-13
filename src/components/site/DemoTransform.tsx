@@ -1,31 +1,61 @@
 "use client";
 
-import { useState } from "react";
-import { ArrowRight, Check, Link2, GitCommit } from "lucide-react";
-
+import * as React from "react";
+import {
+  motion,
+  useScroll,
+  useTransform,
+  useSpring,
+  useMotionValue,
+  type MotionValue,
+} from "framer-motion";
+import { Check, Link2, GitCommit, ArrowDown } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getDemoOutputs } from "@/rpc";
-import { Reveal, RevealItem } from "./Reveal";
+import { REVEAL_EASE } from "./Reveal";
+
+/**
+ * DemoTransform — cinematic before/after.
+ *
+ * Each pair is a full-bleed stage. Scroll into a pair and a horizontal
+ * scan line sweeps left→right; under the scan the BEFORE text fades
+ * back, AFTER materializes with a kinetic blur-in. Citations stagger in
+ * beneath. The AFTER side has cursor-tilt parallax. A floating "STAGE
+ * 01 / NN" marker tracks the section's progress on the left rail.
+ *
+ * Implementation: useScroll(target=stageRef) gives a 0→1 progress for
+ * each pair as it enters and exits the viewport. Mapping the typical
+ * "start-end → end-start" range to scan-line position + per-element
+ * opacity/blur lets the user "scrub" the transformation by scrolling.
+ * Lenis (mounted in __root.tsx) smooths the input so the animation is
+ * inertia-driven, not jittery.
+ */
 
 const fallbackPairs = [
   {
     before: "Fixed API issue in payments worker.",
     after:
-      "Redesigned async retry handling to improve backend reliability under concurrent transaction loads. Implemented exponential jittered backoff.",
+      "Redesigned async retry handling to improve backend reliability under concurrent transaction loads. Implemented exponential jittered backoff that recovered 0.3% of previously-dropped transactions ($4.2k/mo).",
     tag: "Reliability",
     repo: "payments-svc",
     pr: "#1428",
-    citations: [{ ref: "lib/retry.ts:42", sha: "a4f1c2" }],
+    citations: [
+      { ref: "lib/retry.ts:42", sha: "a4f1c2" },
+      { ref: "lib/queue.ts:108", sha: "c81dba" },
+    ],
     slug: "9f2c",
   },
   {
     before: "Refactored session handling logic.",
     after:
-      "Migrated session handling from cookie-bound state to a stateless JWT pipeline, cutting auth latency p95 by 38% while improving edge scalability.",
+      "Migrated session handling from cookie-bound state to a stateless JWT pipeline, cutting auth latency p95 by 38% and unlocking the edge-routing rollout that had been blocked on session stickiness.",
     tag: "Architecture",
     repo: "edge-gateway",
     pr: "#812",
-    citations: [{ ref: "auth/session.ts:1", sha: "7b22ee" }],
+    citations: [
+      { ref: "auth/session.ts:1", sha: "7b22ee" },
+      { ref: "edge/routing.ts:54", sha: "92aaf0" },
+    ],
     slug: "3a71",
   },
 ];
@@ -59,120 +89,295 @@ export function DemoTransform() {
   return (
     <section
       id="demo"
-      className="relative py-32 bg-muted/[0.03] border-t border-border"
+      className="relative bg-muted/[0.02] border-t border-border overflow-hidden"
     >
-      <div className="mx-auto max-w-7xl px-6">
-        <div className="mb-16">
-          <SectionLabel>The transformation</SectionLabel>
-          <SectionTitle>
-            From{" "}
-            <span className="font-mono text-muted-foreground">"fixed bug"</span>{" "}
-            to a story <br className="hidden md:block" />a recruiter actually
-            understands.
-          </SectionTitle>
-          <p className="mt-6 max-w-2xl text-muted-foreground text-lg leading-relaxed">
-            Every line is grounded in real diffs. DevBrand's engine extracts the
-            strategic value from your technical implementation, creating
-            verifiable proof of impact.
-          </p>
-        </div>
+      {/* Section header */}
+      <div className="mx-auto max-w-7xl px-6 pt-32 pb-16">
+        <SectionLabel>The transformation</SectionLabel>
+        <SectionTitle>
+          From{" "}
+          <span className="font-mono text-muted-foreground">"fixed bug"</span>{" "}
+          to a story <br className="hidden md:block" />a recruiter actually
+          understands.
+        </SectionTitle>
+        <p className="mt-6 max-w-2xl text-muted-foreground text-lg leading-relaxed">
+          Every line is grounded in real diffs. Scroll a pair into view to watch
+          the engine reconstruct strategic narrative from raw commit chatter —
+          citations included.
+        </p>
+      </div>
 
-        <Reveal stagger={0.1} className="grid gap-6">
-          {displayPairs.map((p, i) => (
-            <RevealItem key={i}>
-              <Pair {...p} />
-            </RevealItem>
-          ))}
-        </Reveal>
+      {/* Stages */}
+      <div className="space-y-12 md:space-y-20 pb-32">
+        {displayPairs.map((p, i) => (
+          <Stage
+            key={p.slug ?? i}
+            pair={p}
+            index={i}
+            total={displayPairs.length}
+          />
+        ))}
       </div>
     </section>
   );
 }
 
-function Pair(p: any) {
-  const [copied, setCopied] = useState(false);
-  const url = `devbrand.app/t/${p.slug}`;
+interface StageProps {
+  pair: {
+    before: string;
+    after: string;
+    tag: string;
+    repo: string;
+    pr: string;
+    citations: Array<{ ref?: string; sha?: string }>;
+    slug?: string;
+  };
+  index: number;
+  total: number;
+}
+
+function Stage({ pair, index, total }: StageProps) {
+  const ref = React.useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start end", "end start"],
+  });
+
+  // Smoothed progress so the scan line doesn't twitch on rapid scroll —
+  // Lenis already inertia-paces input; this damps the residual rendering.
+  const progress = useSpring(scrollYProgress, {
+    stiffness: 90,
+    damping: 26,
+    mass: 0.5,
+  });
+
+  // The active band — the moment of transformation — happens in the
+  // middle 35–70% of the section's scroll window. Tight enough that the
+  // user feels the alchemy happen, wide enough that they can pause and
+  // read either side.
+  const scanX = useTransform(progress, [0.35, 0.7], ["0%", "100%"]);
+  const beforeOpacity = useTransform(progress, [0.35, 0.55], [1, 0.28]);
+  const afterOpacity = useTransform(progress, [0.42, 0.7], [0, 1]);
+  const afterBlur = useTransform(progress, [0.42, 0.7], [14, 0]);
+  const afterY = useTransform(progress, [0.42, 0.7], [24, 0]);
+
+  // The scan line itself: a thin vertical stroke with a bright halo. We
+  // fade it in/out at the edges of the active band so it doesn't sit
+  // static at the start or finish.
+  const scanOpacity = useTransform(
+    progress,
+    [0.32, 0.4, 0.65, 0.72],
+    [0, 1, 1, 0],
+  );
+
+  // Stage marker — pinned on the left rail, fades in as the stage enters.
+  const markerOpacity = useTransform(progress, [0.1, 0.3], [0, 1]);
+
+  // Cursor tilt for the AFTER pane.
+  const tiltX = useMotionValue(0);
+  const tiltY = useMotionValue(0);
+  const sTiltX = useSpring(tiltX, { stiffness: 200, damping: 20, mass: 0.4 });
+  const sTiltY = useSpring(tiltY, { stiffness: 200, damping: 20, mass: 0.4 });
+  const onAfterMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    const nx = (e.clientX - r.left) / r.width - 0.5;
+    const ny = (e.clientY - r.top) / r.height - 0.5;
+    // ±4° feels intentional; more and it reads as gimmick.
+    tiltX.set(-ny * 4);
+    tiltY.set(nx * 4);
+  };
+  const onAfterLeave = () => {
+    tiltX.set(0);
+    tiltY.set(0);
+  };
 
   return (
-    <div className="group grid md:grid-cols-[1fr_auto_1.4fr] items-stretch gap-0 md:gap-8 rounded-[2.5rem] border border-border bg-muted/20 hover:border-blue-500/30 hover:shadow-[0_32px_80px_-24px_rgba(59,130,246,0.18)] hover:-translate-y-0.5 transition-all duration-500 overflow-hidden backdrop-blur-sm">
-      <div className="p-8 md:p-10 border-b md:border-b-0 md:border-r border-border bg-background/40">
-        <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-bold mb-6">
-          <span>BEFORE</span>
-          <span className="font-mono normal-case tracking-normal text-[11px] opacity-60">
-            {p.repo} · {p.pr}
+    <div
+      ref={ref}
+      className="relative mx-auto max-w-7xl px-6 min-h-[90vh] grid place-items-center"
+    >
+      {/* Stage marker — small floating chip top-left of the section. */}
+      <motion.div
+        style={{ opacity: markerOpacity }}
+        className="absolute top-6 left-6 md:top-8 md:left-8 flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/70 pointer-events-none"
+      >
+        <span className="text-blue-500/80 font-mono">
+          {String(index + 1).padStart(2, "0")}
+        </span>
+        <span className="h-px w-12 bg-gradient-to-r from-blue-500/40 to-transparent" />
+        <span>
+          Stage {String(index + 1).padStart(2, "0")} /{" "}
+          {String(total).padStart(2, "0")}
+        </span>
+      </motion.div>
+
+      {/* The actual stage content — grid of BEFORE / scan / AFTER */}
+      <div className="w-full grid md:grid-cols-[1fr_minmax(0,32px)_1.4fr] gap-8 md:gap-0 items-stretch relative">
+        {/* BEFORE */}
+        <BeforePane pair={pair} opacity={beforeOpacity} />
+
+        {/* Center divider + scan line */}
+        <div className="hidden md:flex justify-center items-stretch relative">
+          <div className="w-px h-full bg-gradient-to-b from-transparent via-white/8 to-transparent" />
+          <motion.div
+            style={{ left: scanX, opacity: scanOpacity }}
+            className="pointer-events-none absolute top-0 bottom-0 w-px"
+            aria-hidden
+          >
+            <div className="absolute inset-y-0 w-px bg-gradient-to-b from-transparent via-blue-300/90 to-transparent" />
+            <div className="absolute inset-y-0 -left-[6px] w-[13px] blur-[6px] bg-gradient-to-b from-transparent via-blue-400/50 to-transparent" />
+            <div className="absolute top-1/2 -translate-y-1/2 -left-1 h-2 w-2 rounded-full bg-blue-200 shadow-[0_0_18px_4px_rgba(180,200,255,0.6)]" />
+          </motion.div>
+        </div>
+
+        {/* Mobile-only scan line — same energy, vertical orientation flipped. */}
+        <motion.div
+          style={{ opacity: scanOpacity }}
+          className="md:hidden flex items-center justify-center text-blue-300/80 -my-2"
+          aria-hidden
+        >
+          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-blue-300/60 to-transparent" />
+          <ArrowDown className="h-3 w-3 mx-3" />
+          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-blue-300/60 to-transparent" />
+        </motion.div>
+
+        {/* AFTER */}
+        <motion.div
+          style={{
+            opacity: afterOpacity,
+            y: afterY,
+            filter: useTransform(afterBlur, (b) => `blur(${b}px)`),
+            rotateX: sTiltX,
+            rotateY: sTiltY,
+            transformPerspective: 1400,
+            willChange: "transform, opacity, filter",
+          }}
+          onMouseMove={onAfterMove}
+          onMouseLeave={onAfterLeave}
+          className="relative"
+        >
+          <AfterPane pair={pair} />
+        </motion.div>
+      </div>
+    </div>
+  );
+}
+
+function BeforePane({
+  pair,
+  opacity,
+}: {
+  pair: StageProps["pair"];
+  opacity: MotionValue<number>;
+}) {
+  return (
+    <motion.div
+      style={{ opacity }}
+      className="relative p-8 md:p-10 rounded-[2rem] border border-white/5 bg-background/40 backdrop-blur-sm flex flex-col justify-center"
+    >
+      <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.25em] text-muted-foreground/60 font-black mb-6">
+        <span>Before · raw commit</span>
+        <span className="font-mono normal-case tracking-normal text-[11px]">
+          {pair.repo} · {pair.pr}
+        </span>
+      </div>
+      <p className="font-mono text-lg md:text-xl text-foreground/70 leading-relaxed italic">
+        "{pair.before}"
+      </p>
+      <div className="mt-8 flex items-center gap-2 text-[10px] font-mono text-muted-foreground/60 uppercase tracking-widest font-bold">
+        <GitCommit className="h-3.5 w-3.5 text-blue-500/70" />{" "}
+        {pair.citations[0]?.sha?.slice(0, 7) ?? "head"}
+      </div>
+    </motion.div>
+  );
+}
+
+function AfterPane({ pair }: { pair: StageProps["pair"] }) {
+  const [copied, setCopied] = React.useState(false);
+  const url = `devbrand.app/t/${pair.slug ?? ""}`;
+
+  return (
+    <div className="p-8 md:p-12 rounded-[2.5rem] border border-blue-500/20 bg-gradient-to-br from-blue-500/[0.06] via-transparent to-purple-500/[0.04] relative overflow-hidden">
+      {/* Inner halo — picks up the AFTER pane as the bright side of the
+          composition without competing with the actual text. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -inset-12 opacity-60"
+        style={{
+          background:
+            "radial-gradient(50% 50% at 20% 0%, rgba(120,160,255,0.12), transparent 70%)",
+        }}
+      />
+
+      <div className="relative flex items-center justify-between mb-6">
+        <div className="text-[10px] uppercase tracking-[0.3em] text-blue-300 font-black">
+          After · narrative
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="text-[10px] font-mono font-bold text-muted-foreground border border-white/10 rounded-lg px-2 py-1 uppercase tracking-widest bg-white/5">
+            {pair.tag}
           </span>
-        </div>
-        <p className="font-mono text-base text-foreground/80 leading-relaxed italic">
-          "{p.before}"
-        </p>
-        <div className="mt-8 flex items-center gap-2 text-[10px] font-mono text-muted-foreground uppercase tracking-widest font-bold">
-          <GitCommit className="h-3.5 w-3.5 text-blue-500" />{" "}
-          {p.citations[0]?.sha?.slice(0, 7) ?? "head"}
+          <button
+            onClick={() => {
+              navigator.clipboard?.writeText(`https://${url}`);
+              setCopied(true);
+              setTimeout(() => setCopied(false), 1400);
+            }}
+            className="text-[10px] font-bold inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.03] hover:bg-white/10"
+          >
+            {copied ? (
+              <Check className="h-3.5 w-3.5 text-green-400" />
+            ) : (
+              <Link2 className="h-3.5 w-3.5" />
+            )}
+            {copied ? "Copied" : "Share"}
+          </button>
         </div>
       </div>
 
-      <div className="hidden md:flex items-center justify-center px-2">
-        <div className="relative">
-          <div className="h-24 w-px bg-gradient-to-b from-transparent via-border to-transparent" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-background border border-border rounded-full p-2 group-hover:border-blue-500/50 transition-colors">
-            <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-blue-500 transition-all group-hover:translate-x-0.5" />
-          </div>
-        </div>
-      </div>
+      <p className="relative text-[19px] md:text-[22px] leading-[1.55] text-pretty font-medium text-foreground/95">
+        {pair.after}
+      </p>
 
-      <div className="p-8 md:p-10 relative bg-blue-500/[0.02]">
-        <div className="flex items-center justify-between mb-6">
-          <div className="text-[10px] uppercase tracking-[0.2em] text-blue-500 font-black">
-            AFTER
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-[10px] font-mono font-bold text-muted-foreground border border-border rounded-lg px-2 py-1 uppercase tracking-widest">
-              {p.tag}
-            </span>
-            <button
-              onClick={() => {
-                navigator.clipboard?.writeText(`https://${url}`);
-                setCopied(true);
-                setTimeout(() => setCopied(false), 1400);
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-15% 0px" }}
+        transition={{ duration: 0.6, delay: 0.15, ease: REVEAL_EASE }}
+        className="relative mt-10 p-5 rounded-2xl border border-blue-500/15 bg-blue-500/[0.04]"
+      >
+        <div className="text-[9px] uppercase tracking-[0.3em] text-blue-300 font-black mb-4">
+          Verifiable Evidence
+        </div>
+        <ol className="space-y-2.5">
+          {pair.citations.map((c, idx) => (
+            <motion.li
+              key={idx}
+              initial={{ opacity: 0, x: -6 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: "-10% 0px" }}
+              transition={{
+                duration: 0.5,
+                delay: 0.25 + idx * 0.08,
+                ease: REVEAL_EASE,
               }}
-              className="text-[10px] font-bold inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition px-3 py-1.5 rounded-lg border border-border bg-background hover:bg-muted"
+              className="flex items-center gap-3 text-[12px] font-mono"
             >
-              {copied ? (
-                <Check className="h-3.5 w-3.5 text-green-500" />
-              ) : (
-                <Link2 className="h-3.5 w-3.5" />
-              )}
-              {copied ? "COPIED" : "SHARE"}
-            </button>
-          </div>
-        </div>
-        <p className="text-[17px] leading-8 text-pretty font-medium text-foreground/90">
-          {p.after}
-        </p>
+              <span className="text-blue-300 font-bold">
+                [{String(idx + 1).padStart(2, "0")}]
+              </span>
+              <span className="text-foreground/80 truncate">{c.ref}</span>
+              <span className="opacity-20">·</span>
+              <span className="opacity-50 text-foreground/60">
+                {c.sha?.slice(0, 7) ?? "head"}
+              </span>
+            </motion.li>
+          ))}
+        </ol>
+      </motion.div>
 
-        <div className="mt-8 p-4 rounded-xl border border-blue-500/10 bg-blue-500/[0.03] shadow-inner">
-          <div className="text-[9px] uppercase tracking-[0.25em] text-blue-500 font-black mb-3">
-            Verifiable Evidence
-          </div>
-          <ol className="space-y-2">
-            {p.citations.map((c: any, idx: number) => (
-              <li
-                key={idx}
-                className="flex items-center gap-3 text-[11px] font-mono text-muted-foreground"
-              >
-                <span className="text-blue-500 font-bold">[{idx + 1}]</span>
-                <span className="text-foreground/70">{c.ref}</span>
-                <span className="opacity-20">·</span>
-                <span className="opacity-40">
-                  {c.sha?.slice(0, 7) ?? "head"}
-                </span>
-              </li>
-            ))}
-          </ol>
-        </div>
-        <div className="mt-6 text-[10px] font-mono text-muted-foreground/40 font-bold uppercase tracking-widest">
-          {url}
-        </div>
+      <div className="relative mt-6 text-[10px] font-mono text-muted-foreground/40 font-bold uppercase tracking-widest">
+        {url}
       </div>
     </div>
   );

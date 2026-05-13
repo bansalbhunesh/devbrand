@@ -339,7 +339,8 @@ function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col md:flex-row">
+    <div className="relative min-h-screen bg-background text-foreground flex flex-col md:flex-row">
+      <AmbientBackdrop tab={tab} />
       {/* Sidebar - Desktop */}
       <aside className="hidden md:flex w-72 flex-col glass-morphism border-r border-white/5 sticky top-0 h-screen overflow-y-auto z-50">
         <div className="p-8">
@@ -600,5 +601,80 @@ function Dashboard() {
         </div>
       </main>
     </div>
+  );
+}
+
+/**
+ * Subtle dual-blob radial backdrop that shifts color + position based on
+ * the active tab. Pinned behind everything (fixed inset, z-0, pointer-
+ * events-none) so it never competes with content. Reads as ambient
+ * lighting in the workspace — the room subtly redecorates as the user
+ * switches surfaces. Each blob is large (60vw) and blurred so the edge
+ * is imperceptible; the shift is felt more than seen.
+ */
+function AmbientBackdrop({ tab }: { tab: Tab }) {
+  const palette: Record<
+    Tab,
+    { primary: string; accent: string; px: string; py: string }
+  > = {
+    generate: {
+      primary: "rgba(59,130,246,0.10)",
+      accent: "rgba(168,85,247,0.06)",
+      px: "20%",
+      py: "30%",
+    },
+    history: {
+      primary: "rgba(168,85,247,0.09)",
+      accent: "rgba(59,130,246,0.06)",
+      px: "80%",
+      py: "20%",
+    },
+    digest: {
+      primary: "rgba(99,102,241,0.10)",
+      accent: "rgba(236,72,153,0.05)",
+      px: "60%",
+      py: "75%",
+    },
+    scheduled: {
+      primary: "rgba(34,211,238,0.09)",
+      accent: "rgba(59,130,246,0.06)",
+      px: "30%",
+      py: "70%",
+    },
+    repos: {
+      primary: "rgba(74,222,128,0.07)",
+      accent: "rgba(34,211,238,0.05)",
+      px: "70%",
+      py: "30%",
+    },
+    teams: {
+      primary: "rgba(251,146,60,0.07)",
+      accent: "rgba(244,114,182,0.05)",
+      px: "75%",
+      py: "60%",
+    },
+    settings: {
+      primary: "rgba(148,163,184,0.06)",
+      accent: "rgba(100,116,139,0.05)",
+      px: "50%",
+      py: "50%",
+    },
+    security: {
+      primary: "rgba(239,68,68,0.09)",
+      accent: "rgba(244,114,182,0.05)",
+      px: "85%",
+      py: "85%",
+    },
+  };
+  const p = palette[tab];
+  return (
+    <motion.div
+      aria-hidden
+      className="fixed inset-0 z-0 pointer-events-none"
+      animate={{
+        background: `radial-gradient(60vw 60vh at ${p.px} ${p.py}, ${p.primary}, transparent 70%), radial-gradient(40vw 50vh at ${100 - parseInt(p.px)}% ${100 - parseInt(p.py)}%, ${p.accent}, transparent 75%)`,
+      }}
+      transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1] }}
+    />
   );
 }

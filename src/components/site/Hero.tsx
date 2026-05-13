@@ -19,6 +19,7 @@ import {
   useTransform,
   AnimatePresence,
   useScroll,
+  useVelocity,
 } from "framer-motion";
 import { NeuralBackground } from "./NeuralBackground";
 import { REVEAL_EASE } from "./Reveal";
@@ -61,6 +62,21 @@ export function Hero() {
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
   const scale = useTransform(scrollYProgress, [0, 0.5], [1, 0.95]);
   const y = useTransform(scrollYProgress, [0, 0.5], [0, 100]);
+
+  // Kinetic headline — the H1 leans into the scroll direction. Velocity
+  // (px/s) is spring-smoothed so quick flicks don't visually overshoot,
+  // then clamped to ±5° skew + ±8px y. Reads as "weighted" letterform
+  // physics, not a wobble. Lenis runs at 60+ fps so velocity values
+  // peak around ±2000 px/s during real scrolls.
+  const { scrollY } = useScroll();
+  const scrollVel = useVelocity(scrollY);
+  const smoothVel = useSpring(scrollVel, {
+    stiffness: 200,
+    damping: 30,
+    mass: 0.4,
+  });
+  const headlineSkew = useTransform(smoothVel, [-2000, 2000], [4, -4]);
+  const headlineY = useTransform(smoothVel, [-2000, 2000], [-8, 8]);
 
   const cardX = useMotionValue(0);
   const cardY = useMotionValue(0);
@@ -176,7 +192,10 @@ export function Hero() {
           </motion.div>
 
           <div className="relative mb-12">
-            <h1 className="text-7xl md:text-9xl lg:text-[12rem] font-black tracking-[-0.08em] leading-[0.8] text-balance">
+            <motion.h1
+              style={{ skewX: headlineSkew, y: headlineY }}
+              className="text-7xl md:text-9xl lg:text-[12rem] font-black tracking-[-0.08em] leading-[0.8] text-balance will-change-transform"
+            >
               <span className="inline-block relative">
                 <TextReveal text="SYSTEMS" delay={T_HEAD} />
                 {/* Refined underglow: a horizontal gradient sweep, not a flat
@@ -203,7 +222,7 @@ export function Hero() {
               >
                 <TextReveal text="OF PROOF" delay={T_HEAD + 0.32} />
               </span>
-            </h1>
+            </motion.h1>
           </div>
 
           <motion.p
