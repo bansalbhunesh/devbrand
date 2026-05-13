@@ -93,21 +93,24 @@ export function Intelligence() {
             <div className="p-2 md:p-8 bg-muted/20">
               <div className="rounded-2xl border border-border bg-background p-6 font-mono text-[11px] leading-7 shadow-inner relative group">
                 <div className="text-purple-500/50 mb-4 tracking-widest uppercase flex items-center justify-between">
-                  <span>System Prompt V1.2</span>
+                  <span>Engine · Layer 05 narrative</span>
                   <div className="h-1.5 w-1.5 rounded-full bg-purple-500 animate-pulse" />
                 </div>
                 <div className="space-y-2 text-muted-foreground">
-                  <TypewriterText text="SET analyst_mode = PRECISE" delay={0} />
                   <TypewriterText
-                    text="ENFORCE citation_model = TRUE"
+                    text="layers = [0..7]  // 8-stage chain"
+                    delay={0}
+                  />
+                  <TypewriterText
+                    text="evidence.require_citations = TRUE"
                     delay={1.5}
                   />
                   <TypewriterText
-                    text='FORBID buzzwords = ["game-changer", "revolutionary"]'
+                    text='tone.drop_buzzwords = ["game-changer", "revolutionary"]'
                     delay={3}
                   />
                   <TypewriterText
-                    text="PRIORITIZE structural_impact = TRUE"
+                    text="emit = [linkedinPost1..3, twitterThread, resumeBullet]"
                     delay={4.5}
                   />
 

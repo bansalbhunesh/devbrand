@@ -25,10 +25,11 @@ const tiers = [
   {
     name: "Free",
     price: { monthly: "₹0", yearly: "₹0" },
-    description: "Perfect for students and early-career devs.",
+    description: "Try the engine on your own PRs.",
     features: [
-      "Monthly Wrapped reports",
-      "3 AI transformations / mo",
+      "3 AI transformations / month",
+      "LinkedIn post + resume bullet output",
+      "Verifiable evidence citations",
       "Public profile link",
       "GitHub Roast (limited)",
     ],
@@ -38,13 +39,16 @@ const tiers = [
   {
     name: "Pro",
     price: { monthly: "₹999", yearly: "₹799" },
-    description: "For active engineers building their reputation.",
+    description: "Autonomous brand building from your actual engineering work.",
     features: [
-      "Unlimited AI transformations",
-      "Custom branding for reports",
-      "Advanced 'Invisible Work' analysis",
-      "LinkedIn auto-drafting",
-      "Priority API access",
+      "Watch repos — auto-draft on every merge",
+      "Twitter/X threads + 3 LinkedIn variants",
+      "Voice memory learns from your edits",
+      "Weekly digest + release notes",
+      "Schedule posts for later",
+      "Unlimited transformations",
+      "Invisible Work analysis",
+      "Annual Wrapped report",
     ],
     cta: "Go Pro",
     popular: true,
@@ -54,6 +58,7 @@ const tiers = [
     price: { monthly: "₹3999", yearly: "₹3199" },
     description: "Help your team showcase their impact.",
     features: [
+      "Everything in Pro for every seat",
       "Team-wide impact dashboard",
       "Internal reputation scoring",
       "Hiring lead export",
@@ -328,29 +333,54 @@ export function Pricing() {
             </thead>
             <tbody className="text-sm">
               <ComparisonRow
-                label="AI PR Analysis"
+                label="AI PR Transformations"
                 free="3 / month"
                 pro="Unlimited"
               />
               <ComparisonRow
-                label="Impact Scoring (7-layer Engine)"
+                label="Impact Scoring (8-layer Engine)"
                 free={true}
                 pro={true}
               />
               <ComparisonRow
-                label="LinkedIn Post Generation"
+                label="LinkedIn Post Generation (3 variants)"
                 free={true}
                 pro={true}
               />
               <ComparisonRow
-                label="Resume Bullet Generation"
+                label="Resume Bullet + Interview Hook"
                 free={true}
                 pro={true}
               />
               <ComparisonRow
-                label="GitHub Roast Engine"
-                free="Limited"
-                pro="Unlimited + AI Personas"
+                label="Verifiable Evidence Citations"
+                free={true}
+                pro={true}
+              />
+              <ComparisonRow
+                label="Twitter / X Thread Generation"
+                free={false}
+                pro={true}
+              />
+              <ComparisonRow
+                label="Watch repos — auto-draft on merge"
+                free={false}
+                pro={true}
+              />
+              <ComparisonRow
+                label="Voice Memory (learns from your edits)"
+                free={false}
+                pro={true}
+              />
+              <ComparisonRow
+                label="Weekly Digest + Release Notes"
+                free={false}
+                pro={true}
+              />
+              <ComparisonRow
+                label="Schedule Posts For Later"
+                free={false}
+                pro={true}
               />
               <ComparisonRow
                 label="Invisible Work Signal Analysis"
@@ -358,14 +388,9 @@ export function Pricing() {
                 pro={true}
               />
               <ComparisonRow
-                label="LinkedIn Auto-Drafting"
-                free={false}
-                pro={true}
-              />
-              <ComparisonRow
-                label="Personal AI Career Coach"
-                free={false}
-                pro={true}
+                label="GitHub Roast Engine"
+                free="Limited"
+                pro="Unlimited"
               />
               <ComparisonRow label="Priority Support" free={false} pro={true} />
             </tbody>

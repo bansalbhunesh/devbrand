@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Nav } from "@/components/site/Nav";
 import { Hero } from "@/components/site/Hero";
 import { DemoTransform } from "@/components/site/DemoTransform";
+import { Autonomy } from "@/components/site/Autonomy";
 import { Intelligence } from "@/components/site/Intelligence";
 import { Roast } from "@/components/site/Roast";
 import { Pricing } from "@/components/site/Pricing";
@@ -21,6 +22,14 @@ function LandingPage() {
 
         <section id="demo" className="scroll-mt-20">
           <DemoTransform />
+        </section>
+
+        {/* Autonomy sits above Intelligence because the headline v2 shift
+            is category-level: from "tool the user opens" to "agent that
+            watches your work". This section pitches that, the next two
+            sections pitch the depth of what the agent does. */}
+        <section id="autonomy" className="scroll-mt-20">
+          <Autonomy />
         </section>
 
         <section id="intelligence" className="scroll-mt-20">

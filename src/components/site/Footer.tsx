@@ -47,7 +47,7 @@ export function Footer() {
               { label: "Intelligence", to: "/#intelligence" },
               { label: "GitHub Roast", to: "/#roast" },
               { label: "Pricing", to: "/#pricing" },
-              { label: "Wrapped 2025", to: "/dashboard" },
+              { label: "Annual Wrapped", to: "/wrapped" },
             ]}
           />
 

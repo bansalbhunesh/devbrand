@@ -48,6 +48,9 @@ export function Nav() {
           <a href="#demo" className="hover:text-foreground transition">
             Demo
           </a>
+          <a href="#autonomy" className="hover:text-foreground transition">
+            Autonomy
+          </a>
           <a href="#roast" className="hover:text-foreground transition">
             Roast
           </a>
@@ -107,6 +110,12 @@ export function Nav() {
                   className="text-lg font-medium hover:text-blue-500 transition"
                 >
                   Demo
+                </a>
+                <a
+                  href="#autonomy"
+                  className="text-lg font-medium hover:text-blue-500 transition"
+                >
+                  Autonomy
                 </a>
                 <a
                   href="#roast"

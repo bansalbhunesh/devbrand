@@ -202,7 +202,7 @@ export const GenerateResult = React.memo(
               <div className="flex items-center gap-3">
                 <div className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
                 <span className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-black">
-                  Neural Draft Output
+                  Generated Narrative
                 </span>
               </div>
               <div className="flex items-center gap-3">

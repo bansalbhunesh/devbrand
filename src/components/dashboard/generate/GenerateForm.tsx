@@ -146,8 +146,7 @@ export const GenerateForm = React.memo(
           >
             {generating ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" /> Neural Parse in
-                progress...
+                <Loader2 className="h-4 w-4 animate-spin" /> Engine running…
               </>
             ) : (
               <>
