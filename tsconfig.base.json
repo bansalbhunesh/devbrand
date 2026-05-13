@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "jsx": "react-jsx",
+    "module": "ESNext",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "moduleResolution": "Bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": false,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noImplicitAny": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@devbrand/ai-sdk": ["./packages/ai-sdk/index.ts"],
+      "@devbrand/repo-intelligence": ["./packages/repo-intelligence/index.server.ts"],
+      "@devbrand/config": ["./packages/config/env.ts"],
+      "@infrastructure/*": ["./infrastructure/*"],
+      "@modules/*": ["./modules/*"]
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "@devbrand/repo-intelligence",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./index.server.ts",
+  "dependencies": {
+    "@devbrand/ai-sdk": "workspace:*",
+    "zod": "^3.24.2"
+  }
+}
