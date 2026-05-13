@@ -332,7 +332,7 @@ export const getAdminStats = createServerFn({ method: "GET" }).handler(
     await ensureAdmin();
 
     const { listAllJobsFn } = await import("@/server/jobs.server");
-    const { readSecurityEvents } = await import("@/server/redis");
+    const { readSecurityEvents } = await import("@/server/redis.server");
     const { analyzeIPBehavior } = await import("@/server/security.server");
     const { db } = await import("@/server/db.server");
     const { users } = await import("@/server/schema.server");
@@ -496,7 +496,7 @@ async function checkRateLimit(
   const ip =
     request?.headers.get("x-forwarded-for")?.split(",")[0] || "127.0.0.1";
 
-  const { rateLimit } = await import("@/server/redis");
+  const { rateLimit } = await import("@/server/redis.server");
   const { success } = await rateLimit(`rpc:${key}:${ip}`, limit, window);
 
   if (!success) {

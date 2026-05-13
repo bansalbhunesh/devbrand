@@ -50,23 +50,23 @@ export async function getTeamImpactImpl(teamId: string) {
   const memberIds = members.map((m) => m.userId);
   const recentImpacts =
     memberIds.length > 0
-      ? await db.query.outputs.findMany({
+      ? (await db.query.outputs.findMany({
           where: inArray(outputs.userId, memberIds),
           orderBy: [desc(outputs.createdAt)],
           limit: 30,
-        })
-      : [];
+        }) as any[])
+      : ([] as any[]);
 
   const avgImpact =
     recentImpacts.length > 0
-      ? recentImpacts.reduce((sum, o) => sum + o.impactScore, 0) /
+      ? recentImpacts.reduce((sum: number, o: any) => sum + o.impactScore, 0) /
         recentImpacts.length
       : 0;
   const coreInfraCount = recentImpacts.filter(
-    (o) => o.category === "Architecture" || o.impactScore > 80,
+    (o: any) => o.category === "Architecture" || o.impactScore > 80,
   ).length;
   const invisibleWorkCount = recentImpacts.filter(
-    (o) => o.metadata?.invisibleWorkReport?.isSignificant,
+    (o: any) => o.metadata?.invisibleWorkReport?.isSignificant,
   ).length;
   const invisibleWorkPercent =
     recentImpacts.length > 0
@@ -78,7 +78,7 @@ export async function getTeamImpactImpl(teamId: string) {
     const memberAvgImpact =
       userImpacts.length > 0
         ? Math.round(
-            userImpacts.reduce((sum, o) => sum + o.impactScore, 0) /
+            userImpacts.reduce((sum: number, o: any) => sum + o.impactScore, 0) /
               userImpacts.length,
           )
         : 0;
@@ -120,9 +120,9 @@ export async function getPublicFeedImpl() {
   const rankedEngineers = topEngineers
     .map((u) => ({
       ...u,
-      totalImpact: u.outputs.reduce((s, o) => s + o.impactScore, 0),
+      totalImpact: u.outputs.reduce((s: number, o: any) => s + o.impactScore, 0),
       avgImpact: Math.round(
-        u.outputs.reduce((s, o) => s + o.impactScore, 0) /
+        u.outputs.reduce((s: number, o: any) => s + o.impactScore, 0) /
           (u.outputs.length || 1),
       ),
     }))

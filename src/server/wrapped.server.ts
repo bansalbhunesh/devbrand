@@ -32,12 +32,12 @@ export async function getWrappedStatsInternal() {
   });
 
   const totalImpact = yearOutputs.reduce(
-    (acc, o) => acc + (o.impactScore ?? 0),
+    (acc: number, o: OutputRow) => acc + (o.impactScore ?? 0),
     0,
   );
   const avgImpact = Math.round(totalImpact / yearOutputs.length);
 
-  const categoryMap = yearOutputs.reduce<Record<string, number>>((acc, o) => {
+  const categoryMap = yearOutputs.reduce<Record<string, number>>((acc: Record<string, number>, o: OutputRow) => {
     const cat = o.category ?? "Other";
     acc[cat] = (acc[cat] ?? 0) + 1;
     return acc;
@@ -47,7 +47,7 @@ export async function getWrappedStatsInternal() {
   ).sort(([, a], [, b]) => b - a);
   const topCategory = sortedCategories[0]?.[0] ?? "Feature";
 
-  const complexityMap = yearOutputs.reduce<Record<string, number>>((acc, o) => {
+  const complexityMap = yearOutputs.reduce<Record<string, number>>((acc: Record<string, number>, o: OutputRow) => {
     const c = o.complexityLevel ?? "Mid";
     acc[c] = (acc[c] ?? 0) + 1;
     return acc;
@@ -56,8 +56,8 @@ export async function getWrappedStatsInternal() {
     Object.entries(complexityMap).sort(([, a], [, b]) => b - a)[0]?.[0] ??
     "Mid";
 
-  const invisibleWork = yearOutputs.filter((o) =>
-    o.prSignals?.some((s) => ["structural", "behavioral"].includes(s)),
+  const invisibleWork = yearOutputs.filter((o: OutputRow) =>
+    o.prSignals?.some((s: string) => ["structural", "behavioral"].includes(s)),
   ).length;
   const invisiblePct = Math.round((invisibleWork / yearOutputs.length) * 100);
 
@@ -72,7 +72,7 @@ export async function getWrappedStatsInternal() {
 
   const stackMap = yearOutputs
     .flatMap((o) => o.stack ?? [])
-    .reduce<Record<string, number>>((acc, s) => {
+    .reduce<Record<string, number>>((acc: Record<string, number>, s: string) => {
       acc[s] = (acc[s] ?? 0) + 1;
       return acc;
     }, {});

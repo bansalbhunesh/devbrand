@@ -103,20 +103,22 @@ export async function generateRoastFn(data: {
   const events = eventsRes.data;
   const repos = reposRes.data;
 
-  const pushEvents = events.filter((e) => e.type === "PushEvent");
+  const pushEvents = events.filter((e: any) => e.type === "PushEvent");
   const commitMessages = pushEvents
     .flatMap(
-      (e) =>
+      (e: any) =>
         ((e.payload as any).commits as any[])?.map((c: any) => c.message) ?? [],
     )
     .filter(Boolean)
     .slice(0, 20);
 
   const languages = repos
-    .map((r) => r.language)
+    .map((r: any) => r.language)
     .filter(Boolean)
-    .reduce<Record<string, number>>((acc, lang) => {
-      acc[lang!] = (acc[lang!] ?? 0) + 1;
+    .reduce<Record<string, number>>((acc: Record<string, number>, lang: string | null) => {
+      if (lang) {
+        acc[lang] = (acc[lang] ?? 0) + 1;
+      }
       return acc;
     }, {});
 
