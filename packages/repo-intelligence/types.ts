@@ -358,6 +358,7 @@ export interface NarrativeDraft {
   selfConsistencyScore: number;
   evidenceDensityScore: number;
   userPreferences?: UserPreference;
+  theVerdict?: TheVerdict;
 }
 
 export interface Citation {
@@ -369,3 +370,19 @@ export interface Citation {
   verificationDetails?: string;
   confidenceScore: number;
 }
+
+export interface TheVerdict {
+  summary: string; // The sharp, authoritative "Bottom Line"
+  judgment: Judgment;
+  aiSlopProbability: number; // 0-1 score indicating if the work is likely AI-generated fluff
+  engineeringExcellenceScore: number; // 0-1 score for structural quality
+  redFlags: string[];
+  goldStars: string[];
+}
+
+export interface Judgment {
+  intent: "innovation" | "maintenance" | "firefighting" | "debt_repayment";
+  quality: "architectural" | "functional" | "performant" | "clean";
+  impactVsEffort: "low_effort_high_impact" | "high_effort_high_impact" | "busy_work";
+}
+

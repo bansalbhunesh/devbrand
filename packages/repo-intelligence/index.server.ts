@@ -8,7 +8,8 @@ import { runLayer6 } from "./layer6.server";
 import { consumeLayer6Usage } from "./layer6.server";
 import { runLayer7 } from "./layer7.server";
 import { sumUsage, type TokenUsage } from "@devbrand/ai-sdk";
-import type { NarrativeDraft, UserContext, GraphImpactReport } from "./types";
+import type { NarrativeDraft, UserContext, GraphImpactReport, NarrativeRequest } from "./types";
+import { VerdictEngine } from "./verdict.server";
 
 import { logger } from "../../apps/web/src/lib/logger";
 
@@ -69,8 +70,17 @@ export async function runEngine(
       await import("../../apps/web/src/server/voice-memory.server");
     const voiceExamples = await getUserVoiceExamples(userId);
 
+    // NEW: Compute The Verdict (Engineering Judgment & AI Slop Detection)
+    const verdictEngine = new VerdictEngine();
+    const theVerdict = verdictEngine.computeVerdict(
+      enrichedPR,
+      staticMetrics,
+      graphImpactReport,
+      impactProfile,
+    );
+
     // Layer 5: Narrative Generation
-    const narrative = await generateNarrative({
+    const narrativeRequest: NarrativeRequest = {
       impactProfile,
       invisibleWorkReport,
       enrichedPR,
@@ -79,7 +89,11 @@ export async function runEngine(
       userContext: context,
       userPreferences,
       voiceExamples,
-    });
+    };
+
+    const narrative = await runLayer5(narrativeRequest);
+    narrative.theVerdict = theVerdict;
+
 
     // Layer 6: Verification & Evidence Linking (Semantic Upgrade)
     const verifiedNarrative = await runLayer6(
