@@ -24,25 +24,27 @@ export const Route = createFileRoute("/r/$id")({
     const id = ctx.params.id;
     return {
       meta: [
-        { title: "DevBrand // Verified GitHub Roast" },
+        { title: "DevBrand · The Verdict" },
         {
           name: "description",
-          content: "Our AI just judged this GitHub profile. See the fallout.",
+          content:
+            "An evidence-backed read of a GitHub profile — patterns, tradeoffs, and one growth direction. Grounded in real commit data.",
         },
-        { property: "og:title", content: "DevBrand // Humiliation Registry" },
+        { property: "og:title", content: "DevBrand · The Verdict" },
         {
           property: "og:description",
-          content: "A verifiable judgment of technical reputation.",
+          content:
+            "Read between every commit. A signal report on this developer's engineering work.",
         },
         {
           property: "og:image",
           content: `${getPublicSiteUrl()}/api/og/roast/${id}`,
         },
         { name: "twitter:card", content: "summary_large_image" },
-        { name: "twitter:title", content: "DevBrand Roast // Impact Verified" },
+        { name: "twitter:title", content: "DevBrand · The Verdict" },
         {
           name: "twitter:description",
-          content: "Click to see the full technical roast.",
+          content: "The full read on this engineer — evidence included.",
         },
         {
           name: "twitter:image",
@@ -96,7 +98,7 @@ function RoastPage() {
             </div>
           </div>
           <span className="font-mono uppercase tracking-[0.3em] text-[10px] text-muted-foreground">
-            Decrypting humiliation...
+            Rendering the Verdict…
           </span>
         </div>
       </div>
@@ -121,7 +123,7 @@ function RoastPage() {
             </div>
           </div>
           <h1 className="text-3xl font-black mb-3 tracking-tighter">
-            Roast not found.
+            Verdict not found.
           </h1>
           <p className="text-muted-foreground mb-8 font-medium leading-relaxed">
             This judgment has been redacted or never existed. The registry keeps
@@ -132,7 +134,7 @@ function RoastPage() {
             hash="roast"
             className="group inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-red-500 text-white font-black text-sm transition-all duration-300 shadow-[0_18px_40px_-12px_rgba(239,68,68,0.5)] hover:-translate-y-0.5 hover:shadow-[0_24px_60px_-12px_rgba(239,68,68,0.65)]"
           >
-            Roast Someone Else
+            Render Another
             <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
           </Link>
         </div>
@@ -173,48 +175,48 @@ function RoastPage() {
         className="max-w-3xl w-full relative z-10"
       >
         <RevealItem className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] font-black tracking-widest uppercase mb-6">
-            <Flame className="h-3.5 w-3.5" /> High Criticality Roast
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/[0.08] border border-amber-500/20 text-amber-300 text-[10px] font-black tracking-widest uppercase mb-6">
+            <Flame className="h-3.5 w-3.5" /> The Verdict
           </div>
           <h1 className="text-4xl md:text-6xl font-black tracking-tighter mb-4 leading-tight">
             {card_title}
           </h1>
           <p className="text-muted-foreground font-medium uppercase tracking-[0.4em] text-[10px] flex items-center justify-center gap-3">
-            <span className="opacity-40">Registered Hubris</span>
-            <span className="h-1 w-1 rounded-full bg-red-500/30" />
+            <span className="opacity-40">Signal Report</span>
+            <span className="h-1 w-1 rounded-full bg-amber-400/40" />
             <span className="text-foreground">@{roastData.githubUsername}</span>
           </p>
         </RevealItem>
 
-        <RevealItem className="p-12 md:p-20 rounded-[3rem] border border-white/5 bg-white/5 backdrop-blur-2xl relative group mb-16 shadow-2xl shadow-red-500/5 overflow-hidden">
+        <RevealItem className="p-12 md:p-20 rounded-[3rem] border border-white/5 bg-white/5 backdrop-blur-2xl relative group mb-16 shadow-2xl shadow-amber-500/5 overflow-hidden">
           <div className="absolute top-0 right-0 p-12 opacity-[0.01] group-hover:opacity-[0.03] transition-opacity duration-1000 pointer-events-none">
             <Flame className="h-64 w-64" />
           </div>
 
-          <p className="text-2xl md:text-4xl text-foreground font-black leading-tight mb-20 italic decoration-red-500/10 underline-offset-8 decoration-4 underline">
-            "{roast}"
+          <p className="text-xl md:text-2xl text-foreground/95 font-medium leading-relaxed mb-20 whitespace-pre-line">
+            {roast}
           </p>
 
           <div className="flex flex-wrap gap-12 items-end pt-12 border-t border-white/5">
             <div>
               <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">
-                Technical Hubris
+                Signal Score
               </div>
-              <div className="text-6xl font-black text-red-500 tracking-tighter">
-                {roast_score}%
+              <div className="text-6xl font-black text-amber-400 tracking-tighter">
+                {roast_score}
               </div>
             </div>
             <div>
               <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">
-                Verdict
+                Signal Class
               </div>
               <div className="text-xl font-bold uppercase tracking-tight text-foreground/80">
-                {criticality}
+                {{ LOW: "Faint", MEDIUM: "Steady", HIGH: "Strong", NUCLEAR: "Elite" }[criticality] ?? criticality}
               </div>
             </div>
             <div className="ml-auto text-right hidden sm:block">
               <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">
-                Registry Hash
+                Verdict Hash
               </div>
               <div className="text-[10px] font-mono opacity-20 hover:opacity-100 transition-opacity uppercase">
                 {id}
@@ -270,7 +272,7 @@ function RoastPage() {
       </Reveal>
 
       <footer className="absolute bottom-12 left-1/2 -translate-x-1/2 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/30">
-        <ShieldCheck className="h-3 w-3" /> Proof of technical Hubris registered
+        <ShieldCheck className="h-3 w-3" /> Evidence-grounded signal report
         via DevBrand AI
       </footer>
     </div>

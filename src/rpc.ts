@@ -41,6 +41,15 @@ export const toggleVisibilitySchema = z.object({
   isPublic: z.boolean(),
 });
 
+// The Verdict — tone gradient. Default `peer` is what public shares
+// render at. `chaos` is opt-in only and gated by a confirmation in the
+// UI; it's the closest analogue to the old `nuclear` mode.
+//   mentor: encouraging, observation-only. Self-roast for juniors.
+//   peer:   balanced peer-review tone. Public-share default.
+//   staff:  rigorous technical critique. For serious analysis.
+//   edge:   sharp, opinionated, takes positions. Authed-only.
+//   chaos:  irreverent, meme-adjacent. The old salty/nuclear energy
+//           but better-written. Requires explicit opt-in.
 export const roastSchema = z.object({
   username: z
     .string()
@@ -51,7 +60,7 @@ export const roastSchema = z.object({
       "Invalid GitHub login",
     ),
   userId: z.string().uuid().optional(),
-  tone: z.enum(["salty", "helpful", "nuclear", "technical"]),
+  tone: z.enum(["mentor", "peer", "staff", "edge", "chaos"]).default("peer"),
 });
 
 export const verifyPaymentSchema = z.object({

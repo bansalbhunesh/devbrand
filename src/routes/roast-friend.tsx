@@ -93,19 +93,20 @@ function RoastFriendPage() {
             {/* Header */}
             <Reveal stagger={0.1} className="text-center mb-16">
               <RevealItem>
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-500 text-[10px] font-bold uppercase tracking-widest mb-6">
-                  <UserPlus className="h-3 w-3" /> Roast a Friend
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/[0.08] border border-amber-500/20 text-amber-300 text-[10px] font-bold uppercase tracking-widest mb-6">
+                  <UserPlus className="h-3 w-3" /> Verdict a Friend
                 </div>
               </RevealItem>
               <RevealItem>
                 <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6">
-                  {target ? `Roasting @${target}` : "Send a Friend to Judgment"}
+                  {target ? `Reading @${target}` : "Render a Friend's Verdict"}
                 </h1>
               </RevealItem>
               <RevealItem>
                 <p className="text-lg text-muted-foreground max-w-lg mx-auto">
-                  Enter their GitHub username. We'll generate an evidence-backed
-                  roast and let you tag them on social media. No mercy.
+                  Drop their GitHub username. The engine reads their commit
+                  history, names the tradeoffs, and lands a closing line you
+                  can tag them on. Evidence included.
                 </p>
               </RevealItem>
             </Reveal>
@@ -154,7 +155,7 @@ function RoastFriendPage() {
                   ) : (
                     <Flame className="h-4 w-4 transition-transform duration-300 group-hover:rotate-[-8deg]" />
                   )}
-                  {loading ? scanLogs[scanStep] : "Roast Their Profile"}
+                  {loading ? scanLogs[scanStep] : "Render the Verdict"}
                 </button>
               </motion.div>
             )}
@@ -168,45 +169,45 @@ function RoastFriendPage() {
                   transition={{ duration: 0.5 }}
                   className="space-y-8"
                 >
-                  {/* Judgment Card */}
+                  {/* Verdict Card */}
                   <div
                     className={cn(
                       "relative rounded-[2.5rem] border p-10 backdrop-blur-md overflow-hidden",
                       roastData.criticality === "NUCLEAR"
-                        ? "bg-red-500/10 border-red-500/40"
+                        ? "bg-amber-500/[0.06] border-amber-500/30"
                         : "bg-muted/20 border-border",
                     )}
                   >
-                    <div className="absolute top-[-15%] right-[-10%] h-64 w-64 bg-orange-500/10 blur-[100px] rounded-full" />
+                    <div className="absolute top-[-15%] right-[-10%] h-64 w-64 bg-amber-500/[0.08] blur-[100px] rounded-full" />
 
                     <div className="flex items-center justify-between mb-8">
                       <div>
-                        <h2 className="text-3xl font-black text-orange-500 mb-1">
+                        <h2 className="text-3xl font-black text-foreground mb-1">
                           {roastData.card_title}
                         </h2>
                         <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
-                          Judgment for @{username}
+                          Verdict for @{username}
                         </p>
                       </div>
                       <div className="text-right">
-                        <div className="text-3xl font-black">
-                          {roastData.roast_score}%
+                        <div className="text-3xl font-black text-amber-400">
+                          {roastData.roast_score}
                         </div>
                         <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
-                          Humiliation
+                          Signal Score
                         </p>
                       </div>
                     </div>
 
-                    <p className="text-lg text-foreground leading-relaxed italic border-l-2 border-orange-500/20 pl-6 py-2 mb-8">
-                      "{roastData.roast}"
+                    <p className="text-base text-foreground/95 leading-relaxed whitespace-pre-line border-l-2 border-amber-500/30 pl-6 py-2 mb-8">
+                      {roastData.roast}
                     </p>
 
                     <div className="p-4 rounded-xl border border-blue-500/10 bg-blue-500/5">
-                      <div className="text-[9px] text-blue-500 font-black uppercase tracking-[0.2em] mb-1">
-                        One Redeeming Quality
+                      <div className="text-[9px] text-blue-400 font-black uppercase tracking-[0.2em] mb-1">
+                        What this profile does well
                       </div>
-                      <p className="text-[12px] text-blue-500/80 italic">
+                      <p className="text-[12px] text-blue-200/80 italic">
                         "{roastData.redeeming_quality}"
                       </p>
                     </div>
