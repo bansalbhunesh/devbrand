@@ -347,7 +347,7 @@ export async function getSecurityEventsFn() {
   if (user.plan !== "pro") throw new Error("PRO_REQUIRED");
   const { readSecurityEvents } = await import("./redis.server");
   const rows = await readSecurityEvents(100);
-  return rows.map((r) => ({
+  return rows.map((r: any) => ({
     type: r.type,
     ip: r.ip,
     timestamp: r.timestamp.toISOString(),

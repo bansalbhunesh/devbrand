@@ -6,7 +6,10 @@ import {
   teamMembers,
   roasts,
 } from "@/server/schema.server";
-import { eq, avg, and, desc, inArray, count, sql } from "drizzle-orm";
+import { eq, avg, and, desc, inArray, count, sql, type InferSelectModel } from "drizzle-orm";
+
+type User = InferSelectModel<typeof users>;
+type Output = InferSelectModel<typeof outputs>;
 
 /**
  * ELITE ARCHITECTURE: This file is strictly server-only.
@@ -59,11 +62,11 @@ export async function getTeamImpactImpl(teamId: string) {
 
   const avgImpact =
     recentImpacts.length > 0
-      ? recentImpacts.reduce((sum: number, o: any) => sum + o.impactScore, 0) /
+      ? recentImpacts.reduce((sum: number, o: Output) => sum + (o.impactScore || 0), 0) /
         recentImpacts.length
       : 0;
   const coreInfraCount = recentImpacts.filter(
-    (o: any) => o.category === "Architecture" || o.impactScore > 80,
+    (o: Output) => o.category === "Architecture" || (o.impactScore || 0) > 80,
   ).length;
   const invisibleWorkCount = recentImpacts.filter(
     (o: any) => o.metadata?.invisibleWorkReport?.isSignificant,
@@ -73,12 +76,12 @@ export async function getTeamImpactImpl(teamId: string) {
       ? Math.round((invisibleWorkCount / recentImpacts.length) * 100)
       : 0;
 
-  const membersWithStats = members.map((m) => {
-    const userImpacts = recentImpacts.filter((o) => o.userId === m.userId);
+  const membersWithStats = members.map((m: any) => {
+    const userImpacts = recentImpacts.filter((o: Output) => o.userId === m.userId);
     const memberAvgImpact =
       userImpacts.length > 0
         ? Math.round(
-            userImpacts.reduce((sum: number, o: any) => sum + o.impactScore, 0) /
+            userImpacts.reduce((sum: number, o: Output) => sum + (o.impactScore || 0), 0) /
               userImpacts.length,
           )
         : 0;
@@ -118,15 +121,15 @@ export async function getPublicFeedImpl() {
     db.query.users.findMany({ limit: 5, with: { outputs: true } }),
   ]);
   const rankedEngineers = topEngineers
-    .map((u) => ({
+    .map((u: any) => ({
       ...u,
-      totalImpact: u.outputs.reduce((s: number, o: any) => s + o.impactScore, 0),
+      totalImpact: u.outputs.reduce((s: number, o: Output) => s + (o.impactScore || 0), 0),
       avgImpact: Math.round(
-        u.outputs.reduce((s: number, o: any) => s + o.impactScore, 0) /
+        u.outputs.reduce((s: number, o: Output) => s + (o.impactScore || 0), 0) /
           (u.outputs.length || 1),
       ),
     }))
-    .sort((a, b) => b.totalImpact - a.totalImpact);
+    .sort((a: any, b: any) => b.totalImpact - a.totalImpact);
   return { feed, topRoasts, topEngineers: rankedEngineers };
 }
 

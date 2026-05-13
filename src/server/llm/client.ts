@@ -272,7 +272,7 @@ export async function completeText(
 /** Sum a list of usage records. */
 export function sumUsage(parts: TokenUsage[]): TokenUsage {
   return parts.reduce(
-    (acc, u) => ({
+    (acc: TokenUsage, u: TokenUsage) => ({
       inputTokens: acc.inputTokens + u.inputTokens,
       outputTokens: acc.outputTokens + u.outputTokens,
       cacheReadInputTokens: acc.cacheReadInputTokens + u.cacheReadInputTokens,
