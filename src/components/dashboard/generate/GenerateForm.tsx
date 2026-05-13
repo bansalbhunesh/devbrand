@@ -10,6 +10,7 @@ import {
 import { motion } from "framer-motion";
 import { fadeInDown } from "@/lib/animations";
 import { cn } from "@/lib/utils";
+import { Magnetic } from "@/components/site/Magnetic";
 
 // Live URL validity hint — catches obvious typos before the user submits.
 // Returns null while the field is empty (no nag on initial state).
@@ -132,28 +133,30 @@ export const GenerateForm = React.memo(
           </div>
         </div>
 
-        <button
-          onClick={handleGenerate}
-          disabled={
-            generating ||
-            !prUrl.trim() ||
-            isFreeLimitReached ||
-            validity?.ok === false
-          }
-          className="group w-full inline-flex items-center justify-center gap-2 px-6 py-4 rounded-2xl bg-foreground text-background font-black text-xs uppercase tracking-[0.15em] disabled:opacity-40 disabled:translate-y-0 transition-all duration-300 shadow-[0_20px_50px_-16px_rgba(0,0,0,0.5)] hover:-translate-y-0.5 hover:shadow-[0_28px_70px_-16px_rgba(0,0,0,0.65)] border border-white/10"
-        >
-          {generating ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" /> Neural Parse in
-              progress...
-            </>
-          ) : (
-            <>
-              <Sparkles className="h-4 w-4 text-blue-500 transition-transform duration-300 group-hover:rotate-[-8deg]" />{" "}
-              Extract Impact Story
-            </>
-          )}
-        </button>
+        <Magnetic strength={0.18} className="block w-full">
+          <button
+            onClick={handleGenerate}
+            disabled={
+              generating ||
+              !prUrl.trim() ||
+              isFreeLimitReached ||
+              validity?.ok === false
+            }
+            className="group w-full inline-flex items-center justify-center gap-2 px-6 py-4 rounded-2xl bg-foreground text-background font-black text-xs uppercase tracking-[0.15em] disabled:opacity-40 disabled:translate-y-0 transition-all duration-300 shadow-[0_20px_50px_-16px_rgba(0,0,0,0.5)] hover:-translate-y-0.5 hover:shadow-[0_28px_70px_-16px_rgba(0,0,0,0.65)] border border-white/10"
+          >
+            {generating ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" /> Neural Parse in
+                progress...
+              </>
+            ) : (
+              <>
+                <Sparkles className="h-4 w-4 text-blue-500 transition-transform duration-300 group-hover:rotate-[-8deg]" />{" "}
+                Extract Impact Story
+              </>
+            )}
+          </button>
+        </Magnetic>
 
         {error && (
           <motion.div

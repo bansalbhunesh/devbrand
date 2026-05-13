@@ -7,6 +7,14 @@ import { GenerateLoading } from "./generate/GenerateLoading";
 import { GenerateEmpty } from "./generate/GenerateEmpty";
 import { fadeInDown } from "@/lib/animations";
 
+// Engine cinematic — heavy (three.js + R3F + postprocessing, ~280KB gz).
+// Lazy-imported so dashboard mount stays light; only loads when the user
+// actually generates. The GenerateLoading fallback below covers the brief
+// chunk-fetch window so we never show a blank panel.
+const Engine = React.lazy(() =>
+  import("./generate/Engine").then((m) => ({ default: m.Engine })),
+);
+
 interface GenerateTabProps {
   user: any;
   prUrl: string;
@@ -112,7 +120,14 @@ export function GenerateTab({
       <div className="space-y-4">
         <AnimatePresence mode="wait">
           {!result && !generating && <GenerateEmpty key="empty" />}
-          {generating && <GenerateLoading key="loading" step={step} />}
+          {generating && (
+            <React.Suspense
+              key="loading"
+              fallback={<GenerateLoading step={step} />}
+            >
+              <Engine step={step} />
+            </React.Suspense>
+          )}
           {result && (
             <GenerateResult
               key="result"

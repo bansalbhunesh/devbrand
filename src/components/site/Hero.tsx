@@ -21,6 +21,7 @@ import {
 } from "framer-motion";
 import { NeuralBackground } from "./NeuralBackground";
 import { REVEAL_EASE } from "./Reveal";
+import { Magnetic } from "./Magnetic";
 
 const springConfig = { damping: 25, stiffness: 120, mass: 0.5 };
 
@@ -204,40 +205,46 @@ export function Hero() {
           >
             <AnimatePresence mode="wait">
               {session ? (
-                <Link
-                  to="/dashboard"
-                  className="group relative inline-flex items-center gap-4 px-10 py-5 rounded-2xl bg-foreground text-background font-black text-xs uppercase tracking-[0.2em] transition-all duration-300 shadow-[0_24px_60px_-12px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.06)] hover:-translate-y-0.5 hover:shadow-[0_32px_80px_-12px_rgba(80,120,255,0.35),0_0_0_1px_rgba(255,255,255,0.12)] active:translate-y-0"
-                >
-                  <LayoutDashboard className="h-4 w-4" /> Open Workspace
-                  <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
-                </Link>
+                <Magnetic strength={0.25}>
+                  <Link
+                    to="/dashboard"
+                    className="group relative inline-flex items-center gap-4 px-10 py-5 rounded-2xl bg-foreground text-background font-black text-xs uppercase tracking-[0.2em] transition-all duration-300 shadow-[0_24px_60px_-12px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.06)] hover:-translate-y-0.5 hover:shadow-[0_32px_80px_-12px_rgba(80,120,255,0.35),0_0_0_1px_rgba(255,255,255,0.12)] active:translate-y-0"
+                  >
+                    <LayoutDashboard className="h-4 w-4" /> Open Workspace
+                    <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+                  </Link>
+                </Magnetic>
               ) : (
-                <button
-                  onClick={handleAuth}
-                  disabled={loggingIn}
-                  className="group relative inline-flex items-center gap-4 px-10 py-5 rounded-2xl bg-foreground text-background font-black text-xs uppercase tracking-[0.2em] transition-all duration-300 shadow-[0_24px_60px_-12px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.06)] hover:-translate-y-0.5 hover:shadow-[0_32px_80px_-12px_rgba(80,120,255,0.35),0_0_0_1px_rgba(255,255,255,0.12)] active:translate-y-0 disabled:opacity-70 disabled:cursor-not-allowed overflow-hidden"
-                >
-                  {/* Subtle idle shimmer to draw the eye back to the primary CTA.
-                      Pure CSS / GPU transform, runs continuously but is cheap. */}
-                  <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/15 to-transparent skew-x-[-12deg] group-hover:animate-[shine_900ms_ease-out] motion-reduce:hidden" />
-                  {loggingIn ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Github className="h-4 w-4" />
-                  )}
-                  Initialize Session
-                  <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
-                </button>
+                <Magnetic strength={0.25}>
+                  <button
+                    onClick={handleAuth}
+                    disabled={loggingIn}
+                    className="group relative inline-flex items-center gap-4 px-10 py-5 rounded-2xl bg-foreground text-background font-black text-xs uppercase tracking-[0.2em] transition-all duration-300 shadow-[0_24px_60px_-12px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.06)] hover:-translate-y-0.5 hover:shadow-[0_32px_80px_-12px_rgba(80,120,255,0.35),0_0_0_1px_rgba(255,255,255,0.12)] active:translate-y-0 disabled:opacity-70 disabled:cursor-not-allowed overflow-hidden"
+                  >
+                    {/* Subtle idle shimmer to draw the eye back to the primary CTA.
+                        Pure CSS / GPU transform, runs continuously but is cheap. */}
+                    <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/15 to-transparent skew-x-[-12deg] group-hover:animate-[shine_900ms_ease-out] motion-reduce:hidden" />
+                    {loggingIn ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Github className="h-4 w-4" />
+                    )}
+                    Initialize Session
+                    <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+                  </button>
+                </Magnetic>
               )}
             </AnimatePresence>
 
-            <a
-              href="#demo"
-              className="group inline-flex items-center gap-4 px-10 py-5 rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-3xl hover:bg-white/[0.07] hover:border-white/20 text-foreground transition-all duration-300 font-black text-xs uppercase tracking-[0.2em]"
-            >
-              <Terminal className="h-4 w-4 text-blue-500 transition-transform duration-300 group-hover:rotate-[-8deg]" />{" "}
-              View Methodology
-            </a>
+            <Magnetic strength={0.2}>
+              <a
+                href="#demo"
+                className="group inline-flex items-center gap-4 px-10 py-5 rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-3xl hover:bg-white/[0.07] hover:border-white/20 text-foreground transition-all duration-300 font-black text-xs uppercase tracking-[0.2em]"
+              >
+                <Terminal className="h-4 w-4 text-blue-500 transition-transform duration-300 group-hover:rotate-[-8deg]" />{" "}
+                View Methodology
+              </a>
+            </Magnetic>
           </motion.div>
         </div>
 

@@ -7,6 +7,7 @@ import {
 } from "@tanstack/react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
+import { SmoothScroll } from "@/components/site/SmoothScroll";
 import "@/styles.css";
 import * as React from "react";
 import { getSession } from "@/rpc";
@@ -147,6 +148,7 @@ function RootComponent() {
   return (
     <RootDocument>
       <QueryClientProvider client={queryClient}>
+        <SmoothScroll />
         <AnimatePresence mode="wait">
           <motion.div
             key={location.pathname}
