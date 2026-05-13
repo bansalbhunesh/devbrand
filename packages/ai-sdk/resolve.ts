@@ -1,4 +1,4 @@
-import { env } from "@/lib/env";
+import { env } from "@devbrand/config";
 
 /** OpenAI-compat base URL (…/…/openai without trailing slash handled by caller) and helpers. */
 

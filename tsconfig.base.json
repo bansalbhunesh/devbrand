@@ -17,12 +17,15 @@
     "noUncheckedSideEffectImports": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"],
+      "@/*": ["./apps/web/src/*"],
       "@devbrand/ai-sdk": ["./packages/ai-sdk/index.ts"],
-      "@devbrand/repo-intelligence": [
-        "./packages/repo-intelligence/index.server.ts"
-      ],
+      "@devbrand/ai-sdk/*": ["./packages/ai-sdk/*"],
+      "@devbrand/repo-intelligence": ["./packages/repo-intelligence/index.server.ts"],
+      "@devbrand/repo-intelligence/*": ["./packages/repo-intelligence/*"],
       "@devbrand/config": ["./packages/config/env.ts"],
+      "@devbrand/config/*": ["./packages/config/*"],
+      "@devbrand/telemetry": ["./packages/telemetry/index.ts"],
+      "@devbrand/telemetry/*": ["./packages/telemetry/*"],
       "@infrastructure/*": ["./infrastructure/*"],
       "@modules/*": ["./modules/*"]
     }

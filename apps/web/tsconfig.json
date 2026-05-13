@@ -6,7 +6,10 @@
     "paths": {
       "@/*": ["./src/*"],
       "@modules/*": ["../../modules/*"],
-      "@infrastructure/*": ["../../infrastructure/*"]
+      "@infrastructure/*": ["../../infrastructure/*"],
+      "@devbrand/config": ["../../packages/config/env.ts"],
+      "@devbrand/telemetry": ["../../packages/telemetry/index.ts"],
+      "@devbrand/ai-sdk": ["../../packages/ai-sdk/index.ts"]
     }
   }
 }
