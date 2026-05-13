@@ -19,8 +19,8 @@ export async function getGlobalFeedback(
     limit: 100,
   });
 
-  const generateEvents = events.filter((e) => e.eventType === "generate");
-  const editEvents = events.filter((e) => e.eventType === "edit_output");
+  const generateEvents = events.filter((e: any) => e.eventType === "generate");
+  const editEvents = events.filter((e: any) => e.eventType === "edit_output");
 
   const totalGenerated = generateEvents.length || 1;
   const totalEdited = editEvents.length;
@@ -28,7 +28,7 @@ export async function getGlobalFeedback(
   const categories: Record<string, number> = {};
   let totalScore = 0;
 
-  generateEvents.forEach((e) => {
+  generateEvents.forEach((e: any) => {
     const payload = e.payload as any;
     if (payload.category) {
       categories[payload.category] = (categories[payload.category] || 0) + 1;
@@ -86,7 +86,7 @@ export async function computeCareerVelocity(userId: string): Promise<{
   return {
     velocity: latest.velocityScore,
     consistency:
-      history.filter((h) => h.velocityScore > 20).length / history.length,
+      history.filter((h: any) => h.velocityScore > 20).length / history.length,
     impactGrowth:
       ((latest.impactScore - previous.impactScore) /
         (previous.impactScore || 1)) *
@@ -110,7 +110,7 @@ export async function extractUserPreferences(
     limit: 50,
   });
 
-  const editEvents = events.filter((e) => e.eventType === "edit_output");
+  const editEvents = events.filter((e: any) => e.eventType === "edit_output");
 
   let totalLengthDelta = 0;
   let totalBeforeLength = 0;
@@ -138,7 +138,7 @@ export async function extractUserPreferences(
     "would",
   ]);
 
-  editEvents.forEach((e) => {
+  editEvents.forEach((e: any) => {
     const payload = e.payload as any;
     if (payload.before && payload.after) {
       totalLengthDelta += payload.after.length - payload.before.length;

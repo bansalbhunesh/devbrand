@@ -75,7 +75,7 @@ export async function listAllJobsFn() {
   if (!user || user.role !== "admin") throw new Error("ADMIN_REQUIRED");
 
   return db.query.backgroundJobs.findMany({
-    orderBy: (jobs, { desc }) => [desc(jobs.createdAt)],
+    orderBy: (jobs: any, { desc }: any) => [desc(jobs.createdAt)],
     limit: 100,
     with: {
       user: true,

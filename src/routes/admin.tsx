@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { getAdminStats } from "@/rpc";
-import * as React from "react";
+
 import {
   AreaChart,
   Area,

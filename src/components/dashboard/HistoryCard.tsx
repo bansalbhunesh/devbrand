@@ -43,11 +43,9 @@ export function Stat({
 
 export function HistoryCard({
   output,
-  _userId,
   onQueryInvalidate,
 }: {
   output: any;
-  _userId: string;
   onQueryInvalidate: () => void;
 }) {
   const [copied, setCopied] = useState<string | null>(null);

@@ -172,7 +172,7 @@ function TeamDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {teamData?.members.map((m, i) => (
+                {teamData?.members.map((m: any, i: number) => (
                   <tr
                     key={m.id}
                     className="border-b border-border last:border-b-0 hover:bg-muted/30 transition-colors group"

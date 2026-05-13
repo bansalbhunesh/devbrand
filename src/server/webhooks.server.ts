@@ -210,7 +210,7 @@ export async function processGithubWebhookRaw(
     return r;
   }
 
-  const verified = subscribers.filter((s) =>
+  const verified = subscribers.filter((s: any) =>
     verifyGithubSignature(rawBody, signature, s.webhookSecret),
   );
   if (verified.length === 0) {
@@ -222,7 +222,7 @@ export async function processGithubWebhookRaw(
   const jobs = await db
     .insert(backgroundJobs)
     .values(
-      verified.map((s) => ({
+      verified.map((s: any) => ({
         userId: s.userId,
         type: "transform_pr_webhook",
         status: "PENDING",
@@ -233,7 +233,7 @@ export async function processGithubWebhookRaw(
 
   const r: GithubWebhookResult = {
     status: "enqueued",
-    jobIds: jobs.map((j) => j.id),
+    jobIds: jobs.map((j: any) => j.id),
   };
   await finalize(r);
   return r;

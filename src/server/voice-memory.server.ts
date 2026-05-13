@@ -40,7 +40,7 @@ export async function getUserVoiceExamples(
 
   return rows
     .reverse()
-    .map((r) => ({ postKind: r.postKind, editedText: r.editedText }));
+    .map((r: any) => ({ postKind: r.postKind, editedText: r.editedText }));
 }
 
 export async function saveEditedPostFn(data: {

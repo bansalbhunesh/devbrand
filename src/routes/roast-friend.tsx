@@ -4,7 +4,6 @@ import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Gavel,
-  Terminal,
   Loader2,
   ShieldAlert,
   Share2,

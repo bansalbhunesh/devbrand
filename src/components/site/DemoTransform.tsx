@@ -47,7 +47,7 @@ export function DemoTransform() {
   });
 
   const displayPairs = dbOutputs?.length
-    ? dbOutputs.map((o) => {
+    ? dbOutputs.map((o: any) => {
         const rawCitations = Array.isArray(o.citations) ? o.citations : [];
         const citations =
           rawCitations.length > 0
@@ -92,7 +92,7 @@ export function DemoTransform() {
 
       {/* Transformation Slides */}
       <div className="space-y-0">
-        {displayPairs.map((p, i) => (
+        {displayPairs.map((p: any, i: number) => (
           <Stage
             key={p.slug ?? i}
             pair={p}
@@ -119,7 +119,7 @@ interface StageProps {
   total: number;
 }
 
-function Stage({ pair, index, total }: StageProps) {
+function Stage({ pair, index: _index, total: _total }: StageProps) {
   const ref = React.useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: ref,

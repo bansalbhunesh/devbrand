@@ -33,10 +33,10 @@ function ExplorePage() {
     if (!feed?.feed) return [];
     if (tab === "global") return feed.feed;
     if (tab === "impact")
-      return feed.feed.filter((i) => (i.impactScore ?? 0) >= 80);
+      return feed.feed.filter((i: any) => (i.impactScore ?? 0) >= 80);
     if (tab === "structural")
       return feed.feed.filter(
-        (i) =>
+        (i: any) =>
           i.category === "Structural" ||
           i.category === "Refactor" ||
           i.category === "Architecture",
@@ -144,7 +144,7 @@ function ExplorePage() {
                 className="grid grid-cols-1 md:grid-cols-2 gap-8"
               >
                 <AnimatePresence mode="popLayout">
-                  {filteredFeed.map((item) => (
+                  {filteredFeed.map((item: any) => (
                     <RevealItem key={item.id}>
                       <Link
                         to="/t/$slug"
@@ -178,7 +178,7 @@ function ExplorePage() {
 
                         <div className="flex items-center justify-between pt-6 border-t border-border mt-auto">
                           <div className="flex gap-2">
-                            {item.stack?.slice(0, 2).map((s) => (
+                            {item.stack?.slice(0, 2).map((s: any) => (
                               <span
                                 key={s}
                                 className="text-[9px] font-black px-2 py-1 rounded bg-muted-foreground/10 uppercase tracking-wider"
@@ -210,7 +210,7 @@ function ExplorePage() {
                 </span>
               </h2>
               <div className="space-y-4">
-                {feed?.topEngineers?.map((eng, i) => (
+                {feed?.topEngineers?.map((eng: any, i: number) => (
                   <Link
                     key={eng.id}
                     to="/u/$login"
@@ -260,7 +260,7 @@ function ExplorePage() {
 
               <div className="space-y-4">
                 {feed?.topRoasts?.length ? (
-                  feed.topRoasts.map((roast) => (
+                  feed.topRoasts.map((roast: any) => (
                     <Link
                       key={roast.id}
                       to="/r/$id"

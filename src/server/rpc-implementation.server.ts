@@ -6,9 +6,9 @@ import {
   teamMembers,
   roasts,
 } from "@/server/schema.server";
-import { eq, avg, and, desc, inArray, count, sql, type InferSelectModel } from "drizzle-orm";
+import { eq, avg, and, desc, inArray, count, type InferSelectModel } from "drizzle-orm";
 
-type User = InferSelectModel<typeof users>;
+
 type Output = InferSelectModel<typeof outputs>;
 
 /**

@@ -1,6 +1,6 @@
 import { and, desc, eq, gte, lte } from "drizzle-orm";
 import { db } from "./db.server";
-import { digests, outputs, users, userEvents } from "./schema.server";
+import { digests, outputs, userEvents } from "./schema.server";
 import { loadSessionUser } from "./auth.server";
 import {
   completeText,
@@ -177,7 +177,7 @@ export async function generateDigestFn(
     throw new Error("AI_PARSE_ERROR");
   }
 
-  const includedOutputIds = rows.map((r) => r.id);
+  const includedOutputIds = rows.map((r: any) => r.id);
 
   const [inserted] = await db
     .insert(digests)
@@ -239,7 +239,7 @@ export async function listDigestsFn() {
     .orderBy(desc(digests.createdAt))
     .limit(50);
 
-  return rows.map((r) => ({
+  return rows.map((r: any) => ({
     ...r,
     outputCount: r.includedOutputIds?.length ?? 0,
   }));

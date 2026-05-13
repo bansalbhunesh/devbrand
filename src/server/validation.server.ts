@@ -15,7 +15,7 @@ export interface AIOutput {
  */
 export async function validateAIOutput(
   output: AIOutput,
-  originalPayload?: any,
+  _originalPayload?: any,
 ): Promise<{
   isValid: boolean;
   errors: string[];

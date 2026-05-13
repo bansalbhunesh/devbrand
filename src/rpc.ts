@@ -351,8 +351,8 @@ export const getAdminStats = createServerFn({ method: "GET" }).handler(
       anomalyReport,
       stats: {
         totalUsers: userCount[0].count,
-        activeJobs: jobs.filter((j) => j.status === "PROCESSING").length,
-        failedJobs: jobs.filter((j) => j.status === "FAILED").length,
+        activeJobs: jobs.filter((j: any) => j.status === "PROCESSING").length,
+        failedJobs: jobs.filter((j: any) => j.status === "FAILED").length,
       },
     };
   },

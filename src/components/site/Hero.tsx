@@ -1,4 +1,4 @@
-import * as React from "react";
+
 import { useRef, useState } from "react";
 import {
   ArrowRight,

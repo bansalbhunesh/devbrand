@@ -7,7 +7,7 @@ import { generateNarrative, consumeLayer5Usage } from "./layer5.server";
 import { runLayer6 } from "./layer6.server";
 import { consumeLayer6Usage } from "./layer6.server";
 import { runLayer7 } from "./layer7.server";
-import { sumUsage, ZeroUsage, type TokenUsage } from "../llm/client";
+import { sumUsage, type TokenUsage } from "../llm/client";
 import type { NarrativeDraft, UserContext, GraphImpactReport } from "./types";
 
 import { logger } from "@/lib/logger";
