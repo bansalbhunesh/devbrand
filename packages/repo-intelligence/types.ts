@@ -376,8 +376,32 @@ export interface TheVerdict {
   judgment: Judgment;
   aiSlopProbability: number; // 0-1 score indicating if the work is likely AI-generated fluff
   engineeringExcellenceScore: number; // 0-1 score for structural quality
+  categories: VerdictCategories;
   redFlags: string[];
   goldStars: string[];
+}
+
+export interface VerdictCategories {
+  maintainability: {
+    score: number;
+    futureChaosRisk: number;
+    onboardingFriction: number;
+    rewriteProbability: number;
+  };
+  aiSlop: {
+    score: number;
+    fakeAbstractionDensity: number;
+    hallucinatedArchRisk: number;
+  };
+  architecture: {
+    couplingSeverity: number;
+    scalabilityConfidence: number;
+    maturityStage: "mvp" | "scaling" | "overengineered" | "mature";
+  };
+  culture: {
+    persona: string; // e.g. "Ex-FAANG Architecture Maximalist"
+    velocityVsRigor: number; // 0 (speed) to 1 (rigor)
+  };
 }
 
 export interface Judgment {
