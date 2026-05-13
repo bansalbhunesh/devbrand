@@ -35,7 +35,17 @@ export const EventSchema = z.discriminatedUnion("type", [
       to: z.string(),
     }),
   }),
+  z.object({
+    type: z.literal("REPO_INGESTION_REQUESTED"),
+    payload: z.object({
+      url: z.string(),
+      userId: z.string(),
+      priority: z.enum(["low", "high"]),
+      timestamp: z.number(),
+    }),
+  }),
 ]);
+
 
 export type PlatformEvent = z.infer<typeof EventSchema>;
 
@@ -43,9 +53,17 @@ type Handler<T extends PlatformEvent["type"]> = (
   payload: Extract<PlatformEvent, { type: T }>["payload"],
 ) => Promise<void> | void;
 
-class EventBus {
+export class EventBus {
+  private static instance: EventBus;
   private handlers: Map<string, Set<Handler<any>>> = new Map();
   private maxRetries = 3;
+
+  public static getInstance(): EventBus {
+    if (!EventBus.instance) {
+      EventBus.instance = new EventBus();
+    }
+    return EventBus.instance;
+  }
 
   on<T extends PlatformEvent["type"]>(type: T, handler: Handler<T>) {
     if (!this.handlers.has(type)) this.handlers.set(type, new Set());
@@ -107,4 +125,4 @@ class EventBus {
   }
 }
 
-export const mesh = new EventBus();
+export const mesh = EventBus.getInstance();

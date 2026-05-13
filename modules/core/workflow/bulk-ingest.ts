@@ -26,7 +26,7 @@ export class BulkIngestWorkflow extends WorkflowBase<BulkIngestInput, { total: n
       const chunk = repoUrls.slice(i, i + CHUNK_SIZE);
       
       await Promise.all(chunk.map(async (url) => {
-        await bus.publish({
+        await bus.emit({
           type: "REPO_INGESTION_REQUESTED",
           payload: {
             url,

@@ -1,87 +1,33 @@
-import { db } from "@infrastructure/database/db.server";
-import { backgroundJobs } from "@infrastructure/database/schema.server";
-import { eq } from "drizzle-orm";
-import { mesh } from "../events/mesh";
+import { WorkflowBase, WorkflowContext } from "./workflow.base";
+import { WorkflowRegistry } from "./workflow.registry";
+import { EventBus } from "../events/mesh";
 
 /**
- * ELITE ARCHITECTURE: The Workflow Core.
- * Workflows are resumable, stateful processes that orchestrate capabilities across domains.
+ * ELITE ARCHITECTURE: The Workflow Engine.
+ * Orchestrates the execution of registered workflows.
  */
-
-export interface WorkflowContext {
-  jobId: string;
-  userId: string;
-  payload: any;
-}
-
-export abstract class Workflow<TState extends string> {
-  constructor(protected ctx: WorkflowContext) {}
+export class WorkflowEngine {
+  private registry = WorkflowRegistry.getInstance();
+  private eventBus = EventBus.getInstance();
 
   /**
-   * Transition the workflow to a new state.
-   * This is atomic and persistent.
+   * Execute a workflow by its registered type.
    */
-  protected async transition(from: TState, to: TState) {
-    console.log(`[Workflow:${this.ctx.jobId}] ${from} -> ${to}`);
+  async executeByType(type: string, input: any, context: Omit<WorkflowContext, "jobId">) {
+    const workflow = this.registry.getWorkflow(type, this.eventBus);
+    if (!workflow) {
+      throw new Error(`No workflow registered for type: ${type}`);
+    }
 
-    await db
-      .update(backgroundJobs)
-      .set({
-        status: to === "COMPLETED" ? "COMPLETED" : "PROCESSING",
-        updatedAt: new Date(),
-      })
-      .where(eq(backgroundJobs.id, this.ctx.jobId));
-
-    // Emit to mesh for reactive monitoring/logging
-    await mesh.emit({
-      type: "workflow.state_changed",
-      payload: {
-        workflowId: this.ctx.jobId,
-        from,
-        to,
-      },
-    });
+    const jobId = `job_${Math.random().toString(36).slice(2, 11)}`;
+    return await workflow.run(input, { ...context, jobId });
   }
 
   /**
-   * Execute the workflow logic.
+   * Execute a specific workflow instance directly (useful for scripts/testing).
    */
-  abstract execute(): Promise<void>;
-}
-
-/**
- * Registry to map job types to workflow implementations.
- */
-const workflowRegistry: Map<
-  string,
-  new (ctx: WorkflowContext) => Workflow<any>
-> = new Map();
-
-export function registerWorkflow(
-  type: string,
-  ctor: new (ctx: WorkflowContext) => Workflow<any>,
-) {
-  workflowRegistry.set(type, ctor);
-}
-
-export async function runWorkflow(type: string, ctx: WorkflowContext) {
-  const Ctor = workflowRegistry.get(type);
-  if (!Ctor) {
-    throw new Error(`[WorkflowCore] No workflow registered for type: ${type}`);
-  }
-
-  const wf = new Ctor(ctx);
-  try {
-    await wf.execute();
-  } catch (err) {
-    console.error(`[WorkflowCore] Workflow ${type} failed:`, err);
-    await db
-      .update(backgroundJobs)
-      .set({
-        status: "FAILED",
-        updatedAt: new Date(),
-      })
-      .where(eq(backgroundJobs.id, ctx.jobId));
-    throw err;
+  async execute<I, O>(workflow: WorkflowBase<I, O>, input: I, context: Omit<WorkflowContext, "jobId"> = { userId: "system" }) {
+    const jobId = `job_direct_${Math.random().toString(36).slice(2, 11)}`;
+    return await workflow.run(input, { ...context, jobId });
   }
 }

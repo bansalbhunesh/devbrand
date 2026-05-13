@@ -1,62 +1,40 @@
-import { db } from "@infrastructure/database/db.server";
-import { backgroundJobs } from "@infrastructure/database/schema.server";
-import { eq, sql } from "drizzle-orm";
-import { EventBus } from "../events/event-bus";
+import { EventBus } from "../events/mesh";
 
 export interface WorkflowContext {
   userId: string;
   jobId: string;
 }
 
-export abstract class Workflow<TInput, TOutput> {
-  protected abstract name: string;
+/**
+ * ELITE ARCHITECTURE: The Workflow Base.
+ * Provides standard lifecycle methods for all domain workflows.
+ */
+export abstract class WorkflowBase<TInput, TOutput> {
+  public abstract id: string;
 
-  constructor(protected eventBus: EventBus) {}
+  constructor(protected eventBus: EventBus = EventBus.getInstance()) {}
 
   async run(input: TInput, context: WorkflowContext): Promise<TOutput> {
     try {
-      await this.updateStatus(context.jobId, "PROCESSING");
-
+      logger.info(`[Workflow:${this.id}] Starting`, { jobId: context.jobId });
       const result = await this.execute(input, context);
-
-      await this.updateStatus(context.jobId, "COMPLETED", result);
+      logger.info(`[Workflow:${this.id}] Completed`, { jobId: context.jobId });
       return result;
     } catch (err: any) {
-      await this.updateStatus(context.jobId, "FAILED", null, err.message);
+      logger.error(`[Workflow:${this.id}] Failed`, { jobId: context.jobId, error: err.message });
       throw err;
     }
-  }
-
-  protected async updateStep(jobId: string, step: string) {
-    console.log(`[Workflow] Job ${jobId} -> Step: ${step}`);
-    await db
-      .update(backgroundJobs)
-      .set({
-        payload: sql`${backgroundJobs.payload} || jsonb_build_object('currentStep', ${step})`,
-        updatedAt: new Date(),
-      })
-      .where(eq(backgroundJobs.id, jobId));
   }
 
   protected abstract execute(
     input: TInput,
     context: WorkflowContext,
   ): Promise<TOutput>;
-
-  private async updateStatus(
-    jobId: string,
-    status: string,
-    result: any = null,
-    error: string | null = null,
-  ) {
-    await db
-      .update(backgroundJobs)
-      .set({
-        status: status as any,
-        result: result as any,
-        error,
-        updatedAt: new Date(),
-      })
-      .where(eq(backgroundJobs.id, jobId));
-  }
 }
+
+// Minimal logger if telemetry is not yet initialized in the script environment
+const logger = {
+  info: (msg: string, meta?: any) => console.log(`[INFO] ${msg}`, meta || ""),
+  error: (msg: string, meta?: any) => console.error(`[ERROR] ${msg}`, meta || ""),
+  warn: (msg: string, meta?: any) => console.warn(`[WARN] ${msg}`, meta || ""),
+};

@@ -1,9 +1,9 @@
-import { Workflow } from "./workflow.base";
-import { EventBus } from "../events/event-bus";
+import { WorkflowBase } from "./workflow.base";
+import { EventBus } from "../events/mesh";
 
 export class WorkflowRegistry {
   private static instance: WorkflowRegistry;
-  private workflows: Map<string, (eventBus: EventBus) => Workflow<any, any>> =
+  private workflows: Map<string, (eventBus: EventBus) => WorkflowBase<any, any>> =
     new Map();
 
   private constructor() {}
@@ -14,14 +14,14 @@ export class WorkflowRegistry {
     return WorkflowRegistry.instance;
   }
 
-  register(type: string, factory: (eventBus: EventBus) => Workflow<any, any>) {
+  register(type: string, factory: (eventBus: EventBus) => WorkflowBase<any, any>) {
     this.workflows.set(type, factory);
   }
 
   getWorkflow(
     type: string,
     eventBus: EventBus,
-  ): Workflow<any, any> | undefined {
+  ): WorkflowBase<any, any> | undefined {
     const factory = this.workflows.get(type);
     return factory ? factory(eventBus) : undefined;
   }
