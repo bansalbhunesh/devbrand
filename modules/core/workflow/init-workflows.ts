@@ -6,6 +6,7 @@ import { BackgroundWorker } from "./worker";
 import { TransformWorkflow } from "@/modules/transform/application/transform.workflow";
 import { EngineWorkflow } from "@/modules/ai/application/engine.workflow";
 import { DrizzleTransformRepository } from "@/modules/transform/infrastructure/drizzle-transform.repository";
+import { BulkIngestWorkflow } from "./bulk-ingest";
 
 // Import Listeners
 import { NotificationListener } from "@/modules/notifications/application/notification.listener";
@@ -16,6 +17,9 @@ export function initWorkflows() {
 
   // Initialize Listeners
   new NotificationListener(eventBus).init();
+
+  // Register Bulk Ingest
+  registry.register(new BulkIngestWorkflow());
 
   // Register Transform
   registry.register("transform_pr", (eb) => {
