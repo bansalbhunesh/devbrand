@@ -121,17 +121,17 @@ describe("rpc input schemas", () => {
   describe("roastSchema", () => {
     it("accepts a valid GitHub login", () => {
       expect(() =>
-        roastSchema.parse({ username: "torvalds", tone: "salty" }),
+        roastSchema.parse({ username: "torvalds", tone: "peer" }),
       ).not.toThrow();
     });
     it("rejects login with slashes (path traversal hint)", () => {
       expect(() =>
-        roastSchema.parse({ username: "foo/bar", tone: "salty" }),
+        roastSchema.parse({ username: "foo/bar", tone: "peer" }),
       ).toThrow();
     });
     it("rejects login starting with hyphen", () => {
       expect(() =>
-        roastSchema.parse({ username: "-bad", tone: "salty" }),
+        roastSchema.parse({ username: "-bad", tone: "peer" }),
       ).toThrow();
     });
     it("rejects unknown tone", () => {

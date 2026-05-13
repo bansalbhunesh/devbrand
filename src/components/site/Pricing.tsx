@@ -31,7 +31,7 @@ const tiers = [
       "LinkedIn post + resume bullet output",
       "Verifiable evidence citations",
       "Public profile link",
-      "GitHub Roast (limited)",
+      "The Verdict (limited)",
     ],
     cta: "Connect GitHub",
     popular: false,
@@ -388,7 +388,7 @@ export function Pricing() {
                 pro={true}
               />
               <ComparisonRow
-                label="GitHub Roast Engine"
+                label="Verdict Engine"
                 free="Limited"
                 pro="Unlimited"
               />

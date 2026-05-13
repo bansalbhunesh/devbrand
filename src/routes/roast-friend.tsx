@@ -3,13 +3,14 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Flame,
+  Gavel,
   Terminal,
   Loader2,
   ShieldAlert,
   Share2,
   UserPlus,
   Check,
+  Zap,
 } from "lucide-react";
 import { getSession } from "@/rpc";
 import { generateRoast } from "@/rpc";
@@ -39,11 +40,11 @@ function RoastFriendPage() {
   const [linkCopied, setLinkCopied] = useState(false);
 
   const scanLogs = [
-    "Locating victim in GitHub's witness protection...",
-    "Cross-referencing commit sins with public record...",
-    "Calibrating insult precision to maximum damage...",
-    "Loading friend-specific humiliation templates...",
-    "Generating evidence-backed roast payload...",
+    "Identifying target profile in GitHub's registry...",
+    "Cross-referencing commit patterns with signal baseline...",
+    "Calibrating technical precision for signal report...",
+    "Parsing engineering tradeoffs and artifacts...",
+    "Generating evidence-backed signal report...",
   ];
   const [scanStep, setScanStep] = useState(0);
 
@@ -65,7 +66,7 @@ function RoastFriendPage() {
     } catch (err: any) {
       setError(
         err.message.includes("LIMIT_REACHED")
-          ? "Roast limit reached. Upgrade to keep the roasts coming."
+          ? "Verdict limit reached. Upgrade to keep the reports coming."
           : "GitHub didn't like that username. Double-check and try again.",
       );
     } finally {
@@ -76,10 +77,10 @@ function RoastFriendPage() {
 
   const shareUrl = roastData ? `https://devbrand.ai/r/${roastData.id}` : "";
   const tagTweetUrl = roastData
-    ? `https://twitter.com/intent/tweet?text=${encodeURIComponent(`Hey @${username}, I just roasted your GitHub on DevBrand 🔥\n\n"${roastData.card_title}"\n\nScore: ${roastData.roast_score}/100\n\nSee your full roast:`)}&url=${encodeURIComponent(shareUrl)}`
+    ? `https://twitter.com/intent/tweet?text=${encodeURIComponent(`Hey @${username}, I just generated your GitHub Verdict on DevBrand ✨\n\n"${roastData.card_title}"\n\nSignal Score: ${roastData.roast_score}/100\n\nRead the report:`)}&url=${encodeURIComponent(shareUrl)}`
     : "";
   const challengeTweetUrl = roastData
-    ? `https://twitter.com/intent/tweet?text=${encodeURIComponent(`I just roasted @${username}'s GitHub on DevBrand. They scored ${roastData.roast_score}/100.\n\nRoast YOUR friend's code next:`)}&url=${encodeURIComponent("https://devbrand.ai/roast-friend")}`
+    ? `https://twitter.com/intent/tweet?text=${encodeURIComponent(`I just rendered @${username}'s GitHub Verdict on DevBrand. They scored ${roastData.roast_score}/100 signal.\n\nRender your friend's Verdict next:`)}&url=${encodeURIComponent("https://devbrand.ai/roast-friend")}`
     : "";
 
   return (
@@ -87,7 +88,7 @@ function RoastFriendPage() {
       <Nav />
       <main className="pt-20">
         <section className="relative py-32 border-t border-border overflow-hidden bg-background">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-orange-500/5 blur-[200px] rounded-full -mt-96 pointer-events-none" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-amber-500/5 blur-[200px] rounded-full -mt-96 pointer-events-none" />
 
           <div className="mx-auto max-w-3xl px-6 relative">
             {/* Header */}
@@ -105,8 +106,8 @@ function RoastFriendPage() {
               <RevealItem>
                 <p className="text-lg text-muted-foreground max-w-lg mx-auto">
                   Drop their GitHub username. The engine reads their commit
-                  history, names the tradeoffs, and lands a closing line you
-                  can tag them on. Evidence included.
+                  history, names the tradeoffs, and lands a closing line you can
+                  tag them on. Evidence included.
                 </p>
               </RevealItem>
             </Reveal>
@@ -120,14 +121,13 @@ function RoastFriendPage() {
                 className="max-w-md mx-auto space-y-6"
               >
                 <div className="relative group">
-                  <Terminal className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-orange-500 transition-colors" />
                   <input
                     type="text"
                     placeholder="friends_github_username"
                     value={username}
                     onChange={(e) => setUsername(e.target.value.trim())}
                     onKeyDown={(e) => e.key === "Enter" && handleRoast()}
-                    className="w-full pl-11 pr-4 py-4 rounded-2xl bg-muted/30 border border-border focus:border-orange-500/40 focus:ring-4 focus:ring-orange-500/5 transition outline-none text-sm font-mono"
+                    className="w-full pl-11 pr-4 py-4 rounded-2xl bg-muted/30 border border-border focus:border-amber-500/40 focus:ring-4 focus:ring-amber-500/5 transition outline-none text-sm font-mono"
                   />
                 </div>
 
@@ -148,12 +148,12 @@ function RoastFriendPage() {
                 <button
                   onClick={handleRoast}
                   disabled={loading || !username}
-                  className="group w-full inline-flex items-center justify-center gap-2 px-6 py-4 rounded-2xl bg-orange-500 text-white font-bold disabled:opacity-40 transition-all duration-300 shadow-[0_20px_50px_-16px_rgba(249,115,22,0.55)] hover:-translate-y-0.5 hover:shadow-[0_28px_70px_-16px_rgba(249,115,22,0.75)] disabled:translate-y-0"
+                  className="group w-full inline-flex items-center justify-center gap-2 px-6 py-4 rounded-2xl bg-amber-500 text-background font-bold disabled:opacity-40 transition-all duration-300 shadow-[0_20px_50px_-16px_rgba(245,158,11,0.3)] hover:-translate-y-0.5 hover:shadow-[0_28px_70px_-16px_rgba(245,158,11,0.5)] disabled:translate-y-0"
                 >
                   {loading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    <Flame className="h-4 w-4 transition-transform duration-300 group-hover:rotate-[-8deg]" />
+                    <Gavel className="h-4 w-4 transition-transform duration-300 group-hover:rotate-[-8deg]" />
                   )}
                   {loading ? scanLogs[scanStep] : "Render the Verdict"}
                 </button>
@@ -216,7 +216,7 @@ function RoastFriendPage() {
                   {/* Share CTAs */}
                   <div className="space-y-4">
                     <p className="text-center text-sm font-bold text-muted-foreground uppercase tracking-widest">
-                      Send the Roast
+                      Share the Verdict
                     </p>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -226,7 +226,7 @@ function RoastFriendPage() {
                         rel="noreferrer"
                         className="group flex items-center justify-center gap-3 px-6 py-4 rounded-2xl bg-white text-black font-bold transition-all duration-300 shadow-[0_20px_50px_-16px_rgba(255,255,255,0.25)] hover:-translate-y-0.5 hover:shadow-[0_28px_70px_-16px_rgba(255,255,255,0.4)]"
                       >
-                        <Flame className="h-5 w-5 text-orange-500 transition-transform duration-300 group-hover:rotate-[-8deg]" />{" "}
+                        <Zap className="h-5 w-5 text-amber-500 transition-transform duration-300 group-hover:rotate-[-8deg]" />{" "}
                         Tag @{username} on X
                       </a>
                       <a
@@ -284,10 +284,10 @@ function RoastFriendPage() {
                         setRoastData(null);
                         setUsername("");
                       }}
-                      className="group inline-flex items-center gap-2 px-8 py-3 rounded-full bg-red-500 text-white font-bold transition-all duration-300 shadow-[0_18px_40px_-12px_rgba(239,68,68,0.5)] hover:-translate-y-0.5 hover:shadow-[0_24px_60px_-12px_rgba(239,68,68,0.7)]"
+                      className="group inline-flex items-center gap-2 px-8 py-3 rounded-full bg-amber-500 text-background font-bold transition-all duration-300 shadow-[0_18px_40px_-12px_rgba(245,158,11,0.3)] hover:-translate-y-0.5 hover:shadow-[0_24px_60px_-12px_rgba(245,158,11,0.5)]"
                     >
-                      <Flame className="h-4 w-4 transition-transform duration-300 group-hover:rotate-[-8deg]" />{" "}
-                      Roast Someone Else
+                      <Gavel className="h-4 w-4 transition-transform duration-300 group-hover:rotate-[-8deg]" />{" "}
+                      Render Another Verdict
                     </button>
                   </motion.div>
                 </motion.div>

@@ -31,36 +31,34 @@ import { Reveal } from "./Reveal";
 
 type Tone = "mentor" | "peer" | "staff" | "edge" | "chaos";
 
-const TONE_META: Record<
-  Tone,
-  { label: string; hint: string; color: string }
-> = {
-  mentor: {
-    label: "Mentor",
-    hint: "Encouraging, observation-only",
-    color: "text-blue-400",
-  },
-  peer: {
-    label: "Peer",
-    hint: "Balanced peer review",
-    color: "text-emerald-400",
-  },
-  staff: {
-    label: "Staff",
-    hint: "Rigorous, technical",
-    color: "text-violet-400",
-  },
-  edge: {
-    label: "Edge",
-    hint: "Sharp, opinionated",
-    color: "text-amber-400",
-  },
-  chaos: {
-    label: "Chaos",
-    hint: "Off-record, screenshot-ready",
-    color: "text-red-400",
-  },
-};
+const TONE_META: Record<Tone, { label: string; hint: string; color: string }> =
+  {
+    mentor: {
+      label: "Mentor",
+      hint: "Encouraging, observation-only",
+      color: "text-blue-400",
+    },
+    peer: {
+      label: "Peer",
+      hint: "Balanced peer review",
+      color: "text-emerald-400",
+    },
+    staff: {
+      label: "Staff",
+      hint: "Rigorous, technical",
+      color: "text-violet-400",
+    },
+    edge: {
+      label: "Edge",
+      hint: "Sharp, opinionated",
+      color: "text-amber-400",
+    },
+    chaos: {
+      label: "Chaos",
+      hint: "Off-record, screenshot-ready",
+      color: "text-red-400",
+    },
+  };
 
 const SIGNAL_LABEL: Record<string, string> = {
   LOW: "Faint",
@@ -151,9 +149,8 @@ export function Roast() {
             <p className="text-muted-foreground text-lg leading-relaxed mb-10">
               Point the engine at any GitHub profile — yours, a friend's,
               someone you're considering hiring. We read patterns, name
-              tradeoffs, surface one growth direction, and land a closing
-              line worth screenshotting. Grounded in real commit data, not
-              vibes.
+              tradeoffs, surface one growth direction, and land a closing line
+              worth screenshotting. Grounded in real commit data, not vibes.
             </p>
 
             <div className="space-y-6 max-w-md">

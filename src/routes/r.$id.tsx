@@ -5,7 +5,7 @@ import { getRoast, postToX } from "@/rpc";
 import {
   Share2,
   Twitter,
-  Flame,
+  Gavel,
   ArrowRight,
   ShieldCheck,
   Check,
@@ -93,8 +93,8 @@ function RoastPage() {
                 ease: "easeOut",
               }}
             />
-            <div className="relative h-12 w-12 rounded-full bg-red-500/10 border border-red-500/30 grid place-items-center">
-              <Flame className="h-5 w-5 text-red-500/80" />
+            <div className="relative h-12 w-12 rounded-full bg-amber-500/10 border border-amber-500/30 grid place-items-center">
+              <Gavel className="h-5 w-5 text-amber-500/80" />
             </div>
           </div>
           <span className="font-mono uppercase tracking-[0.3em] text-[10px] text-muted-foreground">
@@ -132,7 +132,7 @@ function RoastPage() {
           <Link
             to="/"
             hash="roast"
-            className="group inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-red-500 text-white font-black text-sm transition-all duration-300 shadow-[0_18px_40px_-12px_rgba(239,68,68,0.5)] hover:-translate-y-0.5 hover:shadow-[0_24px_60px_-12px_rgba(239,68,68,0.65)]"
+            className="group inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-amber-500 text-background font-black text-sm transition-all duration-300 shadow-[0_18px_40px_-12px_rgba(245,158,11,0.3)] hover:-translate-y-0.5 hover:shadow-[0_24px_60px_-12px_rgba(245,158,11,0.5)]"
           >
             Render Another
             <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
@@ -157,17 +157,17 @@ function RoastPage() {
       await postToX({ data: { id, content: share_summary } });
       toast.success("Broadcasted to the timeline");
     } catch (e) {
-      toast.error("Failed to broadcast humiliation");
+      toast.error("Failed to broadcast verdict");
     } finally {
       setPosting(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white selection:bg-red-500/30 p-6 flex flex-col items-center justify-center relative overflow-hidden">
-      {/* Ambient red glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-red-500/5 rounded-full blur-[140px] -translate-y-1/2 pointer-events-none" />
-      <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-red-500/5 rounded-full blur-[100px] translate-y-1/2 pointer-events-none" />
+    <div className="min-h-screen bg-[#050505] text-white selection:bg-amber-500/30 p-6 flex flex-col items-center justify-center relative overflow-hidden">
+      {/* Ambient amber glow */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-amber-500/[0.03] rounded-full blur-[140px] -translate-y-1/2 pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-amber-500/[0.03] rounded-full blur-[100px] translate-y-1/2 pointer-events-none" />
 
       <Reveal
         stagger={0.12}
@@ -176,7 +176,7 @@ function RoastPage() {
       >
         <RevealItem className="text-center mb-16">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/[0.08] border border-amber-500/20 text-amber-300 text-[10px] font-black tracking-widest uppercase mb-6">
-            <Flame className="h-3.5 w-3.5" /> The Verdict
+            <Gavel className="h-3.5 w-3.5" /> The Verdict
           </div>
           <h1 className="text-4xl md:text-6xl font-black tracking-tighter mb-4 leading-tight">
             {card_title}
@@ -190,7 +190,7 @@ function RoastPage() {
 
         <RevealItem className="p-12 md:p-20 rounded-[3rem] border border-white/5 bg-white/5 backdrop-blur-2xl relative group mb-16 shadow-2xl shadow-amber-500/5 overflow-hidden">
           <div className="absolute top-0 right-0 p-12 opacity-[0.01] group-hover:opacity-[0.03] transition-opacity duration-1000 pointer-events-none">
-            <Flame className="h-64 w-64" />
+            <Gavel className="h-64 w-64" />
           </div>
 
           <p className="text-xl md:text-2xl text-foreground/95 font-medium leading-relaxed mb-20 whitespace-pre-line">
@@ -211,7 +211,12 @@ function RoastPage() {
                 Signal Class
               </div>
               <div className="text-xl font-bold uppercase tracking-tight text-foreground/80">
-                {{ LOW: "Faint", MEDIUM: "Steady", HIGH: "Strong", NUCLEAR: "Elite" }[criticality] ?? criticality}
+                {{
+                  LOW: "Faint",
+                  MEDIUM: "Steady",
+                  HIGH: "Strong",
+                  NUCLEAR: "Elite",
+                }[criticality] ?? criticality}
               </div>
             </div>
             <div className="ml-auto text-right hidden sm:block">
@@ -242,7 +247,7 @@ function RoastPage() {
               className="group flex items-center gap-3 px-10 py-5 rounded-2xl bg-[#0077b5] text-white font-black text-sm transition-all duration-300 shadow-[0_24px_60px_-16px_rgba(0,119,181,0.5)] hover:-translate-y-0.5 hover:shadow-[0_32px_80px_-16px_rgba(0,119,181,0.7)]"
             >
               <Share2 className="h-5 w-5 transition-transform duration-300 group-hover:-rotate-6" />{" "}
-              LinkedIn fallout
+              Share on LinkedIn
             </a>
             <button
               onClick={handleCopyLink}
@@ -262,9 +267,9 @@ function RoastPage() {
             <Link
               to="/"
               hash="roast"
-              className="group text-xs font-black uppercase tracking-[0.3em] text-muted-foreground hover:text-red-500 transition-all flex items-center gap-3"
+              className="group text-xs font-black uppercase tracking-[0.3em] text-muted-foreground hover:text-amber-400 transition-all flex items-center gap-3"
             >
-              Get Roasted Yourself{" "}
+              Get Your Verdict{" "}
               <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
@@ -272,8 +277,8 @@ function RoastPage() {
       </Reveal>
 
       <footer className="absolute bottom-12 left-1/2 -translate-x-1/2 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/30">
-        <ShieldCheck className="h-3 w-3" /> Evidence-grounded signal report
-        via DevBrand AI
+        <ShieldCheck className="h-3 w-3" /> Evidence-grounded signal report via
+        DevBrand AI
       </footer>
     </div>
   );

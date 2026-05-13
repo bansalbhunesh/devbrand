@@ -6,7 +6,7 @@ import {
   Sparkles,
   TrendingUp,
   ArrowUpRight,
-  Flame,
+  Gavel,
   Trophy,
   Rocket,
   ArrowRight,
@@ -254,9 +254,9 @@ function ExplorePage() {
             {/* Roast Sidebar */}
             <div className="space-y-8">
               <h2 className="text-xl font-bold flex items-center gap-3">
-                <Flame className="h-5 w-5 text-red-500" />
+                <Gavel className="h-5 w-5 text-amber-400" />
                 <span className="uppercase tracking-widest text-xs font-black">
-                  Critical Roasts
+                  Elite Signal
                 </span>
               </h2>
 
@@ -267,7 +267,7 @@ function ExplorePage() {
                       key={roast.id}
                       to="/r/$id"
                       params={{ id: roast.id }}
-                      className="block p-5 rounded-2xl border border-red-500/10 bg-red-500/[0.02] hover:border-red-500/40 hover:bg-red-500/[0.05] transition-all group"
+                      className="block p-5 rounded-2xl border border-amber-500/10 bg-amber-500/[0.02] hover:border-amber-500/40 hover:bg-amber-500/[0.05] transition-all group"
                     >
                       <div className="flex items-center justify-between mb-4">
                         <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">
@@ -277,29 +277,31 @@ function ExplorePage() {
                           className={cn(
                             "text-[9px] font-black px-2 py-0.5 rounded-full border uppercase tracking-widest",
                             roast.roastData.criticality === "NUCLEAR"
-                              ? "bg-red-500 text-white border-red-500 shadow-lg shadow-red-500/20"
-                              : "text-red-500 border-red-500/20 bg-red-500/5",
+                              ? "bg-amber-400 text-background border-amber-400 shadow-lg shadow-amber-400/20"
+                              : "text-amber-400 border-amber-500/20 bg-amber-500/5",
                           )}
                         >
-                          {roast.roastData.criticality}
+                          {roast.roastData.criticality === "NUCLEAR"
+                            ? "ELITE"
+                            : roast.roastData.criticality}
                         </div>
                       </div>
                       <p className="text-xs text-foreground/90 leading-relaxed italic line-clamp-3 mb-4 font-medium">
                         "{roast.roastData.roast}"
                       </p>
                       <div className="flex items-center justify-between">
-                        <div className="text-[10px] font-mono font-bold text-red-500/60 uppercase tracking-tighter">
-                          SCORE: {roast.roastData.roast_score}/100
+                        <div className="text-[10px] font-mono font-bold text-amber-500/60 uppercase tracking-tighter">
+                          SIGNAL: {roast.roastData.roast_score}/100
                         </div>
-                        <ArrowUpRight className="h-3 w-3 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <ArrowUpRight className="h-3 w-3 text-amber-400 opacity-0 group-hover:opacity-100 transition-opacity" />
                       </div>
                     </Link>
                   ))
                 ) : (
                   <div className="p-8 rounded-2xl border border-dashed border-border text-center">
                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 leading-relaxed">
-                      No public roasts found. <br /> Roast a repo to ignite the
-                      feed.
+                      No public signals found. <br /> Render a Verdict to ignite
+                      the feed.
                     </p>
                   </div>
                 )}

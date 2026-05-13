@@ -77,7 +77,7 @@ export const GenerateForm = React.memo(
                 <p className="text-sm font-bold">Quota Exhausted.</p>
                 <p className="text-[11px] text-muted-foreground mt-1 text-pretty font-medium leading-relaxed">
                   You've reached your free limit. Upgrade to Pro for unlimited
-                  transformations and advanced AI roasting.
+                  transformations and advanced AI signal reports.
                 </p>
                 <button
                   onClick={handleUpgrade}

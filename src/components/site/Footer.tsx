@@ -45,7 +45,7 @@ export function Footer() {
             title="Product"
             links={[
               { label: "Intelligence", to: "/#intelligence" },
-              { label: "GitHub Roast", to: "/#roast" },
+              { label: "The Verdict", to: "/#roast" },
               { label: "Pricing", to: "/#pricing" },
               { label: "Annual Wrapped", to: "/wrapped" },
             ]}
