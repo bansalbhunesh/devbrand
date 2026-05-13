@@ -1,5 +1,6 @@
 import { BulkIngestWorkflow } from "../modules/core/workflow/bulk-ingest";
 import { WorkflowEngine } from "../modules/core/workflow/engine";
+import { initWorkflows } from "../modules/core/workflow/init-workflows";
 import { logger } from "@devbrand/telemetry";
 
 /**
@@ -94,6 +95,9 @@ async function seedSystemAwareness() {
 
   logger.info(`🚨 STARTING SYSTEM AWARENESS INGESTION 🚨`);
   logger.info(`Target: ${repos.length} High-Fidelity Repositories`);
+
+  // Initialize System Capabilities (Listeners & Workflows)
+  initWorkflows();
 
   const engine = new WorkflowEngine();
   const workflow = new BulkIngestWorkflow();

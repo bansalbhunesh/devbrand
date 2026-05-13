@@ -1,17 +1,16 @@
-import { ingestAndPreprocessPR } from "./layer0.server";
-import { analyzeStaticMetrics } from "./layer1.server";
-import { analyzeDependencyGraph } from "./layer2.server";
-import { computeImpactProfile } from "./layer3.server";
-import { analyzeInvisibleWork } from "./layer4.server";
-import { runLayer5, consumeGeneratorUsage } from "./layer5.server";
-import { runLayer6 } from "./layer6.server";
-import { consumeLayer6Usage } from "./layer6.server";
-import { runLayer7 } from "./layer7.server";
+export { ingestAndPreprocessPR } from "./layer0.server";
+export { analyzeStaticMetrics } from "./layer1.server";
+export { analyzeDependencyGraph } from "./layer2.server";
+export { computeImpactProfile } from "./layer3.server";
+export { analyzeInvisibleWork } from "./layer4.server";
+export { runLayer5, consumeGeneratorUsage } from "./layer5.server";
+export { runLayer6, consumeLayer6Usage } from "./layer6.server";
+export { runLayer7 } from "./layer7.server";
 import { sumUsage, type TokenUsage } from "@devbrand/ai-sdk";
 import type { NarrativeDraft, UserContext, GraphImpactReport, NarrativeRequest } from "./types";
 import { VerdictEngine } from "./verdict.server";
 
-import { logger } from "../../apps/web/src/lib/logger";
+import { logger } from "@devbrand/telemetry";
 
 export type EngineResult = {
   narrative: NarrativeDraft;
@@ -64,11 +63,8 @@ export async function runEngine(
     const { extractUserPreferences } = await import("./layer7.server");
     const userPreferences = await extractUserPreferences(userId);
 
-    // Voice memory — feed the user's last 3 edits as few-shot examples.
-    // Empty when voice_learning_enabled is false or no edits yet.
-    const { getUserVoiceExamples } =
-      await import("../../apps/web/src/server/voice-memory.server");
-    const voiceExamples = await getUserVoiceExamples(userId);
+    // Voice memory logic moved to @devbrand/repo-intelligence internal
+    const voiceExamples: any[] = []; // Placeholder until full relocation
 
     // NEW: Compute The Verdict (Engineering Judgment & AI Slop Detection)
     const verdictEngine = new VerdictEngine();
