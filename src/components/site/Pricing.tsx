@@ -144,7 +144,7 @@ export function Pricing() {
   return (
     <section
       id="pricing"
-      className="py-32 border-t border-border bg-muted/10 relative overflow-hidden"
+      className="border-t border-border bg-muted/10 relative overflow-hidden w-full"
     >
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-500/5 blur-[60px] rounded-full pointer-events-none" />
 

@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Nav } from "@/components/site/Nav";
 import { Hero } from "@/components/site/Hero";
 import { DemoTransform } from "@/components/site/DemoTransform";
+import { Workflow } from "@/components/site/Workflow";
 import { Autonomy } from "@/components/site/Autonomy";
 import { Intelligence } from "@/components/site/Intelligence";
 import { Roast } from "@/components/site/Roast";
@@ -16,35 +17,36 @@ export const Route = createFileRoute("/")({
 function LandingPage() {
   return (
     <div className="min-h-screen bg-background">
-      <Nav />
-      <main>
-        <Hero />
-
-        <section id="demo" className="scroll-mt-20">
+      <main className="w-full">
+        <section id="hero" className="snap-start min-h-screen flex items-center w-full">
+          <Hero />
+        </section>
+        
+        <section id="demo" className="scroll-mt-20 w-full">
           <DemoTransform />
         </section>
 
-        {/* Autonomy sits above Intelligence because the headline v2 shift
-            is category-level: from "tool the user opens" to "agent that
-            watches your work". This section pitches that, the next two
-            sections pitch the depth of what the agent does. */}
-        <section id="autonomy" className="scroll-mt-20">
+        <section id="workflow" className="scroll-mt-20 w-full">
+          <Workflow />
+        </section>
+
+        <section id="autonomy" className="scroll-mt-20 snap-start min-h-screen flex items-center w-full">
           <Autonomy />
         </section>
 
-        <section id="intelligence" className="scroll-mt-20">
+        <section id="intelligence" className="scroll-mt-20 snap-start min-h-screen flex items-center w-full">
           <Intelligence />
         </section>
 
-        <section id="invisible-work" className="scroll-mt-20">
+        <section id="invisible-work" className="scroll-mt-20 snap-start min-h-screen flex items-center w-full">
           <InvisibleWork />
         </section>
 
-        <section id="roast" className="scroll-mt-20">
+        <section id="roast" className="scroll-mt-20 snap-start min-h-screen flex items-center w-full">
           <Roast />
         </section>
 
-        <section id="pricing" className="scroll-mt-20">
+        <section id="pricing" className="scroll-mt-20 snap-start min-h-screen flex items-center w-full">
           <Pricing />
         </section>
       </main>

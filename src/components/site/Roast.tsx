@@ -132,7 +132,7 @@ export function Roast() {
   return (
     <section
       id="roast"
-      className="relative py-32 border-t border-border overflow-hidden bg-background"
+      className="relative border-t border-border overflow-hidden bg-background w-full"
     >
       <div className="absolute top-0 right-0 w-72 h-72 bg-amber-500/[0.04] blur-[80px] rounded-full -mr-32 -mt-32 pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-72 h-72 bg-blue-500/[0.04] blur-[80px] rounded-full -ml-32 -mb-32 pointer-events-none" />

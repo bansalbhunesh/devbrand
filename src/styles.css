@@ -105,6 +105,11 @@
   --animate-shimmer: shimmer 2s linear infinite;
 }
 
+html {
+  scroll-behavior: smooth;
+  scroll-snap-type: y proximity;
+}
+
 @layer base {
   * {
     @apply border-border;
@@ -157,6 +162,14 @@
   .glass-morphism {
     @apply bg-background/40 backdrop-blur-3xl border border-white/5;
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
 
   .border-glow {

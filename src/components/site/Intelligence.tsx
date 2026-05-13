@@ -26,7 +26,7 @@ export function Intelligence() {
   return (
     <section
       id="intelligence"
-      className="py-32 border-t border-border bg-muted/5 relative"
+      className="w-full relative"
     >
       <div className="mx-auto max-w-7xl px-6">
         <div className="text-center mb-20">

@@ -14,7 +14,7 @@ export function InvisibleWork() {
   }, []);
 
   return (
-    <section className="py-32 bg-background relative overflow-hidden">
+    <section className="bg-background relative overflow-hidden w-full">
       <div className="absolute top-1/2 left-0 w-64 h-64 bg-blue-500/5 blur-[50px] rounded-full -translate-y-1/2 -ml-32" />
 
       <div className="mx-auto max-w-7xl px-6">

@@ -25,7 +25,7 @@ export function Autonomy() {
   return (
     <section
       id="autonomy"
-      className="relative py-32 border-t border-border overflow-hidden"
+      className="relative w-full overflow-hidden"
     >
       {/* Ambient glow — softer than the Roast section's red, positioned
           off-axis so it doesn't fight the demo section above. */}
@@ -66,9 +66,9 @@ export function Autonomy() {
         <Reveal
           stagger={0.14}
           rootMargin="-8% 0px"
-          className="mt-20 grid md:grid-cols-[1fr_auto_1fr_auto_1fr] items-stretch gap-6 md:gap-0"
+          className="mt-20 flex md:grid md:grid-cols-[1fr_auto_1fr_auto_1fr] items-stretch gap-6 md:gap-0 overflow-x-auto pb-8 md:pb-0 scrollbar-hide snap-x snap-mandatory"
         >
-          <RevealItem>
+          <RevealItem className="min-w-[280px] md:min-w-0 snap-start">
             <Step
               n="01"
               icon={Webhook}
@@ -82,7 +82,7 @@ export function Autonomy() {
 
           <Connector />
 
-          <RevealItem>
+          <RevealItem className="min-w-[280px] md:min-w-0 snap-start">
             <Step
               n="02"
               icon={GitMerge}
@@ -96,7 +96,7 @@ export function Autonomy() {
 
           <Connector />
 
-          <RevealItem>
+          <RevealItem className="min-w-[280px] md:min-w-0 snap-start">
             <Step
               n="03"
               icon={Sparkles}

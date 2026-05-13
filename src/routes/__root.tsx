@@ -11,6 +11,7 @@ import { SmoothScroll } from "@/components/site/SmoothScroll";
 import "@/styles.css";
 import * as React from "react";
 import { getSession } from "@/rpc";
+import { Nav } from "@/components/site/Nav";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -149,6 +150,7 @@ function RootComponent() {
     <RootDocument>
       <QueryClientProvider client={queryClient}>
         <SmoothScroll />
+        <Nav />
         <AnimatePresence mode="wait">
           {/* Cinematic route transition.
               Outgoing scales out (1 → 1.02) + blurs out (0 → 10px). Incoming
@@ -163,6 +165,7 @@ function RootComponent() {
             animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
             exit={{ opacity: 0, scale: 1.02, filter: "blur(10px)" }}
             transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+            className="w-full relative"
             style={{ willChange: "transform, filter, opacity" }}
           >
             <Outlet />

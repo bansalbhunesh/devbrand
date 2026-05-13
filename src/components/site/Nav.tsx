@@ -21,16 +21,16 @@ export function Nav() {
   return (
     <nav
       className={cn(
-        "fixed left-0 right-0 z-[100] transition-all duration-700 ease-[0.22,1,0.36,1]",
-        scrolled ? "top-6 mx-auto max-w-fit px-4" : "top-0 w-full",
+        "fixed left-0 right-0 z-[100] transition-all duration-500 ease-[0.22,1,0.36,1]",
+        scrolled ? "top-4" : "top-0",
       )}
     >
       <div
         className={cn(
-          "mx-auto transition-all duration-700 ease-[0.22,1,0.36,1] flex items-center justify-between gap-12",
+          "mx-auto transition-all duration-500 ease-[0.22,1,0.36,1] flex items-center justify-between",
           scrolled
-            ? "glass-morphism py-2.5 px-8 rounded-full shadow-2xl shadow-black/40 border-white/10"
-            : "max-w-7xl px-8 py-8 border-b border-transparent",
+            ? "glass-morphism py-2 px-6 rounded-full w-fit gap-8 shadow-2xl shadow-black/60 border-white/10"
+            : "w-full max-w-7xl px-8 py-8 border-b border-transparent",
         )}
       >
         <Link to="/" className="flex items-center gap-2.5 group shrink-0">
@@ -45,16 +45,19 @@ export function Nav() {
         </Link>
 
         <div className="hidden md:flex items-center gap-8 text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
-          <a href="#demo" className="hover:text-foreground transition">
+          <a href="/#demo" className="hover:text-foreground transition">
             Demo
           </a>
-          <a href="#autonomy" className="hover:text-foreground transition">
+          <a href="/#workflow" className="hover:text-foreground transition">
+            Workflow
+          </a>
+          <a href="/#autonomy" className="hover:text-foreground transition">
             Autonomy
           </a>
-          <a href="#roast" className="hover:text-foreground transition">
+          <a href="/#roast" className="hover:text-foreground transition">
             Verdict
           </a>
-          <a href="#pricing" className="hover:text-foreground transition">
+          <a href="/#pricing" className="hover:text-foreground transition">
             Pricing
           </a>
           <Link to="/explore" className="hover:text-foreground transition">
@@ -106,25 +109,31 @@ export function Nav() {
             >
               <div className="flex flex-col gap-6 mt-12">
                 <a
-                  href="#demo"
+                  href="/#demo"
                   className="text-lg font-medium hover:text-blue-500 transition"
                 >
                   Demo
                 </a>
                 <a
-                  href="#autonomy"
+                  href="/#workflow"
+                  className="text-lg font-medium hover:text-blue-500 transition"
+                >
+                  Workflow
+                </a>
+                <a
+                  href="/#autonomy"
                   className="text-lg font-medium hover:text-blue-500 transition"
                 >
                   Autonomy
                 </a>
                 <a
-                  href="#roast"
+                  href="/#roast"
                   className="text-lg font-medium hover:text-blue-500 transition"
                 >
                   Verdict
                 </a>
                 <a
-                  href="#pricing"
+                  href="/#pricing"
                   className="text-lg font-medium hover:text-blue-500 transition"
                 >
                   Pricing

@@ -15,7 +15,6 @@ import {
 import { getSession } from "@/rpc";
 import { generateRoast } from "@/rpc";
 import { cn } from "@/lib/utils";
-import { Nav } from "@/components/site/Nav";
 import { Footer } from "@/components/site/Footer";
 import { Reveal, RevealItem, REVEAL_EASE } from "@/components/site/Reveal";
 
@@ -85,7 +84,6 @@ function RoastFriendPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Nav />
       <main className="pt-20">
         <section className="relative py-32 border-t border-border overflow-hidden bg-background">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-amber-500/5 blur-[200px] rounded-full -mt-96 pointer-events-none" />
