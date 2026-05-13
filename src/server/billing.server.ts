@@ -89,7 +89,7 @@ export async function verifyPaymentFn(
     const request = getRequest();
     const ip =
       request?.headers.get("x-forwarded-for")?.split(",")[0] || "127.0.0.1";
-    const { logSecurityEvent } = await import("./redis");
+    const { logSecurityEvent } = await import("./redis.server");
     await logSecurityEvent("payment_failed", sessionUser.id, ip, {
       reason: "invalid_signature",
       orderId: data.razorpay_order_id,

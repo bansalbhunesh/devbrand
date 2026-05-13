@@ -1,4 +1,4 @@
-import { readSecurityEvents } from "./redis";
+import { readSecurityEvents } from "./redis.server";
 
 export interface AnomalyReport {
   suspiciousIPs: string[];

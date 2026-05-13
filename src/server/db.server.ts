@@ -28,7 +28,7 @@ function createDb() {
   const pool = new Pool({
     connectionString: databaseUrl,
     connectionTimeoutMillis: 10000, // 10s timeout
-    max: 10, // Limit pool size for serverless
+    max: 1, // Minimize connections in serverless to avoid exhaustion
   });
 
   return drizzle(pool, { schema });

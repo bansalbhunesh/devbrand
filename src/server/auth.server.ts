@@ -9,7 +9,7 @@ import {
 import { db } from "./db.server";
 import { users } from "./schema.server";
 import { eq } from "drizzle-orm";
-import { rateLimit } from "./redis";
+import { rateLimit } from "./redis.server";
 import { env } from "../lib/env";
 
 function sessionCookieName(): string {
@@ -17,7 +17,7 @@ function sessionCookieName(): string {
 }
 
 function cookieSecure(): boolean {
-  return import.meta.env.PROD;
+  return process.env.NODE_ENV === "production" || import.meta.env.PROD;
 }
 
 const STATE_COOKIE_NAME = "devbrand_oauth_state";
@@ -169,7 +169,7 @@ export async function loadSessionUser() {
     const request = getRequest();
     const ip =
       request?.headers.get("x-forwarded-for")?.split(",")[0] || "127.0.0.1";
-    const { logSecurityEvent } = await import("./redis");
+    const { logSecurityEvent } = await import("./redis.server");
     await logSecurityEvent("session_mismatch", user.id, ip, {
       reason: "invalid_nonce",
     });
@@ -345,7 +345,7 @@ export async function getSecurityEventsFn() {
   const user = await loadSessionUser();
   if (!user) throw new Error("UNAUTHORIZED");
   if (user.plan !== "pro") throw new Error("PRO_REQUIRED");
-  const { readSecurityEvents } = await import("./redis");
+  const { readSecurityEvents } = await import("./redis.server");
   const rows = await readSecurityEvents(100);
   return rows.map((r) => ({
     type: r.type,
@@ -390,7 +390,7 @@ export async function signInWithGithubFn() {
     3600,
   );
   if (!success) {
-    const { logSecurityEvent } = await import("./redis");
+    const { logSecurityEvent } = await import("./redis.server");
     await logSecurityEvent("rate_limit_exceeded", null, ip, {
       action: "signin",
     });

@@ -6,7 +6,7 @@ import { completeText, normalizeLlmJsonText } from "./llm/client";
 import { db } from "./db.server";
 import { users, userEvents, roasts } from "./schema.server";
 import { eq, sql } from "drizzle-orm";
-import { rateLimit } from "./redis";
+import { rateLimit } from "./redis.server";
 import { env } from "../lib/env";
 
 let octokit: Octokit | null = null;

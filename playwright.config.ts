@@ -24,6 +24,6 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     // TanStack Start dev boot pulls in .server modules (DB, Redis, Anthropic
     // clients) and can exceed Playwright's default 60s on cold filesystem.
-    timeout: 180_000,
+    timeout: 90_000,
   },
 });

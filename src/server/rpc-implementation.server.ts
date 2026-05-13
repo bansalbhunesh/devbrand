@@ -159,6 +159,6 @@ export async function getWrappedStatsImpl() {
 }
 
 export async function getSecurityEventsImpl(limit: number = 50) {
-  const { readSecurityEvents } = await import("./redis");
+  const { readSecurityEvents } = await import("./redis.server");
   return readSecurityEvents(limit);
 }

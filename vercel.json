@@ -6,7 +6,6 @@
   "functions": {
     "api/index.ts": {
       "runtime": "@vercel/node@5.0.0",
-      "memory": 1024,
       "maxDuration": 60,
       "includeFiles": "dist/server/**"
     }

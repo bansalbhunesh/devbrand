@@ -9,7 +9,7 @@ vi.mock("../lib/env", () => ({
   },
 }));
 
-import { rateLimit } from "./redis";
+import { rateLimit } from "./redis.server";
 import { env } from "../lib/env";
 
 describe("rateLimit fallback behavior", () => {
