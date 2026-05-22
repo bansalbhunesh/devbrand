@@ -499,3 +499,22 @@ export const slackWorkspaces = pgTable("slack_workspaces", {
 export const slackWorkspacesRelations = relations(slackWorkspaces, ({ one }) => ({
   user: one(users, { fields: [slackWorkspaces.userId], references: [users.id] }),
 }));
+
+export const leaderboardEntries = pgTable("leaderboard_entries", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  egoScore: integer("ego_score").notNull().default(0),
+  rank: integer("rank"),
+  category: text("category"),
+  badges: text("badges").array(),
+  computedAt: timestamp("computed_at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  index("leaderboard_ego_score_idx").on(t.egoScore)
+]);
+
+export const badges = pgTable("badges", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  badgeType: text("badge_type").notNull(),
+  earnedAt: timestamp("earned_at", { withTimezone: true }).notNull().defaultNow(),
+});
