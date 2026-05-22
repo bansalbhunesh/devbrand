@@ -361,6 +361,36 @@ export const roasts = pgTable(
   ],
 );
 
+export const repoRoasts = pgTable(
+  "repo_roasts",
+  {
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    owner: text("owner").notNull(),
+    repo: text("repo").notNull(),
+    roastData: jsonb("roast_data")
+      .$type<{
+        verdict: string;
+        narrative: string;
+        executionLog: string;
+        minimalist: string;
+        aiSlopScore: number;
+        debtScore: number;
+        signalsUsed: string[];
+      }>()
+      .notNull(),
+    rawPayloadHash: text("raw_payload_hash"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("repo_roasts_owner_repo_idx").on(t.owner, t.repo),
+    uniqueIndex("repo_roasts_hash_idx").on(t.rawPayloadHash),
+  ],
+);
+
 export const trackedRepos = pgTable(
   "tracked_repos",
   {

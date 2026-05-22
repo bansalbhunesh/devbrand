@@ -13,6 +13,18 @@ export const RoastOutputSchema = z.object({
 
 export type RoastOutput = z.infer<typeof RoastOutputSchema>;
 
+export const RepoRoastOutputSchema = z.object({
+  verdict: z.string().max(300),
+  narrative: z.string().max(2000),
+  executionLog: z.string().max(1000),
+  minimalist: z.string().max(500),
+  aiSlopScore: z.number().min(0).max(100),
+  debtScore: z.number().min(0).max(100),
+  signalsUsed: z.array(z.string()).max(10),
+});
+
+export type RepoRoastOutput = z.infer<typeof RepoRoastOutputSchema>;
+
 export type RoastTone = "mentor" | "peer" | "staff" | "edge" | "chaos";
 
 export const PERSONA_MAP: Record<RoastTone, string> = {

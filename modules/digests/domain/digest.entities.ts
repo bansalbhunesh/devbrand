@@ -6,7 +6,8 @@ export interface Digest {
   kind: DigestKind;
   periodStart: Date;
   periodEnd: Date;
-  linkedinPost: string;
+  postOptions: string[];
+  memoryContext?: string;
   twitterThread: string[];
   releaseNotes: string;
   includedOutputIds: string[];

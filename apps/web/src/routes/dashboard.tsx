@@ -57,7 +57,7 @@ type Tab =
 import { Suspense, lazy } from "react";
 
 const GenerateTab = lazy(() =>
-  import("@/components/dashboard/GenerateTab").then((m) => ({
+  import("../../../modules/transform/ui/GenerateTab").then((m) => ({
     default: m.GenerateTab,
   })),
 );
@@ -67,12 +67,12 @@ const HistoryTab = lazy(() =>
   })),
 );
 const DigestTab = lazy(() =>
-  import("@/components/dashboard/DigestTab").then((m) => ({
+  import("../../../modules/digests/ui/DigestTab").then((m) => ({
     default: m.DigestTab,
   })),
 );
 const TeamsTab = lazy(() =>
-  import("@/components/dashboard/TeamsTab").then((m) => ({
+  import("../../../modules/teams/ui/TeamsTab").then((m) => ({
     default: m.TeamsTab,
   })),
 );
@@ -87,12 +87,12 @@ const SecurityTab = lazy(() =>
   })),
 );
 const TrackedReposTab = lazy(() =>
-  import("@/components/dashboard/TrackedReposTab").then((m) => ({
+  import("../../../modules/repos/ui/TrackedReposTab").then((m) => ({
     default: m.TrackedReposTab,
   })),
 );
 const ScheduledTab = lazy(() =>
-  import("@/components/dashboard/ScheduledTab").then((m) => ({
+  import("../../../modules/scheduling/ui/ScheduledTab").then((m) => ({
     default: m.ScheduledTab,
   })),
 );

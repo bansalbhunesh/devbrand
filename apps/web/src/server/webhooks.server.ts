@@ -1,14 +1,14 @@
 import crypto from "crypto";
-import { db } from "./db.server";
+import { db } from "@infrastructure/database/db.server";
 import {
   users,
   userEvents,
   trackedRepos,
   webhookDeliveries,
   backgroundJobs,
-} from "./schema.server";
+} from "@infrastructure/database/schema.server";
 import { and, eq, sql } from "drizzle-orm";
-import { env } from "../lib/env";
+import { env } from "@devbrand/config";
 
 /**
  * Razorpay signs the exact request body bytes — always verify using the raw string.

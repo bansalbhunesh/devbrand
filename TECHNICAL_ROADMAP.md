@@ -1,322 +1,183 @@
-/**
- * TECHNICAL CHANGES & INTEGRATION IMPROVEMENTS
- * Complete roadmap with all 13+ integrations for global scaling
- * 
- * Status: TIER 1 & TIER 2 Implementation In Progress
- * Branch: feat/github-integrations-tier1
- */
+# 🏗️ TECHNICAL ROADMAP — Complete Integration & Architecture Improvements
 
-# DevBrand Technical Roadmap - Implementation Status
-
-## 🎯 TIER 1: CRITICAL (✅ IN PROGRESS - 90% Complete)
-
-### 1. GitHub App Integration ✅
-- **Status**: Files Created
-- **Files**: 
-  - `infrastructure/github/github-app.server.ts` - Core GitHub App service
-  - `infrastructure/github/webhook-verify.server.ts` - Webhook signature verification
-  - `api/webhook/github.ts` - Webhook receiver endpoint
-- **What it does**:
-  - Validates GitHub webhook signatures using HMAC-SHA256
-  - Routes PR events to analysis engine
-  - Manages GitHub App installations
-  - Auto-triggers verdict on PR open/update
-- **Env Variables Required**:
-  - `GITHUB_APP_ID`
-  - `GITHUB_APP_SECRET`
-  - `GITHUB_APP_PRIVATE_KEY`
-- **Database Tables Added**:
-  - `github_installations` - Tracks app installations per org/user
-  - `github_webhook_events` - Logs all webhook deliveries
-  - `github_action_runs` - Stores CI/CD integration results
-
-### 2. GitHub Actions Integration ✅
-- **Status**: Files Created
-- **Files**:
-  - `packages/github-actions-action/action.yml` - Official GitHub Action definition
-- **What it does**:
-  - Official DevBrand GitHub Action for CI/CD pipelines
-  - Posts PR comments with verdicts
-  - Supports verdict-only and full analysis modes
-  - Exports JSON output for workflow usage
-- **Usage**:
-  ```yaml
-  - uses: devbrand/devbrand-analysis@v1
-    with:
-      api-key: ${{ secrets.DEVBRAND_API_KEY }}
-      post-comment: true
-  ```
-- **Workflow Integration**:
-  - Runs on every PR
-  - Optional enforcement (fail build if AI slop > threshold)
-  - Exports verdict JSON for downstream jobs
-
-### 3. VS Code Extension ✅
-- **Status**: Files Created
-- **Files**:
-  - `packages/vscode-extension/` - Complete extension package
-  - `packages/vscode-extension/package.json` - VS Code marketplace definition
-  - `packages/vscode-extension/src/extension.ts` - Main extension entry
-  - `packages/vscode-extension/src/client/devbrand-client.ts` - API client
-  - `packages/vscode-extension/src/providers/verdict-provider.ts` - Webview provider
-  - `packages/vscode-extension/src/providers/issues-provider.ts` - Tree view provider
-- **What it does**:
-  - Real-time code analysis in VS Code
-  - Inline diagnostics with severity levels
-  - Hover tooltips showing verdicts
-  - Sidebar with verdict summary + issues list
-  - Command: `Ctrl+Shift+D` to analyze current file
-  - Auto-analysis on file save (configurable)
-- **Features**:
-  - File-level analysis
-  - Function/class analysis
-  - Problem highlighting
-  - Suggestions tree view
-  - API key management in settings
-- **Publishing**:
-  - Ready for VS Code Marketplace
-  - Run: `npm run package` to create .vsix
-  - Run: `npm run publish` to push to marketplace
-
-### 4. Slack Bot Integration ✅
-- **Status**: Files Created
-- **Files**:
-  - `infrastructure/slack/slack-bot.server.ts` - Slack OAuth & event handling
-  - `api/webhook/slack.ts` - Slack webhook receiver
-- **What it does**:
-  - OAuth flow for Slack workspace installation
-  - Receives and verifies Slack events
-  - Posts verdicts as rich Slack messages
-  - Manages per-workspace/user subscriptions
-  - Handles app mentions and direct messages
-- **Features**:
-  - `/devbrand analyze [PR URL]` command
-  - Daily digest of repo changes
-  - Per-user notification preferences
-  - Blocks formatting for rich verdicts
-  - Reaction tracking (👍 = agree, 👎 = disagree)
-- **Env Variables Required**:
-  - `SLACK_CLIENT_ID`
-  - `SLACK_CLIENT_SECRET`
-  - `SLACK_SIGNING_SECRET`
-  - `SLACK_REDIRECT_URL`
-- **Database Tables Added**:
-  - `slack_workspaces` - Connected Slack workspaces
-  - `slack_user_subscriptions` - User notification preferences
+**Generated**: May 22, 2026 | **Status**: Comprehensive Technical Blueprint
 
 ---
 
-## 🎯 TIER 2: HIGH-IMPACT (✅ IN PROGRESS - 80% Complete)
+## 📋 SECTION 1: CURRENT TECHNICAL ARCHITECTURE
 
-### 5. REST API v1 (OpenAPI) ✅
-- **Status**: Files Created
-- **Files**:
-  - `apps/web/src/routes/api/v1/index.ts` - REST endpoints
-  - `infrastructure/api/api-keys.server.ts` - Key management
-- **What it does**:
-  - 10+ standardized REST endpoints
-  - Full OpenAPI/Swagger spec
-  - API key management & validation
-  - Rate limiting per tier
-  - Request logging for analytics
-- **Endpoints**:
-  ```
-  POST   /api/v1/analyze               # Analyze PR/file
-  GET    /api/v1/repos/:owner/:repo    # Repository details
-  GET    /api/v1/repos/:owner/:repo/verdict  # Latest verdict
-  POST   /api/v1/api-keys              # Create API key
-  GET    /api/v1/api-keys              # List keys
-  DELETE /api/v1/api-keys/:id          # Revoke key
-  GET    /api/v1/quota                 # Usage stats
-  GET    /api/v1/developers/:username  # Developer profile
-  GET    /api/v1/leaderboard           # Rankings
-  ```
-- **Authentication**: Bearer token (API key)
-- **Rate Limits**:
-  - Free: 1,000 requests/month
-  - Pro: 50,000 requests/month
-  - Enterprise: Unlimited
-- **Database Tables Added**:
-  - `api_keys` - Stores API key hashes
-  - `api_usage_logs` - Rate limit tracking
+### A. Core Package Structure
 
-### 6. GraphQL API ✅
-- **Status**: Files Created
-- **Files**:
-  - `packages/graphql-schema/schema.ts` - Full schema + resolvers
-  - `api/graphql.ts` - GraphQL endpoint
-- **What it does**:
-  - Complex query support (N+1 problem solved)
-  - Single request for multi-resource queries
-  - Flexible filtering & pagination
-  - Enables powerful client-side dashboards
-- **Key Queries**:
-  ```graphql
-  query {
-    repository(owner: "bansalbhunesh", name: "devbrand") {
-      verdict { summary, aiSlopProbability }
-      architectureGraph { nodes, edges, metrics }
-      recentPRs(first: 5) { verdict, files, additions }
-    }
-  }
-  ```
-- **Mutations**:
-  - Create/revoke API keys
-  - Subscribe to notifications
-  - Update preferences
+```
+devbrand/
+├── packages/
+│   ├── repo-intelligence/
+│   │   ├── layer0.server.ts
+│   │   ├── layer1.server.ts
+│   │   ├── layer2.server.ts
+│   │   ├── layer3.server.ts
+│   │   ├── layer4.server.ts
+│   │   ├── layer5.server.ts
+│   │   ├── layer6.server.ts
+│   │   ├── layer7.server.ts
+│   │   ├── verdict.server.ts
+│   │   ├── types.ts
+│   │   ├── arch-graph.server.ts
+│   │   └── collab-graph.server.ts
+│   ├── ai-sdk/
+│   │   └── @anthropic-ai/sdk
+├── apps/
+│   ├── web/
+│   │   ├── src/rpc.ts
+│   │   ├── src/routes/
+│   │   └── vite.config.ts
+├── modules/
+│   ├── ai/
+│   ├── auth/
+│   ├── repos/
+│   ├── roast/
+│   ├── transform/
+│   ├── billing/
+│   ├── users/
+│   ├── scheduling/
+│   ├── notifications/
+│   ├── feeds/
+│   ├── digests/
+│   ├── automation/
+│   ├── teams/
+│   └── core/
+├── infrastructure/
+│   ├── auth/
+│   ├── database/
+│   ├── cache/
+│   └── queues/
+├── api/
+│   └── index.ts
+└── workflows/
+```
 
-### 7. Public Leaderboards 🚀
-- **Status**: Schema Created, UI Pending
-- **Features**:
-  - Global rankings by verdict score
-  - Regional leaderboards (by GitHub location)
-  - Category-specific (Best ML Repos, Best Infrastructure, etc.)
-  - Developer profiles with badges
-  - 10+ achievement badges
-- **Database Tables Added**:
-  - `developer_leaderboard` - Rankings cache
-  - `developer_badges` - Badge assignments
+### B. Technology Stack
 
----
+| Layer | Technology | Role |
+|-------|-----------|------|
+| **Frontend** | React 19 + TanStack Router | SSR routing & state management |
+| **Styling** | Tailwind CSS + Radix UI | Component system |
+| **3D Graphics** | Three.js + React Three Fiber | Architecture topology visualization |
+| **Backend** | TanStack Start (Node.js) | Server-side rendering & RPC bridge |
+| **Database** | Postgres + Drizzle ORM | Persistent data storage |
+| **Cache** | Redis (Upstash) | Rate limiting, session store |
+| **Queue** | Bull/Redis | Async job processing |
+| **Auth** | GitHub OAuth 2.0 | User authentication |
+| **Payments** | Razorpay + Stripe | Billing & subscriptions |
+| **LLM** | Claude 3.5 Sonnet (Anthropic) | AI analysis & narrative generation |
+| **Deployment** | Vercel + Cloudflare Workers | Serverless compute & edge runtime |
 
-## 🎯 TIER 3: MEDIUM-PRIORITY (Pending Implementation)
+### C. Current RPC Endpoints (apps/web/src/rpc.ts)
+```typescript
+// Authentication
+createServerFn() → loginWithGithub()
+createServerFn() → loadSessionUser()
 
-### 8. Multi-Language Support
-- **Planned**: Python, Go, Java, Rust, C#
-- **Implementation**: Language adapters + AST parsers
-- **Expands TAM**: 60%+ for Python/Go/Java repos
+// PR Analysis
+createServerFn() → analyzeGithubPR()
+createServerFn() → transformPR()
 
-### 9. Multi-Model AI Ensemble
-- **Planned**: Claude 3.5 + GPT-4o + Llama 3.3
-- **Router**: Cost-optimized + quality-balanced
-- **Adaptive**: Task-specific model selection
+// User Data
+createServerFn() → getUserOutputs()
+createServerFn() → toggleOutputVisibility()
+createServerFn() → saveEditedPost()
 
-### 10. Compliance & Security Module
-- **Features**: GDPR, HIPAA, PCI-DSS detection
-- **Auto-flags**: Hardcoded secrets, PII handling
-- **Scoring**: Compliance grade in verdicts
+// Repository Management
+createServerFn() → getRepoMetadata()
+createServerFn() → getRoastBySlug()
+createServerFn() → getOutputBySlug()
 
----
+// Background Jobs
+createServerFn() → createJobFn()      # Enqueue async work
+createServerFn() → /api/worker        # Async job processor
+```
 
-## 🎯 TIER 4: LONG-TERM (Future Planning)
-
-### 11. Distributed Event Processing
-- Kafka/Redis Streams for 10M+ repos
-- Event sourcing architecture
-- Parallel consumer groups
-
-### 12. ML-Powered Predictions
-- Maintainability degradation forecasting
-- Code quality timeline predictions
-- TensorFlow-based models
-
-### 13. Real-Time Collaboration
-- WebSocket-based graph editing
-- Figma-style collaborative cursors
-- Live verdict updates
-
----
-
-## 📊 NEW DATABASE TABLES (15 Total)
-
+### D. Database Schema (schema.sql)
 ```sql
--- GitHub Integration
-github_installations
-github_webhook_events
-github_action_runs
+users                    # Core user identity
+├── id (UUID)
+├── github_id (TEXT, UNIQUE)
+├── github_login
+├── seniority (junior|mid|senior|staff)
+├── tone (direct|storytelling|technical)
+├── stripe_customer_id
+└── plan (free|pro|enterprise)
 
--- Slack Integration
-slack_workspaces
-slack_user_subscriptions
+profiles                 # User preferences & customization
+├── user_id → users
+├── bio, custom_domain
+├── collab_stats (JSONB)
+└── contribution_rhythm (JSONB)
 
--- API & Authentication
-api_keys
-api_usage_logs
+outputs                  # Generated PR analysis artifacts
+├── id (UUID)
+├── slug (UNIQUE)
+├── user_id → users
+├── pr_url, pr_title, pr_commit_message
+├── linkedin_post_1|2|3
+├── resume_bullet, interview_hook
+├── impact_score, complexity_level
+└── citations (JSONB)
 
--- Leaderboards & Reputation
-developer_leaderboard
-developer_badges
+repo_graphs              # Cached architecture topology
+├── owner, repo
+├── graph_data (JSONB)
+└── computed_at
 
--- Existing (extended)
-users (already exists)
-outputs (already exists)
-profiles (already exists)
+user_events              # Analytics & audit trail
+├── user_id → users
+├── event_type (string)
+└── payload (JSONB)
+
+subscriptions            # Billing subscriptions
+├── user_id → users
+├── stripe_subscription_id
+├── status, current_period_end
+└── cancel_at_period_end
 ```
 
 ---
 
-## 🚀 DEPLOYMENT CHECKLIST
+## 🔌 SECTION 2: INTEGRATION IMPROVEMENTS (PRIORITY-RANKED)
 
-### Environment Variables
-```env
-# GitHub App
-GITHUB_APP_ID=...
-GITHUB_APP_SECRET=...
-GITHUB_APP_PRIVATE_KEY=...
+### TIER 1: CRITICAL (Next 4 Weeks)
+1. **GitHub App Integration (Replace OAuth-Only)**
+   - Real-time webhooks (pull_request, push)
+   - Auto-trigger PR analysis
+2. **GitHub Actions Integration**
+   - Official `devbrand-analyze` action
+   - CI/CD inline PR comments
+3. **VS Code Extension**
+   - Real-time file analysis in IDE
+   - Inline diagnostics
+4. **Slack Bot Integration**
+   - Event-driven verdict delivery in Slack
 
-# Slack Bot
-SLACK_CLIENT_ID=...
-SLACK_CLIENT_SECRET=...
-SLACK_SIGNING_SECRET=...
-SLACK_REDIRECT_URL=...
+### TIER 2: HIGH-IMPACT (Weeks 5-8)
+1. **GraphQL API Layer**
+   - Query repos + verdicts + graphs
+2. **REST API (v1)**
+   - 10+ standardized endpoints + OpenAPI
+3. **Public Leaderboards**
+   - Global/regional rankings & developer profiles
 
-# API
-API_BASE_URL=https://api.devbrand.io
+### TIER 3: MEDIUM-PRIORITY (Weeks 9-12)
+1. **Multi-Language Support**
+   - Python, Go, Java adapters
+2. **Multi-Model AI Ensemble**
+   - Claude + GPT-4o + Llama 3.3
+3. **Compliance & Security Module**
+   - GDPR, HIPAA, PCI-DSS detection
 
-# Database
-DATABASE_URL=postgres://...
-```
-
-### Deployment Steps
-1. ✅ Create branch: `feat/github-integrations-tier1`
-2. ✅ Commit all files
-3. ⏳ Run migrations: `npm run db:push`
-4. ⏳ Test webhooks locally: `npm run dev`
-5. ⏳ Deploy to Vercel
-6. ⏳ Register GitHub App at github.com/settings/apps
-7. ⏳ Register Slack App at api.slack.com
-8. ⏳ Publish VS Code extension to Marketplace
-9. ⏳ Launch docs & API reference
-
----
-
-## 📈 EXPECTED IMPACT
-
-After implementing all TIER 1 + TIER 2 integrations:
-
-| Metric | Before | After | Growth |
-|--------|--------|-------|--------|
-| Monthly Active Users | 50 | 50K+ | 1000x |
-| GitHub Installs | 0 | 10K+ | ∞ |
-| VS Code Downloads | 0 | 30K+ | ∞ |
-| API Calls/Month | 0 | 1M+ | ∞ |
-| Paid Subscribers | 0 | 2K+ | ∞ |
-| Average Session Time | 3m | 12m | 4x |
-| Viral Share Rate | 0% | 15% | ∞ |
-
----
-
-## ✅ COMPLETION STATUS
-
-- **Tier 1**: 90% Complete ✅
-  - [x] GitHub App Integration
-  - [x] GitHub Actions
-  - [x] VS Code Extension
-  - [x] Slack Bot
-  
-- **Tier 2**: 80% Complete ⏳
-  - [x] REST API v1
-  - [x] GraphQL API
-  - [ ] Leaderboards UI (next PR)
-
-- **Tier 3**: 0% Complete 📋
-- **Tier 4**: 0% Complete 📋
-
----
-
-**Next Steps**: 
-1. Merge this branch once verified
-2. Deploy to staging
-3. Test all webhooks
-4. Create PR for Leaderboard UI
-5. Begin TIER 3 (Multi-language support)
+### TIER 4: LONG-TERM (3-6 Months)
+1. **Distributed Event Processing**
+   - Kafka/Redis Streams
+2. **ML-Powered Predictions**
+   - Maintainability degradation models
+3. **Real-Time Collaboration**
+   - Collaborative cursors (Figma-style)

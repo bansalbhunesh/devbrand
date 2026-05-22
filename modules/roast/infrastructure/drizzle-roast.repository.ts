@@ -35,4 +35,30 @@ export class DrizzleRoastRepository implements IRoastRepository {
       limit,
     });
   }
+
+  async saveRepoRoast(data: {
+    owner: string;
+    repo: string;
+    roastData: import("../domain/roast.types").RepoRoastOutput;
+    rawPayloadHash: string;
+  }) {
+    const { repoRoasts } = await import("@infrastructure/database/schema.server");
+    const [inserted] = await db
+      .insert(repoRoasts)
+      .values({
+        owner: data.owner,
+        repo: data.repo,
+        roastData: data.roastData,
+        rawPayloadHash: data.rawPayloadHash,
+      })
+      .returning();
+    return { id: inserted.id };
+  }
+
+  async getRepoRoastByHash(hash: string) {
+    const { repoRoasts } = await import("@infrastructure/database/schema.server");
+    return db.query.repoRoasts.findFirst({
+      where: eq(repoRoasts.rawPayloadHash, hash),
+    });
+  }
 }

@@ -14,6 +14,10 @@ export function normalizeAppUrl(url: string | undefined): string {
 
 const envSchema = z.object({
   // App & Environment
+  FEATURE_REPO_ROAST: z
+    .enum(["true", "false"])
+    .optional()
+    .transform((v) => v === "true"),
   NODE_ENV: z
     .enum(["development", "production", "test"])
     .default("development"),

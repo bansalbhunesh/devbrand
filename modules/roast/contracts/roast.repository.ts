@@ -19,4 +19,13 @@ export interface IRoastRepository {
    * Fetch a list of public roasts for the feed.
    */
   listPublic(limit: number): Promise<any[]>;
+
+  saveRepoRoast(data: {
+    owner: string;
+    repo: string;
+    roastData: import("../domain/roast.types").RepoRoastOutput;
+    rawPayloadHash: string;
+  }): Promise<{ id: string }>;
+
+  getRepoRoastByHash(hash: string): Promise<any | null>;
 }

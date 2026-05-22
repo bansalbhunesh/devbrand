@@ -87,6 +87,11 @@ export const saveEditedPostSchema = z.object({
   editedText: z.string().min(1).max(10_000),
 });
 
+export const rewritePostSchema = z.object({
+  text: z.string(),
+  instruction: z.enum(["shorter", "technical"]),
+});
+
 // GitHub login/repo character set per GitHub's own rules: login allows
 // alphanumerics + hyphens (no leading/trailing hyphen); repo allows dots,
 // underscores, hyphens, alphanumerics. Same regexes used in roastSchema.
@@ -105,6 +110,11 @@ export const trackedRepoInputSchema = z.object({
 
 export const trackedRepoIdSchema = z.object({
   id: z.string().uuid(),
+});
+
+export const repoRoastSchema = z.object({
+  owner: z.string().min(1).max(100),
+  repo: z.string().min(1).max(100),
 });
 
 // Coerce because the client typically sends ISO date strings, but we accept
@@ -418,6 +428,37 @@ export const generateRoast = createServerFn({ method: "POST" })
     return useCase.execute(data);
   });
 
+// ── Repo Roasts ────────────────────────────────────────────────────────────
+
+export const getRepoRoast = createServerFn({ method: "GET" })
+  .inputValidator((id: string) => id)
+  .handler(async ({ data: id }) => {
+    const { db } = await import("@infrastructure/database/db.server");
+    const { repoRoasts } = await import("@infrastructure/database/schema.server");
+    const { eq } = await import("drizzle-orm");
+    const roast = await db.query.repoRoasts.findFirst({ where: eq(repoRoasts.id, id) });
+    if (!roast) throw new Error("ROAST_NOT_FOUND");
+    return roast;
+  });
+
+export const generateRepoRoast = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => repoRoastSchema.parse(data))
+  .handler(async ({ data }) => {
+    await checkRateLimit("generate_repo_roast", 10, 3600);
+    const { DrizzleRoastRepository } =
+      await import("@modules/roast/infrastructure/drizzle-roast.repository");
+    const { RoastGithubService } =
+      await import("@modules/roast/infrastructure/github.service");
+    const { GenerateRepoRoastUseCase } =
+      await import("@modules/roast/application/generate-repo-roast.usecase");
+
+    const repo = new DrizzleRoastRepository();
+    const github = new RoastGithubService();
+    const useCase = new GenerateRepoRoastUseCase(repo, github);
+
+    return useCase.execute(data);
+  });
+
 // ── Billing ──────────────────────────────────────────────────────────────────
 
 export const createCheckoutSession = createServerFn({ method: "POST" }).handler(
@@ -705,9 +746,36 @@ export const getDigest = createServerFn({ method: "GET" })
 
     return {
       ...row,
+      postOptions: (row.postOptions ?? []) as string[],
       twitterThread: (row.twitterThread ?? []) as string[],
       includedOutputIds: (row.includedOutputIds ?? []) as string[],
     };
+  });
+
+export const rewritePost = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => rewritePostSchema.parse(data))
+  .handler(async ({ data }) => {
+    const { loadSessionUser } = await import("@infrastructure/auth/auth.server");
+    const user = await loadSessionUser();
+    if (!user) throw new Error("UNAUTHORIZED");
+
+    const { completeText } = await import("@modules/ai/infrastructure/llm.gateway");
+    
+    let instructionPrompt = "";
+    if (data.instruction === "shorter") {
+      instructionPrompt = "Rewrite this engineering post to be significantly shorter and punchier. Keep the same tone. No cringe, no hype.";
+    } else if (data.instruction === "technical") {
+      instructionPrompt = "Rewrite this engineering post to focus more heavily on the architectural decisions and technical complexity. Keep the same tone. No cringe, no hype.";
+    }
+
+    const result = await completeText({
+      system: "You are a thoughtful engineer rewriting your own work log. Return ONLY the raw rewritten text, no commentary.",
+      user: `${instructionPrompt}\n\nORIGINAL POST:\n${data.text}`,
+      maxTokens: 1000,
+      temperature: 0.5,
+    });
+
+    return { text: result.text.trim() };
   });
 
 // ── Scheduled Posts ──────────────────────────────────────────────────────────
