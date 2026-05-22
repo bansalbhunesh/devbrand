@@ -26,6 +26,8 @@
       "@devbrand/config/*": ["./packages/config/*"],
       "@devbrand/telemetry": ["./packages/telemetry/index.ts"],
       "@devbrand/telemetry/*": ["./packages/telemetry/*"],
+      "@devbrand/openapi": ["./packages/openapi/schema.ts"],
+      "@devbrand/openapi/*": ["./packages/openapi/*"],
       "@infrastructure/*": ["./infrastructure/*"],
       "@modules/*": ["./modules/*"]
     }
