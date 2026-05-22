@@ -1,0 +1,48 @@
+name: "DevBrand Analysis"
+description: "Run DevBrand verdict engine on PRs directly from your GitHub Actions workflow"
+inputs:
+  devbrand-api-key:
+    description: "Your DevBrand API Key for authentication"
+    required: true
+  github-token:
+    description: "GitHub Token for posting comments on the PR"
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Trigger DevBrand Analysis
+      shell: bash
+      env:
+        OWNER: ${{ github.repository_owner }}
+        REPO: ${{ github.event.repository.name }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+        HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        API_KEY: ${{ inputs.devbrand-api-key }}
+      run: |
+        if [ -z "$PR_NUMBER" ]; then
+          echo "Error: This action must run on a pull_request event."
+          exit 1
+        fi
+        
+        echo "Starting DevBrand Analysis for $OWNER/$REPO#$PR_NUMBER ($HEAD_SHA)..."
+        
+        RESPONSE=$(curl -s -w "\n%{http_code}" -X POST https://devbrand.app/api/analyze \
+          -H "Authorization: Bearer $API_KEY" \
+          -H "Content-Type: application/json" \
+          -d "{
+            \"owner\": \"$OWNER\",
+            \"repo\": \"$REPO\",
+            \"prNumber\": $PR_NUMBER,
+            \"headSha\": \"$HEAD_SHA\"
+          }")
+          
+        HTTP_STATUS=$(echo "$RESPONSE" | tail -n1)
+        BODY=$(echo "$RESPONSE" | sed '$d')
+        
+        if [ "$HTTP_STATUS" -ne 202 ] && [ "$HTTP_STATUS" -ne 200 ]; then
+          echo "Failed to trigger analysis. HTTP Status: $HTTP_STATUS"
+          echo "Response: $BODY"
+          exit 1
+        fi
+        
+        echo "DevBrand analysis successfully enqueued. Verdict will be posted as a PR comment."
