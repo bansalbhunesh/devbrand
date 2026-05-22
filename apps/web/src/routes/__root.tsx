@@ -36,12 +36,16 @@ export const Route = createRootRoute({
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, maximum-scale=5" },
       { title: "DevBrand — Make invisible engineering work visible" },
       {
         name: "description",
-        content: "GitHub → LinkedIn posts + resume bullets. No hype. No emoji.",
+        content: "GitHub to LinkedIn posts and resume bullets automatically. Turn your PRs into verifiable career leverage. No hype. No emoji.",
       },
+      { name: "theme-color", content: "#0a0a0a" },
+      { name: "robots", content: "index, follow" },
+      { name: "author", content: "DevBrand" },
+      { name: "keywords", content: "developer reputation, github portfolio, pull request analysis, engineering blog generator, automated changelog, software engineering career" },
       { property: "og:type", content: "website" },
       { property: "og:site_name", content: "DevBrand" },
       {
@@ -51,16 +55,23 @@ export const Route = createRootRoute({
       {
         property: "og:description",
         content:
-          "Turn your PRs into verifiable career leverage. Evidence citations included.",
+          "Turn your PRs into verifiable career leverage. Evidence citations included. Build quietly. Compound publicly.",
       },
       { property: "og:image", content: "https://devbrand.ai/og-main.png" },
       { property: "og:url", content: "https://devbrand.ai" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@devbrand_ai" },
+      { name: "twitter:creator", content: "@devbrand_ai" },
+      { name: "twitter:title", content: "DevBrand — Make invisible engineering work visible" },
+      { name: "twitter:description", content: "Turn your PRs into verifiable career leverage. Evidence citations included." },
       { name: "twitter:image", content: "https://devbrand.ai/og-main.png" },
     ],
     links: [
       { rel: "canonical", href: "https://devbrand.ai" },
+      { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
+      { rel: "icon", type: "image/png", href: "/favicon.png" },
+      { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png" },
+      { rel: "manifest", href: "/site.webmanifest" },
       {
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap",
