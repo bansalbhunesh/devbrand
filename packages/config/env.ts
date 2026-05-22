@@ -46,6 +46,16 @@ const envSchema = z.object({
   RAZORPAY_KEY_SECRET: z.string().min(1),
   RAZORPAY_WEBHOOK_SECRET: z.string().min(1),
 
+  // Integrations
+  SLACK_SIGNING_SECRET: z.string().optional(),
+  SLACK_CLIENT_ID: z.string().optional(),
+  SLACK_CLIENT_SECRET: z.string().optional(),
+
+  // Observability
+  SENTRY_DSN: z.string().url().optional(),
+  POSTHOG_API_KEY: z.string().optional(),
+  REDIS_URL: z.string().url().optional(),
+
   // AI
   ANTHROPIC_API_KEY: z.string().optional(),
   LLM_PROVIDER: z.enum(["anthropic", "openai_compatible"]).default("anthropic"),
