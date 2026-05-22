@@ -41,14 +41,14 @@ DevBrand is engineered as a highly resilient, distributed monorepo built for sca
 
 ```mermaid
 graph TD
-    A[GitHub Webhooks / VS Code] -->|Events| B(REST API v1 / GraphQL)
-    B --> C{Event Bus (Redis Streams)}
-    C --> D[Multi-Model AI Router]
-    D -->|Failover/Retry| E[OpenAI / Claude / Local LLM]
-    C --> F[AST Parsers Go/Py/TS]
-    F --> G[(PostgreSQL/Neon)]
+    A["GitHub Webhooks / VS Code"] -->|Events| B("REST API v1 / GraphQL")
+    B --> C{"Event Bus (Redis Streams)"}
+    C --> D["Multi-Model AI Router"]
+    D -->|Failover/Retry| E["OpenAI / Claude / Local LLM"]
+    C --> F["AST Parsers Go/Py/TS"]
+    F --> G[("PostgreSQL/Neon")]
     D --> G
-    G --> H[TanStack React UI + 3D Canvas]
+    G --> H["TanStack React UI + 3D Canvas"]
 ```
 
 ### The Tech Stack
