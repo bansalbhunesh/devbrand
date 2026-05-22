@@ -486,3 +486,16 @@ export const apiKeys = pgTable("api_keys", {
 export const apiKeysRelations = relations(apiKeys, ({ one }) => ({
   user: one(users, { fields: [apiKeys.userId], references: [users.id] }),
 }));
+
+export const slackWorkspaces = pgTable("slack_workspaces", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  teamId: text("team_id").notNull(),
+  botToken: text("bot_token").notNull(),
+  webhookUrl: text("webhook_url"),
+  connectedAt: timestamp("connected_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const slackWorkspacesRelations = relations(slackWorkspaces, ({ one }) => ({
+  user: one(users, { fields: [slackWorkspaces.userId], references: [users.id] }),
+}));

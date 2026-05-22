@@ -6,6 +6,12 @@ export { analyzeInvisibleWork } from "./layer4.server";
 export { runLayer5, consumeGeneratorUsage } from "./layer5.server";
 export { runLayer6, consumeLayer6Usage } from "./layer6.server";
 export { runLayer7 } from "./layer7.server";
+
+export function extractPRUrl(text: string): string | null {
+  const match = text.match(/https:\/\/github\.com\/[^/]+\/[^/]+\/pull\/\d+/);
+  return match ? match[0] : null;
+}
+
 import { sumUsage, type TokenUsage } from "@devbrand/ai-sdk";
 import type { NarrativeDraft, UserContext, GraphImpactReport, NarrativeRequest } from "./types";
 import { VerdictEngine } from "./verdict.server";
