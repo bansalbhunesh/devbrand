@@ -9,6 +9,14 @@ export const Route = createFileRoute("/dev/$username")({
     const { username } = params;
     return { username, egoScore: 850, badges: ["Early Adopter", "AI Detective"] };
   },
+  head: ({ loaderData }) => ({
+    meta: [
+      { title: `${loaderData?.username}'s Engineering Reputation | DevBrand` },
+      { name: "description", content: `View ${loaderData?.username}'s architectural Ego Score and verified PR impacts.` },
+      { property: "og:title", content: `${loaderData?.username}'s Engineering Reputation` },
+      { property: "og:image", content: `https://devbrand.ai/api/og/user/${loaderData?.username}` },
+    ],
+  }),
   component: DeveloperProfile,
 });
 

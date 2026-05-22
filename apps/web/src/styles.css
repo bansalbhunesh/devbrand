@@ -114,6 +114,11 @@ html {
   * {
     @apply border-border;
   }
+  
+  *:focus-visible {
+    @apply outline-none ring-2 ring-blue-500 ring-offset-2 ring-offset-background transition-shadow;
+  }
+
   body {
     @apply bg-background text-foreground antialiased selection:bg-blue/20 selection:text-blue overflow-x-hidden;
     font-feature-settings: "ss01", "ss03", "cv01", "cv11";

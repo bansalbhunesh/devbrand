@@ -26,6 +26,9 @@ importers:
       ioredis:
         specifier: ^5.10.1
         version: 5.10.1
+      maath:
+        specifier: ^0.10.8
+        version: 0.10.8(@types/three@0.184.1)(three@0.184.0)
       pino:
         specifier: ^10.3.1
         version: 10.3.1

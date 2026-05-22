@@ -89,6 +89,7 @@ export function Nav() {
               )}
               <Link
                 to="/dashboard"
+                aria-label="Start free"
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-foreground text-background text-xs font-bold hover:opacity-90 transition shadow-lg shadow-foreground/10"
               >
                 <Github className="h-3.5 w-3.5" />

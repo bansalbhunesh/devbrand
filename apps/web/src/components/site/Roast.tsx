@@ -1,11 +1,27 @@
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useRef } from "react";
+import { motion, AnimatePresence, useInView } from "framer-motion";
 import { Github, Search, AlertTriangle, CheckCircle2, Flame, Brain, ShieldAlert } from "lucide-react";
+
+const glitchVariants = {
+  hidden: { opacity: 0, x: -10 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: { type: "spring", stiffness: 200, damping: 10 }
+  },
+  hover: {
+    x: [0, -2, 2, -2, 0],
+    y: [0, 2, -2, 2, 0],
+    transition: { duration: 0.2, repeat: Infinity }
+  }
+};
 
 export function Roast() {
   const [url, setUrl] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [step, setStep] = useState(0);
+  const ref = useRef(null);
+  const isInView = useInView(ref);
 
   const steps = [
     { label: "Ingesting Repository", icon: Github },
@@ -30,7 +46,7 @@ export function Roast() {
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto px-6 py-24">
+    <div ref={ref} className="w-full max-w-6xl mx-auto px-6 py-24">
       <div className="text-center mb-16">
         <h2 className="text-4xl md:text-6xl font-black mb-6 tracking-tight">
           Get Your <span className="text-orange-500">Repo Roast.</span>
@@ -101,9 +117,19 @@ export function Roast() {
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="mt-12 pt-8 border-t border-white/5"
+                  className="mt-12 pt-8 border-t border-white/5 relative"
                 >
-                  <div className="flex items-start gap-4 p-6 rounded-2xl bg-orange-500/5 border border-orange-500/10">
+                  <div className="absolute top-0 right-0 p-4 border-b border-l border-white/5 bg-white/5 rounded-bl-2xl">
+                    <Flame className="h-5 w-5 text-orange-500" />
+                  </div>
+
+                  <motion.div
+                    variants={glitchVariants}
+                    initial="hidden"
+                    animate={isInView ? "visible" : "hidden"}
+                    whileHover="hover"
+                    className="flex items-start gap-4 p-6 rounded-2xl bg-orange-500/5 border border-orange-500/10"
+                  >
                     <ShieldAlert className="h-6 w-6 text-orange-500 shrink-0" />
                     <div>
                       <h4 className="font-black text-orange-500 uppercase tracking-widest text-[10px] mb-2">The Verdict</h4>
@@ -111,7 +137,7 @@ export function Roast() {
                         "This repository exhibits high architectural ego with a 64% AI-generated slop probability. The maintainability decay suggests a mandatory rewrite within 14 months."
                       </p>
                     </div>
-                  </div>
+                  </motion.div>
                 </motion.div>
               )}
             </motion.div>

@@ -10,7 +10,63 @@ import {
 } from "lucide-react";
 import { Link, useMatches } from "@tanstack/react-router";
 import { signInWithGithub } from "@/rpc";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { TopologyHero3D } from "./TopologyHero3D";
+
+function MagneticButton({ children, className, onClick, disabled, href, to }: any) {
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const mouseXSpring = useSpring(x, { stiffness: 150, damping: 15, mass: 0.1 });
+  const mouseYSpring = useSpring(y, { stiffness: 150, damping: 15, mass: 0.1 });
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const width = rect.width;
+    const height = rect.height;
+    const mouseX = e.clientX - rect.left - width / 2;
+    const mouseY = e.clientY - rect.top - height / 2;
+    x.set(mouseX * 0.2);
+    y.set(mouseY * 0.2);
+  };
+
+  const handleMouseLeave = () => {
+    x.set(0);
+    y.set(0);
+  };
+
+  const inner = (
+    <motion.div
+      style={{ x: mouseXSpring, y: mouseYSpring }}
+      className="flex items-center justify-center gap-3 w-full h-full"
+    >
+      {children}
+    </motion.div>
+  );
+
+  if (to) {
+    return (
+      <motion.div onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave}>
+        <Link to={to} className={className}>{inner}</Link>
+      </motion.div>
+    );
+  }
+
+  if (href) {
+    return (
+      <motion.div onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave}>
+        <a href={href} className={className}>{inner}</a>
+      </motion.div>
+    );
+  }
+
+  return (
+    <motion.div onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave}>
+      <button onClick={onClick} disabled={disabled} className={className}>
+        {inner}
+      </button>
+    </motion.div>
+  );
+}
 
 export function Hero() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -47,8 +103,8 @@ export function Hero() {
       {/* Background Pattern */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
         <div className="absolute inset-0 bg-grid opacity-[0.05]" />
+        <TopologyHero3D />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/50 to-background" />
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-blue-500/10 blur-[120px] rounded-full" />
       </div>
 
       <div className="relative z-10 mx-auto max-w-7xl px-6 w-full text-center">
@@ -92,18 +148,18 @@ export function Hero() {
         >
           <AnimatePresence mode="wait">
             {session ? (
-              <Link
+              <MagneticButton
                 to="/dashboard"
-                className="inline-flex items-center gap-3 px-8 py-4 rounded-xl bg-foreground text-background font-bold text-sm tracking-tight hover:opacity-90 transition shadow-xl"
+                className="inline-flex items-center justify-center px-8 py-4 rounded-xl bg-foreground text-background font-bold text-sm tracking-tight hover:opacity-90 transition shadow-xl"
               >
                 <LayoutDashboard className="h-4 w-4" /> Go to Dashboard
                 <ArrowRight className="h-4 w-4" />
-              </Link>
+              </MagneticButton>
             ) : (
-              <button
+              <MagneticButton
                 onClick={handleAuth}
                 disabled={loggingIn}
-                className="inline-flex items-center gap-3 px-8 py-4 rounded-xl bg-foreground text-background font-bold text-sm tracking-tight hover:opacity-90 transition shadow-xl disabled:opacity-70"
+                className="inline-flex items-center justify-center px-8 py-4 rounded-xl bg-foreground text-background font-bold text-sm tracking-tight hover:opacity-90 transition shadow-xl disabled:opacity-70"
               >
                 {loggingIn ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -112,17 +168,17 @@ export function Hero() {
                 )}
                 Start Building Your Brand
                 <ArrowRight className="h-4 w-4" />
-              </button>
+              </MagneticButton>
             )}
           </AnimatePresence>
 
-          <a
+          <MagneticButton
             href="#demo"
-            className="inline-flex items-center gap-3 px-8 py-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition text-sm font-bold tracking-tight"
+            className="inline-flex items-center justify-center px-8 py-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition text-sm font-bold tracking-tight backdrop-blur-md"
           >
             <Terminal className="h-4 w-4 text-blue-500" />
             See How it Works
-          </a>
+          </MagneticButton>
         </motion.div>
       </div>
 
