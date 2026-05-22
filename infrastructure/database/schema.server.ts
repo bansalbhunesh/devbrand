@@ -413,7 +413,9 @@ export const digests = pgTable(
     kind: text("kind").notNull(), // weekly | release_notes
     periodStart: timestamp("period_start", { withTimezone: true }).notNull(),
     periodEnd: timestamp("period_end", { withTimezone: true }).notNull(),
-    linkedinPost: text("linkedin_post").notNull(),
+    postOptions: jsonb("post_options").$type<string[]>().notNull(),
+    memoryContext: text("memory_context"),
+    invisibleWorkUsed: text("invisible_work_used").array(),
     twitterThread: jsonb("twitter_thread").$type<string[]>().notNull(),
     releaseNotes: text("release_notes").notNull(),
     // Postgres uuid[] — stored as a native array so we can join later without

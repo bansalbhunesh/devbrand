@@ -2,7 +2,7 @@
   <img src="https://devbrand.ai/og-main.png" alt="DevBrand Banner" width="100%" />
 
   <h1>DevBrand</h1>
-  <p><b>The Intelligence Layer for Software Systems</b></p>
+  <p><b>Build quietly. Compound publicly.</b></p>
 
   [![CI/CD](https://github.com/bansalbhunesh/devbrand/actions/workflows/playwright.yml/badge.svg)](https://github.com/bansalbhunesh/devbrand/actions)
   [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
@@ -13,23 +13,25 @@
 
 ## 🛑 The Problem
 
-AI is generating code faster than humans can review it. Pull Requests are bloated with subtle architectural rot, hidden technical debt, and what we call **"AI Slop"**. Engineering teams are losing their grip on system topology because architecture is decaying silently.
+Technical founders and builders are quietly shipping massive architectural wins, but their public visibility doesn't reflect their capabilities. Marketing feels like "cringe." Bragging feels unnatural. As a result, the best engineers remain invisible.
 
 ## ⚡ The Solution
 
-**DevBrand is an Engineering Judgment Engine.** 
-We don't just run linters or summarize diffs. We run deep, multi-model analysis over your codebase to predict maintainability decay, map hidden service coupling, and expose architectural flaws before they hit production. 
+**DevBrand is Confidence Software.**
+It is an intelligent translation layer that automatically analyzes your pull requests, determines what actually mattered, and generates thoughtful, authentic weekly engineering updates. 
 
-Think of it as an aggressively honest Staff Engineer that reviews every PR in milliseconds.
+No hype. No emojis. No "engagement bait." Just a calm, clear record of what you shipped, so your reputation compounds while you focus on the code.
 
 ---
 
 ## ✨ Core Features
 
-* **🤖 The Verdict Engine**: A 7-layer heuristic and ML engine that analyzes PRs for semantic intent, complexity acceleration, and AI-generated bloat.
-* **🗺️ Living System Topology**: A real-time, 3D interactive X-Ray of your repository dependencies and microservice meshes.
-* **🏆 The Reputation Economy**: Automatically extracts verifiable "Ego Scores" and engineering traits (e.g. *Ex-FAANG Reliability Engineer*, *Startup Speed Demon*) from commit history.
-* **🔥 Repo Roast**: Our viral, brutally honest teardown of public GitHub repositories.
+* **🧠 Structured Context Engine**: Extracts architectural shifts and true complexity from commits, filtering out minor dependency bumps and noise via a 6-layer pipeline.
+* **🛡️ The OBLITERATUS Protocol**: A split-identity prompt architecture that forces the LLM into a cynical, high-competence Staff Engineer persona. Strict firewall rules obliterate emojis, hype language, and engagement bait.
+* **🧠 Second Brain "Gap Reporting"**: Actively scans repository diffs to detect removed `// TODO` and `// DEBT` comments, piping concrete evidence of paid architectural debt directly into the digest.
+* **📝 Authentic Work Journals**: Generates a single, minimalist UI card every Friday with 3 highly-typed variants: *The Narrative (Trade-offs)*, *The Execution Log*, and *The Minimalist (Algorithmic compression)*.
+* **🎛️ Style-Drift Gate**: Quantitatively measures the words-per-sentence of the generated draft against the average of your last 3 digests to prevent the LLM from hallucinating verbosity.
+* **🏆 The Reputation Economy**: Automatically extracts verifiable engineering traits from commit history to help you build a credible builder profile.
 
 ---
 
@@ -104,6 +106,6 @@ pnpm exec playwright show-report
 ---
 
 <div align="center">
-  <b>Built for engineers who care about the craft.</b><br>
-  <i>Exposing the invisible before it becomes irreversible.</i>
+  <b>Visibility for builders who hate marketing.</b><br>
+  <i>Your reputation, extracted directly from your commits.</i>
 </div>
