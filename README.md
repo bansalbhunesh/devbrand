@@ -38,10 +38,11 @@ Copy. Paste. Compound your career capital publicly.
 ## ✨ Core Features
 
 * **🧠 Dual-Prompt Architecture**: Powered by Anthropic (or local Gemini/Ollama fallbacks), executing two conflicting personas synchronously against a single PR diff.
-* **⚡ Frictionless UX**: No login. No OAuth. No database schemas. Just paste a GitHub PR URL and let the engine rip.
-* **🚀 TanStack Server Functions**: Zero API routes. The backend execution is baked directly into the route via highly optimized Server Functions (`createServerFn`).
+* **⚡ Frictionless UX**: Paste a public GitHub PR URL and let the engine rip. Or, for private repositories, use our highly secure cookie-based **GitHub OAuth** flow built entirely using server functions.
+* **🚀 TanStack Server Functions**: Zero API routes. The backend execution is baked directly into the route via highly optimized Server Functions (`createServerFn`), ensuring secrets never leak.
+* **🛡️ Rate Limiting**: Fully integrated with `@upstash/ratelimit` to protect against API abuse (5 requests / hour / IP).
 * **🎨 Glassmorphism UI**: A stunning, cinematic UI built with Framer Motion, Tailwind CSS, and Lucide React. Because if you're going to generate slop, it should look beautiful.
-* **🛡️ Fallback Mode**: Don't want to pay for an Anthropic API key? DevBrand detects missing keys and automatically falls back to an ultra-realistic local mock mode so you can test the UI instantly.
+* **🧪 Fallback Mode**: Don't want to pay for an Anthropic API key? DevBrand detects missing keys and automatically falls back to an ultra-realistic local mock mode so you can test the UI instantly.
 
 ---
 

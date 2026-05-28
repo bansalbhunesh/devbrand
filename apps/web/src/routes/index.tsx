@@ -4,58 +4,59 @@ import { Gavel, Github, ArrowRight, Activity, Copy, CheckCircle2, Linkedin, Flam
 import { Footer } from "@/components/site/Footer";
 import { motion, AnimatePresence } from "framer-motion";
 import { Reveal, RevealItem, REVEAL_EASE } from "@/components/site/Reveal";
-import { createServerFn } from "@tanstack/react-start";
-import { completeText } from "@devbrand/ai-sdk";
-
-const generatePost = createServerFn("POST", async (prUrl: string) => {
-  if (!prUrl) throw new Error("Missing prUrl");
-
-  const match = prUrl.match(/github\.com\/([^\/]+)\/([^\/]+)\/pull\/(\d+)/);
-  if (!match) throw new Error("Invalid GitHub PR URL. Must be like https://github.com/owner/repo/pull/123");
-  const [, owner, repo, prNumber] = match;
-
-  const prApiUrl = `https://api.github.com/repos/${owner}/${repo}/pulls/${prNumber}`;
-  const headers: any = { "User-Agent": "DevBrand-App" };
-  if (process.env.GITHUB_TOKEN) headers["Authorization"] = `Bearer ${process.env.GITHUB_TOKEN}`;
-
-  const prRes = await fetch(prApiUrl, { headers });
-  if (!prRes.ok) throw new Error("Failed to fetch PR from GitHub");
-  const prData = await prRes.json();
-  const title = prData.title || "";
-  const prBody = prData.body || "";
-
-  const diffRes = await fetch(prApiUrl, {
-    headers: { ...headers, "Accept": "application/vnd.github.v3.diff" }
-  });
-  if (!diffRes.ok) throw new Error("Failed to fetch PR diff from GitHub");
-  const diffText = await diffRes.text();
-  const truncatedDiff = diffText.length > 20000 ? diffText.slice(0, 20000) + "\n...[DIFF TRUNCATED]..." : diffText;
-
-  const brutalTruthRes = await completeText({
-    promptKey: "pr.brutal_truth",
-    variables: [title, prBody, truncatedDiff]
-  });
-  const brutalTruth = brutalTruthRes.text;
-
-  const linkedInSpinRes = await completeText({
-    promptKey: "pr.linkedin_spin",
-    variables: [title, brutalTruth]
-  });
-  const linkedInSpin = linkedInSpinRes.text;
-
-  return { brutalTruth, linkedInSpin };
-});
+import { 
+  getAuthState, 
+  logout, 
+  getAuthUrl, 
+  exchangeAuthCode, 
+  generatePost 
+} from "../server/functions";
 
 export const Route = createFileRoute("/")({
   component: LandingPage,
+  loader: async () => {
+    return await getAuthState();
+  }
 });
 
 function LandingPage() {
+  const { isLoggedIn } = Route.useLoaderData();
   const [prInput, setPrInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isAuthLoading, setIsAuthLoading] = useState(false);
   const [result, setResult] = useState<{ brutalTruth: string; linkedInSpin: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+
+  // Handle GitHub Auth Callback
+  if (typeof window !== "undefined") {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+    if (code && !isAuthLoading) {
+      setIsAuthLoading(true);
+      exchangeAuthCode({ data: code }).then(() => {
+        window.history.replaceState({}, document.title, "/");
+        window.location.reload();
+      }).catch(err => {
+        setError(err.message);
+        setIsAuthLoading(false);
+      });
+    }
+  }
+
+  const handleLogin = async () => {
+    try {
+      const url = await getAuthUrl();
+      window.location.href = url;
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    window.location.reload();
+  };
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -135,6 +136,25 @@ function LandingPage() {
                 </div>
               </form>
               {error && <div className="text-red-400 mt-4 text-sm font-medium">{error}</div>}
+            </RevealItem>
+
+            <RevealItem className="mt-6">
+              {isLoggedIn ? (
+                <div className="flex items-center gap-3 text-sm text-zinc-400">
+                  <CheckCircle2 className="h-4 w-4 text-green-500" />
+                  <span>Authenticated with GitHub (Private PRs supported)</span>
+                  <button onClick={handleLogout} className="text-amber-500 hover:text-amber-400 underline ml-2">Sign out</button>
+                </div>
+              ) : (
+                <button 
+                  onClick={handleLogin}
+                  disabled={isAuthLoading}
+                  className="flex items-center gap-2 text-sm text-zinc-400 hover:text-white transition-colors bg-zinc-900 border border-zinc-800 px-4 py-2 rounded-full shadow-lg disabled:opacity-50"
+                >
+                  <Github className="h-4 w-4" />
+                  {isAuthLoading ? "Authenticating..." : "Sign in with GitHub for Private PRs"}
+                </button>
+              )}
             </RevealItem>
           </Reveal>
 

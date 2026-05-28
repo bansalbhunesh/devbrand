@@ -537,6 +537,308 @@ function errorResponse(error, debug, errHeaders) {
     headers
   });
 }
+function getRequestHost(event, opts = {}) {
+  if (opts.xForwardedHost) {
+    const xForwardedHost = (event.req.headers.get("x-forwarded-host") || "").split(",").shift()?.trim();
+    if (xForwardedHost) return xForwardedHost;
+  }
+  return event.req.headers.get("host") || "";
+}
+function getRequestProtocol(event, opts = {}) {
+  if (opts.xForwardedProto !== false) {
+    const forwardedProto = event.req.headers.get("x-forwarded-proto");
+    if (forwardedProto === "https") return "https";
+    if (forwardedProto === "http") return "http";
+  }
+  return (event.url || new URL(event.req.url)).protocol.slice(0, -1);
+}
+function getRequestIP(event, opts = {}) {
+  if (opts.xForwardedFor) {
+    const _header = event.req.headers.get("x-forwarded-for");
+    if (_header) {
+      const xForwardedFor = _header.split(",")[0].trim();
+      if (xForwardedFor) return xForwardedFor;
+    }
+  }
+  return event.req.context?.clientAddress || event.req.ip || void 0;
+}
+const COOKIE_MAX_AGE_LIMIT = 3456e4;
+function endIndex(str, min, len) {
+  const index = str.indexOf(";", min);
+  return index === -1 ? len : index;
+}
+function eqIndex(str, min, max) {
+  const index = str.indexOf("=", min);
+  return index < max ? index : -1;
+}
+function valueSlice(str, min, max) {
+  if (min === max) return "";
+  let start = min;
+  let end = max;
+  do {
+    const code = str.charCodeAt(start);
+    if (code !== 32 && code !== 9) break;
+  } while (++start < end);
+  while (end > start) {
+    const code = str.charCodeAt(end - 1);
+    if (code !== 32 && code !== 9) break;
+    end--;
+  }
+  return str.slice(start, end);
+}
+const NullObject = /* @__PURE__ */ (() => {
+  const C2 = function() {
+  };
+  C2.prototype = /* @__PURE__ */ Object.create(null);
+  return C2;
+})();
+function parse(str, options) {
+  const obj = new NullObject();
+  const len = str.length;
+  if (len < 2) return obj;
+  const dec = decode;
+  let index = 0;
+  do {
+    const eqIdx = eqIndex(str, index, len);
+    if (eqIdx === -1) break;
+    const endIdx = endIndex(str, index, len);
+    if (eqIdx > endIdx) {
+      index = str.lastIndexOf(";", eqIdx - 1) + 1;
+      continue;
+    }
+    const key = valueSlice(str, index, eqIdx);
+    const val = dec(valueSlice(str, eqIdx + 1, endIdx));
+    if (obj[key] === void 0) obj[key] = val;
+    index = endIdx + 1;
+  } while (index < len);
+  return obj;
+}
+function decode(str) {
+  if (!str.includes("%")) return str;
+  try {
+    return decodeURIComponent(str);
+  } catch {
+    return str;
+  }
+}
+const cookieNameRegExp = /^[\u0021-\u003A\u003C\u003E-\u007E]+$/;
+const cookieValueRegExp = /^[\u0021-\u003A\u003C-\u007E]*$/;
+const domainValueRegExp = /^([.]?[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)([.][a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)*$/i;
+const pathValueRegExp = /^[\u0020-\u003A\u003C-\u007E]*$/;
+const __toString = Object.prototype.toString;
+function serialize(_a0, _a1, _a2) {
+  const isObj = typeof _a0 === "object" && _a0 !== null;
+  const cookie = isObj ? _a0 : {
+    ..._a2,
+    name: _a0,
+    value: ""
+  };
+  const enc = encodeURIComponent;
+  if (!cookieNameRegExp.test(cookie.name)) throw new TypeError(`argument name is invalid: ${cookie.name}`);
+  const value = cookie.value ? enc(cookie.value) : "";
+  if (!cookieValueRegExp.test(value)) throw new TypeError(`argument val is invalid: ${cookie.value}`);
+  if (!cookie.secure) {
+    if (cookie.partitioned) throw new TypeError(`Partitioned cookies must have the Secure attribute`);
+    if (cookie.sameSite && String(cookie.sameSite).toLowerCase() === "none") throw new TypeError(`SameSite=None cookies must have the Secure attribute`);
+    if (cookie.name.length > 9 && cookie.name.charCodeAt(0) === 95 && cookie.name.charCodeAt(1) === 95) {
+      const nameLower = cookie.name.toLowerCase();
+      if (nameLower.startsWith("__secure-") || nameLower.startsWith("__host-")) throw new TypeError(`${cookie.name} cookies must have the Secure attribute`);
+    }
+  }
+  if (cookie.name.length > 7 && cookie.name.charCodeAt(0) === 95 && cookie.name.charCodeAt(1) === 95 && cookie.name.toLowerCase().startsWith("__host-")) {
+    if (cookie.path !== "/") throw new TypeError(`__Host- cookies must have Path=/`);
+    if (cookie.domain) throw new TypeError(`__Host- cookies must not have a Domain attribute`);
+  }
+  let str = cookie.name + "=" + value;
+  if (cookie.maxAge !== void 0) {
+    if (!Number.isInteger(cookie.maxAge)) throw new TypeError(`option maxAge is invalid: ${cookie.maxAge}`);
+    str += "; Max-Age=" + Math.max(0, Math.min(cookie.maxAge, COOKIE_MAX_AGE_LIMIT));
+  }
+  if (cookie.domain) {
+    if (!domainValueRegExp.test(cookie.domain)) throw new TypeError(`option domain is invalid: ${cookie.domain}`);
+    str += "; Domain=" + cookie.domain;
+  }
+  if (cookie.path) {
+    if (!pathValueRegExp.test(cookie.path)) throw new TypeError(`option path is invalid: ${cookie.path}`);
+    str += "; Path=" + cookie.path;
+  }
+  if (cookie.expires) {
+    if (!isDate(cookie.expires) || !Number.isFinite(cookie.expires.valueOf())) throw new TypeError(`option expires is invalid: ${cookie.expires}`);
+    str += "; Expires=" + cookie.expires.toUTCString();
+  }
+  if (cookie.httpOnly) str += "; HttpOnly";
+  if (cookie.secure) str += "; Secure";
+  if (cookie.partitioned) str += "; Partitioned";
+  if (cookie.priority) switch (typeof cookie.priority === "string" ? cookie.priority.toLowerCase() : void 0) {
+    case "low":
+      str += "; Priority=Low";
+      break;
+    case "medium":
+      str += "; Priority=Medium";
+      break;
+    case "high":
+      str += "; Priority=High";
+      break;
+    default:
+      throw new TypeError(`option priority is invalid: ${cookie.priority}`);
+  }
+  if (cookie.sameSite) switch (typeof cookie.sameSite === "string" ? cookie.sameSite.toLowerCase() : cookie.sameSite) {
+    case true:
+    case "strict":
+      str += "; SameSite=Strict";
+      break;
+    case "lax":
+      str += "; SameSite=Lax";
+      break;
+    case "none":
+      str += "; SameSite=None";
+      break;
+    default:
+      throw new TypeError(`option sameSite is invalid: ${cookie.sameSite}`);
+  }
+  return str;
+}
+function isDate(val) {
+  return __toString.call(val) === "[object Date]";
+}
+const maxAgeRegExp = /^-?\d+$/;
+const _nullProto = /* @__PURE__ */ Object.getPrototypeOf({});
+function parseSetCookie(str, options) {
+  const len = str.length;
+  let _endIdx = len;
+  let eqIdx = -1;
+  for (let i = 0; i < len; i++) {
+    const c2 = str.charCodeAt(i);
+    if (c2 === 59) {
+      _endIdx = i;
+      break;
+    }
+    if (c2 === 61 && eqIdx === -1) eqIdx = i;
+  }
+  if (eqIdx >= _endIdx) eqIdx = -1;
+  const name = eqIdx === -1 ? "" : _trim(str, 0, eqIdx);
+  if (name && name in _nullProto) return void 0;
+  let value = eqIdx === -1 ? _trim(str, 0, _endIdx) : _trim(str, eqIdx + 1, _endIdx);
+  if (!name && !value) return void 0;
+  if (name.length + value.length > 4096) return void 0;
+  value = _decode(value, options?.decode);
+  const setCookie2 = {
+    name,
+    value
+  };
+  let index = _endIdx + 1;
+  while (index < len) {
+    let endIdx = len;
+    let attrEqIdx = -1;
+    for (let i = index; i < len; i++) {
+      const c2 = str.charCodeAt(i);
+      if (c2 === 59) {
+        endIdx = i;
+        break;
+      }
+      if (c2 === 61 && attrEqIdx === -1) attrEqIdx = i;
+    }
+    if (attrEqIdx >= endIdx) attrEqIdx = -1;
+    const attr = attrEqIdx === -1 ? _trim(str, index, endIdx) : _trim(str, index, attrEqIdx);
+    const val = attrEqIdx === -1 ? void 0 : _trim(str, attrEqIdx + 1, endIdx);
+    if (val === void 0 || val.length <= 1024) switch (attr.toLowerCase()) {
+      case "httponly":
+        setCookie2.httpOnly = true;
+        break;
+      case "secure":
+        setCookie2.secure = true;
+        break;
+      case "partitioned":
+        setCookie2.partitioned = true;
+        break;
+      case "domain":
+        if (val) setCookie2.domain = (val.charCodeAt(0) === 46 ? val.slice(1) : val).toLowerCase();
+        break;
+      case "path":
+        setCookie2.path = val;
+        break;
+      case "max-age":
+        if (val && maxAgeRegExp.test(val)) setCookie2.maxAge = Math.min(Number(val), COOKIE_MAX_AGE_LIMIT);
+        break;
+      case "expires": {
+        if (!val) break;
+        const date = new Date(val);
+        if (Number.isFinite(date.valueOf())) {
+          const maxDate = new Date(Date.now() + COOKIE_MAX_AGE_LIMIT * 1e3);
+          setCookie2.expires = date > maxDate ? maxDate : date;
+        }
+        break;
+      }
+      case "priority": {
+        if (!val) break;
+        const priority = val.toLowerCase();
+        if (priority === "low" || priority === "medium" || priority === "high") setCookie2.priority = priority;
+        break;
+      }
+      case "samesite": {
+        if (!val) break;
+        const sameSite = val.toLowerCase();
+        if (sameSite === "lax" || sameSite === "strict" || sameSite === "none") setCookie2.sameSite = sameSite;
+        else setCookie2.sameSite = "lax";
+        break;
+      }
+      default: {
+        const attrLower = attr.toLowerCase();
+        if (attrLower && !(attrLower in _nullProto)) setCookie2[attrLower] = val;
+      }
+    }
+    index = endIdx + 1;
+  }
+  return setCookie2;
+}
+function _trim(str, start, end) {
+  if (start === end) return "";
+  let s = start;
+  let e = end;
+  while (s < e && (str.charCodeAt(s) === 32 || str.charCodeAt(s) === 9)) s++;
+  while (e > s && (str.charCodeAt(e - 1) === 32 || str.charCodeAt(e - 1) === 9)) e--;
+  return str.slice(s, e);
+}
+function _decode(value, decode2) {
+  if (!value.includes("%")) return value;
+  try {
+    return (decode2 || decodeURIComponent)(value);
+  } catch {
+    return value;
+  }
+}
+function parseCookies(event) {
+  return parse(event.req.headers.get("cookie") || "");
+}
+function setCookie(event, name, value, options) {
+  const newCookie = serialize({
+    name,
+    value,
+    path: "/",
+    ...options
+  });
+  const currentCookies = event.res.headers.getSetCookie();
+  if (currentCookies.length === 0) {
+    event.res.headers.set("set-cookie", newCookie);
+    return;
+  }
+  const newCookieKey = _getDistinctCookieKey(name, options || {});
+  event.res.headers.delete("set-cookie");
+  for (const cookie of currentCookies) {
+    const parsed = parseSetCookie(cookie);
+    if (!parsed) continue;
+    if (_getDistinctCookieKey(cookie.split("=")?.[0], parsed) === newCookieKey) continue;
+    event.res.headers.append("set-cookie", cookie);
+  }
+  event.res.headers.append("set-cookie", newCookie);
+}
+function _getDistinctCookieKey(name, options) {
+  return [
+    name,
+    options.domain || "",
+    options.path || "/"
+  ].join(";");
+}
 var GLOBAL_EVENT_STORAGE_KEY = /* @__PURE__ */ Symbol.for("tanstack-start:event-storage");
 var globalObj$1 = globalThis;
 if (!globalObj$1[GLOBAL_EVENT_STORAGE_KEY]) globalObj$1[GLOBAL_EVENT_STORAGE_KEY] = new AsyncLocalStorage();
@@ -586,6 +888,27 @@ function getH3Event() {
   const event = eventStorage.getStore();
   if (!event) throw new Error(`No StartEvent found in AsyncLocalStorage. Make sure you are using the function within the server runtime.`);
   return event.h3Event;
+}
+function getRequestIP$1(opts) {
+  return getRequestIP(getH3Event(), opts);
+}
+function getRequestHost$1(opts) {
+  return getRequestHost(getH3Event(), opts);
+}
+function getRequestProtocol$1(opts) {
+  return getRequestProtocol(getH3Event(), opts);
+}
+function getCookies() {
+  const cookies = parseCookies(getH3Event());
+  const definedCookies = /* @__PURE__ */ Object.create(null);
+  for (const [name, value] of Object.entries(cookies)) if (value !== void 0) definedCookies[name] = value;
+  return definedCookies;
+}
+function getCookie(name) {
+  return getCookies()[name];
+}
+function setCookie$1(name, value, options) {
+  setCookie(getH3Event(), name, value, options);
 }
 function getResponse() {
   return getH3Event().res;
@@ -3111,7 +3434,7 @@ const defaultSerovalPlugins = [
   p
 ];
 async function getStartManifest(matchedRoutes) {
-  const { tsrStartManifest } = await import("./assets/_tanstack-start-manifest_v-D_YP7nm6.js");
+  const { tsrStartManifest } = await import("./assets/_tanstack-start-manifest_v-DMH7F_Y0.js");
   const startManifest = tsrStartManifest();
   const rootRoute = startManifest.routes[rootRouteId] = startManifest.routes[rootRouteId] || {};
   rootRoute.assets = rootRoute.assets || [];
@@ -3138,7 +3461,28 @@ async function getStartManifest(matchedRoutes) {
     injectedHeadScripts
   };
 }
-const manifest = {};
+const manifest = {
+  "8ba2ee828bb464bc80637073e31da3273384ed5ae47152bfc586d5ccf7173a48": {
+    functionName: "generatePost_createServerFn_handler",
+    importer: () => import("./assets/functions-9Z30MqVH.js")
+  },
+  "9f7d480fccb61bf3ac1ee08f0ec76f8262b96390e23367d8f074cc12e341e11f": {
+    functionName: "getAuthState_createServerFn_handler",
+    importer: () => import("./assets/functions-9Z30MqVH.js")
+  },
+  "dadc6dbc10c65ea008c090c745f5d2f061493afb1504a70e981a54581956c944": {
+    functionName: "exchangeAuthCode_createServerFn_handler",
+    importer: () => import("./assets/functions-9Z30MqVH.js")
+  },
+  "f1ca2137178ed27584cb567e9926f70c9a6e653517f8af033f288518c696c71d": {
+    functionName: "getAuthUrl_createServerFn_handler",
+    importer: () => import("./assets/functions-9Z30MqVH.js")
+  },
+  "f71d5c4629376acb5d7f7da88c971fa571331021fe87fdabe25085cb0151d808": {
+    functionName: "logout_createServerFn_handler",
+    importer: () => import("./assets/functions-9Z30MqVH.js")
+  }
+};
 async function getServerFnById(id, access) {
   const serverFnInfo = manifest[id];
   if (!serverFnInfo) {
@@ -4509,7 +4853,7 @@ var baseManifestPromise;
 var cachedFinalManifestPromise;
 async function loadEntries() {
   const [routerEntry, startEntry, pluginAdapters] = await Promise.all([
-    import("./assets/router-BhW8nO2A.js"),
+    import("./assets/router-BRIyEqcQ.js").then((n2) => n2.r),
     import("./assets/start-HYkvq4Ni.js"),
     import("./assets/__23tanstack-start-plugin-adapters-Cwee5PKy.js")
   ]);
@@ -4868,7 +5212,14 @@ function createServerEntry(entry) {
 }
 const server = createServerEntry({ fetch: fetch$1 });
 export {
+  TSS_SERVER_FUNCTION as T,
+  getRequestHost$1 as a,
+  getRequestIP$1 as b,
   createServerFn as c,
   createServerEntry,
-  server as default
+  getRequestProtocol$1 as d,
+  server as default,
+  getServerFnById as e,
+  getCookie as g,
+  setCookie$1 as s
 };
