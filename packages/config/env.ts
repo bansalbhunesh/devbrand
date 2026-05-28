@@ -41,9 +41,12 @@ const envSchema = z.object({
   GITHUB_CLIENT_ID: z.string().min(1),
   GITHUB_CLIENT_SECRET: z.string().min(1),
   GITHUB_TOKEN: z.string().optional(),
-  SESSION_SECRET: z
-    .string()
-    .min(32, "SESSION_SECRET must be at least 32 characters"),
+  SESSION_SECRET: z.string().min(32, "SESSION_SECRET must be at least 32 characters"),
+
+  // Billing
+  RAZORPAY_KEY_ID: z.string().min(1),
+  RAZORPAY_KEY_SECRET: z.string().min(1),
+  RAZORPAY_WEBHOOK_SECRET: z.string().min(1),
 
 
   // AI

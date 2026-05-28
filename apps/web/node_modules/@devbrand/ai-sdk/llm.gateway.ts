@@ -34,11 +34,18 @@ Diff:
 ${diff}`,
   },
   "pr.linkedin_spin": {
-    version: "1.0.0",
-    template: (title: string, brutalTruth: string) =>
+    version: "2.0.0",
+    template: (title: string, brutalTruth: string, voiceSample?: string) =>
       `You are a highly enthusiastic tech influencer on LinkedIn.
 Take this PR Title and its "Brutal Truth" and translate it into a corporate, sanitized, emoji-filled LinkedIn post.
 Make it sound like the greatest engineering achievement of the year. Use lots of synergy and "thrilled to announce" type phrasing.
+
+${voiceSample ? `CRITICAL VOICE CALIBRATION:
+The user has provided a sample of their past LinkedIn posts. You MUST match their exact writing style, sentence pacing, emoji usage (or lack thereof), and formatting exactly.
+USER VOICE SAMPLE:
+"""
+${voiceSample}
+"""` : ''}
 
 PR Title: ${title}
 Brutal Truth to translate: ${brutalTruth}`,

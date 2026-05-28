@@ -22,11 +22,29 @@ export const Route = createFileRoute("/")({
 function LandingPage() {
   const { isLoggedIn } = Route.useLoaderData();
   const [prInput, setPrInput] = useState("");
+  const [voiceSample, setVoiceSample] = useState("");
+  const [isVoiceCalibrated, setIsVoiceCalibrated] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isAuthLoading, setIsAuthLoading] = useState(false);
   const [result, setResult] = useState<{ brutalTruth: string; linkedInSpin: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+
+  // Load voice calibration from local storage on mount
+  React.useEffect(() => {
+    const saved = localStorage.getItem("devbrand_voice");
+    if (saved) {
+      setVoiceSample(saved);
+      setIsVoiceCalibrated(true);
+    }
+  }, []);
+
+  const handleCalibrate = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!voiceSample.trim()) return;
+    localStorage.setItem("devbrand_voice", voiceSample.trim());
+    setIsVoiceCalibrated(true);
+  };
 
   // Handle GitHub Auth Callback
   if (typeof window !== "undefined") {
@@ -67,7 +85,7 @@ function LandingPage() {
     setResult(null);
 
     try {
-      const data = await generatePost({ data: prInput.trim() });
+      const data = await generatePost({ data: { prUrl: prInput.trim(), voiceSample } });
       setResult(data);
     } catch (err: any) {
       setError(err.message || "An unexpected error occurred.");
@@ -112,29 +130,71 @@ function LandingPage() {
               </p>
             </RevealItem>
 
-            <RevealItem className="w-full max-w-3xl mx-auto">
-              <form onSubmit={handleGenerate} className="relative group w-full">
-                <div className="absolute -inset-1 bg-gradient-to-r from-amber-500/20 via-orange-500/20 to-amber-500/20 rounded-full blur opacity-0 group-hover:opacity-100 transition duration-1000 group-hover:duration-200" />
-                <div className="relative flex items-center w-full bg-zinc-900/80 border border-zinc-800 rounded-full p-2 backdrop-blur-xl shadow-2xl transition-all focus-within:border-amber-500/50 focus-within:bg-zinc-900">
-                  <div className="pl-6 pr-4 text-zinc-500">
-                    <Github className="h-5 w-5" />
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="https://github.com/owner/repo/pull/123"
-                    value={prInput}
-                    onChange={(e) => setPrInput(e.target.value)}
-                    className="flex-1 bg-transparent border-none outline-none text-zinc-100 placeholder:text-zinc-600 text-lg py-4 font-mono w-full"
-                  />
-                  <button
-                    type="submit"
-                    disabled={!prInput.trim() || isLoading}
-                    className="ml-2 px-8 py-4 rounded-full bg-amber-500 hover:bg-amber-400 text-amber-950 font-bold disabled:opacity-50 transition-all flex items-center gap-2"
-                  >
-                    {isLoading ? "Analyzing..." : "Generate Post"} <ArrowRight className="h-4 w-4" />
-                  </button>
+            <RevealItem className="w-full max-w-3xl mx-auto mt-8">
+              {!isVoiceCalibrated ? (
+                <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-8 backdrop-blur-xl shadow-2xl text-left relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 blur-[100px] pointer-events-none" />
+                  <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                    <Flame className="h-5 w-5 text-amber-500" />
+                    Step 1: Voice Calibration
+                  </h3>
+                  <p className="text-zinc-400 mb-6 text-sm">
+                    DevBrand doesn't generate generic AI slop. Paste 2-3 of your past LinkedIn posts below. We will deeply analyze your formatting, tone, and pacing to perfectly replicate your exact writing style.
+                  </p>
+                  <form onSubmit={handleCalibrate}>
+                    <textarea 
+                      value={voiceSample}
+                      onChange={(e) => setVoiceSample(e.target.value)}
+                      placeholder="Paste past posts here..."
+                      className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-zinc-300 min-h-[150px] focus:outline-none focus:border-amber-500/50 resize-none transition-colors mb-4"
+                    />
+                    <button 
+                      type="submit"
+                      disabled={!voiceSample.trim()}
+                      className="w-full py-3 rounded-xl bg-zinc-100 hover:bg-white text-zinc-950 font-bold transition-all disabled:opacity-50"
+                    >
+                      Calibrate Neural Engine
+                    </button>
+                  </form>
                 </div>
-              </form>
+              ) : (
+                <div className="w-full flex flex-col items-center">
+                  <div className="w-full flex justify-between items-center mb-4 px-4">
+                    <div className="text-xs font-medium text-amber-500/80 bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-full flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse" />
+                      Voice Calibration Active
+                    </div>
+                    <button 
+                      onClick={() => setIsVoiceCalibrated(false)}
+                      className="text-xs text-zinc-500 hover:text-zinc-300 underline"
+                    >
+                      Retrain Voice
+                    </button>
+                  </div>
+                  <form onSubmit={handleGenerate} className="relative group w-full">
+                    <div className="absolute -inset-1 bg-gradient-to-r from-amber-500/20 via-orange-500/20 to-amber-500/20 rounded-full blur opacity-0 group-hover:opacity-100 transition duration-1000 group-hover:duration-200" />
+                    <div className="relative flex items-center w-full bg-zinc-900/80 border border-zinc-800 rounded-full p-2 backdrop-blur-xl shadow-2xl transition-all focus-within:border-amber-500/50 focus-within:bg-zinc-900">
+                      <div className="pl-6 pr-4 text-zinc-500">
+                        <Github className="h-5 w-5" />
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="https://github.com/owner/repo/pull/123"
+                        value={prInput}
+                        onChange={(e) => setPrInput(e.target.value)}
+                        className="flex-1 bg-transparent border-none outline-none text-zinc-100 placeholder:text-zinc-600 text-lg py-4 font-mono w-full"
+                      />
+                      <button
+                        type="submit"
+                        disabled={!prInput.trim() || isLoading}
+                        className="ml-2 px-8 py-4 rounded-full bg-amber-500 hover:bg-amber-400 text-amber-950 font-bold disabled:opacity-50 transition-all flex items-center gap-2"
+                      >
+                        {isLoading ? "Analyzing..." : "Generate Post"} <ArrowRight className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              )}
               {error && <div className="text-red-400 mt-4 text-sm font-medium">{error}</div>}
             </RevealItem>
 

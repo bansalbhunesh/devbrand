@@ -10,33 +10,53 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ShareSlugRouteImport } from './routes/share.$slug'
+import { Route as ApiWebhooksGithubRouteImport } from './routes/api/webhooks/github'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ShareSlugRoute = ShareSlugRouteImport.update({
+  id: '/share/$slug',
+  path: '/share/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiWebhooksGithubRoute = ApiWebhooksGithubRouteImport.update({
+  id: '/api/webhooks/github',
+  path: '/api/webhooks/github',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/share/$slug': typeof ShareSlugRoute
+  '/api/webhooks/github': typeof ApiWebhooksGithubRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/share/$slug': typeof ShareSlugRoute
+  '/api/webhooks/github': typeof ApiWebhooksGithubRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/share/$slug': typeof ShareSlugRoute
+  '/api/webhooks/github': typeof ApiWebhooksGithubRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/share/$slug' | '/api/webhooks/github'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/share/$slug' | '/api/webhooks/github'
+  id: '__root__' | '/' | '/share/$slug' | '/api/webhooks/github'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ShareSlugRoute: typeof ShareSlugRoute
+  ApiWebhooksGithubRoute: typeof ApiWebhooksGithubRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +68,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/share/$slug': {
+      id: '/share/$slug'
+      path: '/share/$slug'
+      fullPath: '/share/$slug'
+      preLoaderRoute: typeof ShareSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/webhooks/github': {
+      id: '/api/webhooks/github'
+      path: '/api/webhooks/github'
+      fullPath: '/api/webhooks/github'
+      preLoaderRoute: typeof ApiWebhooksGithubRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ShareSlugRoute: ShareSlugRoute,
+  ApiWebhooksGithubRoute: ApiWebhooksGithubRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -49,8 +49,8 @@ export const logout = createServerFn({ method: "POST" }).handler(async () => {
 });
 
 export const generatePost = createServerFn({ method: "POST" })
-  .validator((prUrl: string) => prUrl)
-  .handler(async ({ data: prUrl }) => {
+  .validator((input: { prUrl: string; voiceSample?: string }) => input)
+  .handler(async ({ data: { prUrl, voiceSample } }) => {
     const ip = getRequestIP() || "127.0.0.1";
     
     const limiter = getRateLimiter();
@@ -87,7 +87,7 @@ export const generatePost = createServerFn({ method: "POST" })
     
     const linkedInSpinRes = await completeText({
       promptKey: "pr.linkedin_spin",
-      variables: [prData.title, brutalTruthRes.text],
+      variables: [prData.title, brutalTruthRes.text, voiceSample],
     });
 
     return {
