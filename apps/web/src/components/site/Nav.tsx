@@ -1,16 +1,13 @@
 "use client";
 
-import { Link, useMatches } from "@tanstack/react-router";
-import { Github, Menu, LayoutDashboard } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { Github, Menu } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 export function Nav() {
   const [scrolled, setScrolled] = useState(false);
-  const matches = useMatches();
-  const session = (matches.find((m) => m.id === "__root")?.context as any)
-    ?.session;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50);
@@ -45,58 +42,21 @@ export function Nav() {
         </Link>
 
         <div className="hidden md:flex items-center gap-8 text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
-          <a href="/#demo" className="hover:text-foreground transition">
-            Demo
-          </a>
-          <a href="/#workflow" className="hover:text-foreground transition">
-            Workflow
-          </a>
-          <a href="/#autonomy" className="hover:text-foreground transition">
-            Autonomy
-          </a>
-          <a href="/#roast" className="hover:text-foreground transition">
-            Verdict
-          </a>
-          <a href="/#pricing" className="hover:text-foreground transition">
-            Pricing
-          </a>
-          <Link to="/explore" className="hover:text-foreground transition">
-            Explore
-          </Link>
-          <Link to="/wrapped" className="hover:text-foreground transition">
-            Wrapped
+          <Link to="/" className="hover:text-foreground transition">
+            Home
           </Link>
         </div>
 
         <div className="flex items-center gap-3 shrink-0">
-          {session ? (
-            <Link
-              to="/dashboard"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-foreground text-background text-xs font-bold hover:opacity-90 transition shadow-lg shadow-foreground/5"
-            >
-              <LayoutDashboard className="h-3.5 w-3.5" />
-              {!scrolled && "Dashboard"}
-            </Link>
-          ) : (
-            <>
-              {!scrolled && (
-                <Link
-                  to="/dashboard"
-                  className="hidden sm:inline-flex items-center gap-2 text-xs font-bold text-foreground hover:opacity-80 transition uppercase tracking-widest"
-                >
-                  Sign in
-                </Link>
-              )}
-              <Link
-                to="/dashboard"
-                aria-label="Start free"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-foreground text-background text-xs font-bold hover:opacity-90 transition shadow-lg shadow-foreground/10"
-              >
-                <Github className="h-3.5 w-3.5" />
-                {!scrolled && "Start free"}
-              </Link>
-            </>
-          )}
+          <a
+            href="https://github.com/bansalbhunesh/devbrand"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-foreground text-background text-xs font-bold hover:opacity-90 transition shadow-lg shadow-foreground/10"
+          >
+            <Github className="h-3.5 w-3.5" />
+            {!scrolled && "View Source"}
+          </a>
 
           <Sheet>
             <SheetTrigger asChild>
@@ -109,61 +69,12 @@ export function Nav() {
               className="bg-background/95 backdrop-blur-xl border-border"
             >
               <div className="flex flex-col gap-6 mt-12">
-                <a
-                  href="/#demo"
-                  className="text-lg font-medium hover:text-blue-500 transition"
-                >
-                  Demo
-                </a>
-                <a
-                  href="/#workflow"
-                  className="text-lg font-medium hover:text-blue-500 transition"
-                >
-                  Workflow
-                </a>
-                <a
-                  href="/#autonomy"
-                  className="text-lg font-medium hover:text-blue-500 transition"
-                >
-                  Autonomy
-                </a>
-                <a
-                  href="/#roast"
-                  className="text-lg font-medium hover:text-blue-500 transition"
-                >
-                  Verdict
-                </a>
-                <a
-                  href="/#pricing"
-                  className="text-lg font-medium hover:text-blue-500 transition"
-                >
-                  Pricing
-                </a>
                 <Link
-                  to="/explore"
+                  to="/"
                   className="text-lg font-medium hover:text-blue-500 transition"
                 >
-                  Explore
+                  Home
                 </Link>
-                <Link
-                  to="/wrapped"
-                  className="text-lg font-medium hover:text-blue-500 transition"
-                >
-                  Wrapped
-                </Link>
-                <hr className="border-border/50" />
-                {session ? (
-                  <Link
-                    to="/dashboard"
-                    className="text-lg font-medium flex items-center gap-2 text-blue-500"
-                  >
-                    <LayoutDashboard className="h-5 w-5" /> Dashboard
-                  </Link>
-                ) : (
-                  <Link to="/dashboard" className="text-lg font-medium">
-                    Sign in
-                  </Link>
-                )}
               </div>
             </SheetContent>
           </Sheet>

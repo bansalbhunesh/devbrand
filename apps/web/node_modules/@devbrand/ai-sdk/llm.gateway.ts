@@ -20,15 +20,28 @@ export const ZeroUsage: TokenUsage = {
 };
 
 export const PromptRegistry = {
-  "analysis.layer5.narrative": {
+  "pr.brutal_truth": {
     version: "1.0.0",
-    template: (context: string) =>
-      `Analyze this technical data and generate a narrative summary:\n\n${context}`,
+    template: (title: string, body: string, diff: string) =>
+      `You are the ultimate cynical Staff Engineer. Your job is to brutally roast a pull request.
+Do not hold back. Destroy any marketing fluff, bad architectural decisions, or "AI Slop".
+Provide "The Brutal Truth" in 2-3 short, punchy, unconstrained paragraphs.
+
+PR Title: ${title}
+PR Body: ${body}
+
+Diff:
+${diff}`,
   },
-  "roast.profile": {
-    version: "2.1.0",
-    template: (username: string, data: string) =>
-      `Generate a witty, technical roast for GitHub user ${username} based on this data: ${data}`,
+  "pr.linkedin_spin": {
+    version: "1.0.0",
+    template: (title: string, brutalTruth: string) =>
+      `You are a highly enthusiastic tech influencer on LinkedIn.
+Take this PR Title and its "Brutal Truth" and translate it into a corporate, sanitized, emoji-filled LinkedIn post.
+Make it sound like the greatest engineering achievement of the year. Use lots of synergy and "thrilled to announce" type phrasing.
+
+PR Title: ${title}
+Brutal Truth to translate: ${brutalTruth}`,
   },
 } as const;
 
@@ -53,6 +66,24 @@ export async function completeText(params: {
   const model = params.model || env.CLAUDE_MODEL || "claude-3-7-sonnet-20250219";
 
   logger.info(`[AICtrl] Routing ${params.promptKey} (v${prompt.version}) to ${model}`);
+
+  if (!env.ANTHROPIC_API_KEY) {
+    logger.info(`[AICtrl] No ANTHROPIC_API_KEY found, returning mock response for ${params.promptKey}`);
+    await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate network latency
+
+    let mockText = "";
+    if (params.promptKey === "pr.brutal_truth") {
+      mockText = `This PR is a classic example of "Resume Driven Development". You've imported three new dependencies just to center a div. The architecture resembles a bowl of spaghetti that was left out in the rain.\n\nNext time, maybe try writing actual code instead of copy-pasting from StackOverflow circa 2014. My disappointment is immeasurable and my day is ruined.`;
+    } else {
+      mockText = `🚀 THRILLED TO ANNOUNCE my latest open source contribution! 🚀\n\nI just completely revolutionized the way we center divs. By leveraging cutting-edge synergy and bleeding-edge paradigms, we've achieved 10x developer velocity. \n\nSo grateful for my team and the continuous journey of learning! #100DaysOfCode #BuildInPublic #TechLeadership 💡✨`;
+    }
+
+    return {
+      text: mockText,
+      usage: { promptTokens: 100, completionTokens: 50, totalTokens: 150 },
+      version: prompt.version,
+    };
+  }
 
   try {
     const response = await anthropic.messages.create({

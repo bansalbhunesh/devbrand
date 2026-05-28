@@ -1,68 +1,65 @@
 <div align="center">
-  <img src="https://devbrand.ai/api/og?repo=facebook/react" alt="DevBrand Judgment Engine" width="100%" />
+  <div style="background: linear-gradient(to right, #f59e0b, #ea580c); border-radius: 20px; padding: 2px;">
+    <div style="background: #09090b; border-radius: 18px; padding: 40px 20px;">
+      <h1 style="margin: 0; font-size: 3em; color: #fff; letter-spacing: -1px;">DevBrand</h1>
+      <p style="color: #a1a1aa; font-size: 1.2em; font-weight: 300;">Turn your PRs into <b>LinkedIn clout.</b></p>
+    </div>
+  </div>
+  <br />
 
-  <h1>The Judgment Engine</h1>
-  <p><b>Find out if your codebase is AI Slop.</b></p>
-
-  [![CI/CD](https://github.com/bansalbhunesh/devbrand/actions/workflows/playwright.yml/badge.svg)](https://github.com/bansalbhunesh/devbrand/actions)
-  [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
   [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
+  [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+  [![Vite](https://img.shields.io/badge/Vite-7.3.3-646CFF.svg)](https://vitejs.dev/)
 </div>
 
 ---
 
 ## 🛑 The Problem
 
-Most code analysis tools are polite, sanitized linters that tell you about missing semicolons. They ignore the real problems: deep architectural decay, the bus factor, and the influx of poorly-considered AI-generated boilerplate ("AI Slop"). 
+You just spent 40 hours fixing a devastating race condition in the distributed caching layer. Your reward? A single `LGTM` from a junior engineer who didn't even read the diff.
+
+Meanwhile, a PM on LinkedIn just got 500 likes for writing an article about "Synergy".
+
+The tech industry does not reward invisible labor. If you don't hype it, it never happened.
 
 ## ⚡ The Solution
 
-**DevBrand is The Judgment Engine.**
-It is an unconstrained, brutally honest AI system that clones your GitHub repository's metadata, analyzes commit velocity, and renders a final, objective verdict on your architecture. 
+**DevBrand is The Brutal Truth vs. LinkedIn Spin Engine.**
 
-It does not sugarcoat. It tells you exactly where your technical debt lies and what your execution velocity really looks like.
+Drop any public GitHub Pull Request URL into the engine. Our heavily constrained AI system (OBLITERATUS) will analyze the raw diff and deliver two things:
+
+1. **The Brutal Truth:** A cynical, unfiltered roast of what your code *actually* does, written by a burned-out Staff Engineer who hates your variable names.
+2. **The LinkedIn Spin:** A corporate, emoji-filled, aggressively positive translation of that truth designed to instantly farm engagement on LinkedIn.
+
+Copy. Paste. Compound your career capital publicly.
 
 ---
 
 ## ✨ Core Features
 
-* **🧠 The OBLITERATUS Protocol**: A heavily constrained prompt architecture that forces the LLM into a highly-competent, cynical Staff Engineer persona. It is explicitly programmed to obliterate marketing fluff and deliver raw technical critique.
-* **📊 Deterministic Slop Scoring**: Before the LLM even sees your code, the engine computes an `aiSlopScore` and `debtScore` using a strict heuristic of vague commits (`"fix"`, `"wip"`), empty PR descriptions, and the repository's bus factor.
-* **⚡ 60-Second Ingestion**: Ingests the last 50 commits, open pull requests, and contributor dynamics to build a comprehensive execution profile.
-* **🖼️ Dynamic OG Cards**: Automatically generates a highly-shareable, high-contrast OpenGraph card displaying your AI Slop percentage and "THE LINE" (the 25-word final verdict).
-* **🔒 Opt-In Legacy Mode**: Features the original "Weekly Digest" builder logs, now securely gated behind the `FEATURE_REPO_ROAST=true` architecture flag while we scale the Judgment Engine.
+* **🧠 Dual-Prompt Architecture**: Powered by Anthropic (or local Gemini/Ollama fallbacks), executing two conflicting personas synchronously against a single PR diff.
+* **⚡ Frictionless UX**: No login. No OAuth. No database schemas. Just paste a GitHub PR URL and let the engine rip.
+* **🚀 TanStack Server Functions**: Zero API routes. The backend execution is baked directly into the route via highly optimized Server Functions (`createServerFn`).
+* **🎨 Glassmorphism UI**: A stunning, cinematic UI built with Framer Motion, Tailwind CSS, and Lucide React. Because if you're going to generate slop, it should look beautiful.
+* **🛡️ Fallback Mode**: Don't want to pay for an Anthropic API key? DevBrand detects missing keys and automatically falls back to an ultra-realistic local mock mode so you can test the UI instantly.
 
 ---
 
 ## 🏗️ Architecture
 
-DevBrand is engineered as a highly resilient, distributed monorepo built to handle viral influxes of repository analysis requests.
-
-```mermaid
-graph TD
-    A[User Submits Repo] --> B[TanStack Start API]
-    B --> C[Rate Limiter & Cache Layer]
-    C --> D[Roast Github Service]
-    D -->|Fetches Commits/PRs| E[GitHub REST API]
-    D --> F[Deterministic Score Engine]
-    F --> G[The OBLITERATUS LLM Router]
-    G --> H[OpenAI / Claude]
-    H --> I[(PostgreSQL / Neon)]
-    I --> J[Framer Motion UI]
-```
+We executed a "Ruthless Cut" on the original bloated monorepo. It is now a single, surgical, highly-performant React application.
 
 ### The Tech Stack
-- **Frontend**: TanStack Start / React 19 / Vite / Framer Motion (Web UI)
-- **Backend**: Node.js / Server Functions
-- **Database**: PostgreSQL (Neon) via Drizzle ORM
-- **Visuals**: Satori & Resvg (Server-side OG image rendering)
-- **Testing**: Playwright (Exhaustive E2E)
+- **Framework**: TanStack Start / React 19 / Vite
+- **Styling**: Tailwind CSS + Framer Motion
+- **AI Gateway**: `@anthropic-ai/sdk` via custom Prompt Registry
+- **Deployment**: Zero-config ready (Cloudflare / Vercel)
 
 ---
 
 ## 🚀 Getting Started
 
-To run the Judgment Engine locally, ensure you have **Node 22**, **pnpm**, and **Docker** installed.
+To run the engine locally, ensure you have **Node 22** and **pnpm** installed.
 
 ### 1. Clone & Install
 ```bash
@@ -72,38 +69,22 @@ pnpm install
 ```
 
 ### 2. Environment Setup
-Copy the example environment file and add your keys. Ensure `FEATURE_REPO_ROAST=true` is set.
+Copy the example environment file.
 ```bash
 cp .env.example .env
 ```
+*Note: If you do not provide an `ANTHROPIC_API_KEY`, the app will seamlessly drop into Mock Mode so you can still run it end-to-end.*
 
-### 3. Database Migration
-```bash
-pnpm run db:push
-```
-
-### 4. Run the Engine
+### 3. Run the Engine
 ```bash
 pnpm run dev
 ```
-The platform will be live at `http://localhost:3000`.
+The platform will be live at `http://localhost:3000`. 
 
----
-
-## 🧪 Testing
-
-We rely on **Playwright** for exhaustive End-to-End testing across our entire stack.
-
-```bash
-# Run the E2E suite
-pnpm exec playwright test
-
-# View the test report
-pnpm exec playwright show-report
-```
+Drop in a GitHub PR URL and watch the magic happen.
 
 ---
 
 <div align="center">
-  <b>Unfiltered Honesty. No marketing fluff. Just the line.</b>
+  <b>Stop building quietly. Start compounding loudly.</b>
 </div>

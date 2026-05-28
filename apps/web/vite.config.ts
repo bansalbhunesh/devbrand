@@ -23,25 +23,6 @@ export default defineConfig({
     port: 3000,
   },
   build: {
-    minify: "terser",
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true,
-        pure_funcs: [
-          "console.log",
-          "console.info",
-          "console.debug",
-          "console.trace",
-        ],
-      },
-      mangle: {
-        safari10: true,
-      },
-      format: {
-        comments: false,
-      },
-    },
     chunkSizeWarningLimit: 1000,
   },
 });

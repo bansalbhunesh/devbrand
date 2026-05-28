@@ -10,7 +10,6 @@ import { Toaster } from "sonner";
 import { SmoothScroll } from "@/components/site/SmoothScroll";
 import "@/styles.css";
 import * as React from "react";
-import { getSession } from "@/rpc";
 import { Nav } from "@/components/site/Nav";
 
 const queryClient = new QueryClient({
@@ -25,13 +24,7 @@ const queryClient = new QueryClient({
 
 export const Route = createRootRoute({
   loader: async () => {
-    try {
-      const session = await getSession();
-      return { session };
-    } catch (e) {
-      console.error("root_loader_session_failed", e);
-      return { session: null };
-    }
+    return { session: null };
   },
   head: () => ({
     meta: [
