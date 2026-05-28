@@ -3434,7 +3434,7 @@ const defaultSerovalPlugins = [
   p
 ];
 async function getStartManifest(matchedRoutes) {
-  const { tsrStartManifest } = await import("./assets/_tanstack-start-manifest_v-DMH7F_Y0.js");
+  const { tsrStartManifest } = await import("./assets/_tanstack-start-manifest_v-7aN5DV0B.js");
   const startManifest = tsrStartManifest();
   const rootRoute = startManifest.routes[rootRouteId] = startManifest.routes[rootRouteId] || {};
   rootRoute.assets = rootRoute.assets || [];
@@ -3464,23 +3464,23 @@ async function getStartManifest(matchedRoutes) {
 const manifest = {
   "8ba2ee828bb464bc80637073e31da3273384ed5ae47152bfc586d5ccf7173a48": {
     functionName: "generatePost_createServerFn_handler",
-    importer: () => import("./assets/functions-9Z30MqVH.js")
+    importer: () => import("./assets/functions-CAibPd60.js")
   },
   "9f7d480fccb61bf3ac1ee08f0ec76f8262b96390e23367d8f074cc12e341e11f": {
     functionName: "getAuthState_createServerFn_handler",
-    importer: () => import("./assets/functions-9Z30MqVH.js")
+    importer: () => import("./assets/functions-CAibPd60.js")
   },
   "dadc6dbc10c65ea008c090c745f5d2f061493afb1504a70e981a54581956c944": {
     functionName: "exchangeAuthCode_createServerFn_handler",
-    importer: () => import("./assets/functions-9Z30MqVH.js")
+    importer: () => import("./assets/functions-CAibPd60.js")
   },
   "f1ca2137178ed27584cb567e9926f70c9a6e653517f8af033f288518c696c71d": {
     functionName: "getAuthUrl_createServerFn_handler",
-    importer: () => import("./assets/functions-9Z30MqVH.js")
+    importer: () => import("./assets/functions-CAibPd60.js")
   },
   "f71d5c4629376acb5d7f7da88c971fa571331021fe87fdabe25085cb0151d808": {
     functionName: "logout_createServerFn_handler",
-    importer: () => import("./assets/functions-9Z30MqVH.js")
+    importer: () => import("./assets/functions-CAibPd60.js")
   }
 };
 async function getServerFnById(id, access) {
@@ -4853,7 +4853,7 @@ var baseManifestPromise;
 var cachedFinalManifestPromise;
 async function loadEntries() {
   const [routerEntry, startEntry, pluginAdapters] = await Promise.all([
-    import("./assets/router-BRIyEqcQ.js").then((n2) => n2.r),
+    import("./assets/router-BDdKuOeG.js").then((n2) => n2.r),
     import("./assets/start-HYkvq4Ni.js"),
     import("./assets/__23tanstack-start-plugin-adapters-Cwee5PKy.js")
   ]);

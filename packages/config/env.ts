@@ -45,20 +45,6 @@ const envSchema = z.object({
     .string()
     .min(32, "SESSION_SECRET must be at least 32 characters"),
 
-  // Billing
-  RAZORPAY_KEY_ID: z.string().min(1),
-  RAZORPAY_KEY_SECRET: z.string().min(1),
-  RAZORPAY_WEBHOOK_SECRET: z.string().min(1),
-
-  // Integrations
-  SLACK_SIGNING_SECRET: z.string().optional(),
-  SLACK_CLIENT_ID: z.string().optional(),
-  SLACK_CLIENT_SECRET: z.string().optional(),
-
-  // Observability
-  SENTRY_DSN: z.string().url().optional(),
-  POSTHOG_API_KEY: z.string().optional(),
-  REDIS_URL: z.string().url().optional(),
 
   // AI
   ANTHROPIC_API_KEY: z.string().optional(),

@@ -10,7 +10,6 @@ const handler = createStartHandler(defaultStreamHandler);
 // identically in vite dev and Vercel prod. The previous default-export
 // wrapper pattern only ran in prod and was a footgun:
 //   src/routes/webhooks.github.tsx       POST /webhooks/github
-//   src/routes/webhooks.razorpay.tsx     POST /webhooks/razorpay
 //   src/routes/internal.cron.drain.tsx   GET  /internal/cron/drain
 
 export default async (request: Request) => handler(request);
